@@ -3,7 +3,6 @@
 #include <execution>
 #include <algorithm>
 #include <ranges>
-#include <cmath>
 
 // =========================================================================
 // FILE NAME: 16_level_stdpar_transform_vector.cpp
