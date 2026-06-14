@@ -150,6 +150,10 @@ int main() {
     // TODO: Increment ptr using prefix (++ptr) and assign dereferenced value to
     // val (in one line or two)
 
+    val = *(++ptr);
+
+    std::cout << "The value of incremented pointer is " << val << std::endl;
+
     bool ok = (ptr == &arr[1] && val == 20);
     reportStatus("Problem 5: Prefix pointer increment", ok);
     if (ok)
