@@ -1,4 +1,4 @@
-# <span style="color:#1E90FF;">Champion-Level Curriculum: C++ to CUDA C++ for Machine Learning & GPU Acceleration</span>
+# Champion-Level Curriculum: C++ to CUDA C++ for Machine Learning & GPU Acceleration
 
 **Author**: Rahul Kumar (rahul238xaviers@gmail.com)  
 **Goal**: Master CUDA programming for champion-level performance in ML workloads (LLM SFT, inference, agentic RAG, custom kernels, FinTech simulations).  
@@ -8,7 +8,7 @@
 
 ---
 
-## <span style="color:#FF4500;">Environment Setup (Day 0–1)</span>
+## Environment Setup (Day 0–1)
 
 ### 1. WSL 2 + Ubuntu (Recommended for Development)
 1. On Windows (PowerShell as Admin):
@@ -70,9 +70,18 @@ sudo apt install antigravity -y   # If available, or build from source / use fla
 
 **Test**: Create `vector_add.cu`, compile with `nvcc`, and debug in VS Code.
 
+### 4. macOS / Apple Silicon Setup (For C++ Workbooks)
+**Important:** On Apple Silicon (M1 through M5 chips), the behavior of parallel C++ code depends entirely on which compiler you use.
+
+#### ✅ RECOMMENDED: Clang++ with Grand Central Dispatch (GCD)
+Apple's Clang implements `std::execution::par` using GCD - Apple's native parallel framework optimized for Apple Silicon.  
+**No extra libraries needed. Compile with:**
+```bash
+clang++ -std=c++20 -O3 -D_LIBCPP_ENABLE_EXPERIMENTAL program.cpp -o program
+./program
+```
+
 ---
-
-
 
 ## Module 1: C++ Fundamentals Refresh (3–5 days)
 Focus on low-level mastery for CUDA compatibility.
