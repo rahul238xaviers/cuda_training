@@ -1,1 +1,7 @@
+# Ignore build and compiler output folders
+output/
 /output
+
+# Ignore user solution files, but preserve the directory structures (.gitkeep)
+**/solution/*
+!**/solution/.gitkeep

@@ -86,35 +86,49 @@ clang++ -std=c++20 -O3 -D_LIBCPP_ENABLE_EXPERIMENTAL program.cpp -o program
 ## Module 1: C++ Fundamentals Refresh (3–5 days)
 Focus on low-level mastery for CUDA compatibility.
 
-### 1.1 Variables, Types, Pointers & Memory
-**Core Functions/Concepts**:
-- `sizeof`, primitive types, pointer arithmetic (`*`, `+`, `&`), `new`/`delete`, `malloc`/`free`
-- References, `nullptr`
+---
 
-**Exercises** (Aim for 80–100 problems):
-- 20 pointer arithmetic on 1D arrays (math: vector addition, dot products)
-- 20 on 2D/3D flattening (matrix ops, tensor indexing)
-- 20 memory allocation patterns (heap vs stack for large ML batches)
-- 20 edge cases: null deref, out-of-bounds, alignment
-- ML: Simulate embedding lookups, attention score storage
+### 📂 C++ Fundamentals Subtopics (100 Problems)
 
-**Workbook Style**: Create `pointer_arithmetic_workbook.cpp` with verification loop like your example.
+Every subtopic is structured inside its own directory containing:
+* `theory.md`: Outline of concepts and relevance to ML/CUDA.
+* `exercise/`: Practice workbooks divided into **Beginner**, **Intermediate**, and **Champion** difficulty levels.
+* `solution/`: Workspace directory for user solutions.
 
-### 1.2 Arrays, Strings & Flattening
-**Core**:
-- C-arrays, `std::array`, `std::vector`
-- Row/column-major, striding formulas
+#### 1.1 Variables, Types, Pointers & Memory
+* **Section 1: Pointer Arithmetic & Offsets**
+  - [[1.1] Basic Offset & Increment](file:///home/rahul/dev/cuda_training/src/module1/1.1_basic_offsets/theory.md)
+  - [[1.2] Strides & Indirection](file:///home/rahul/dev/cuda_training/src/module1/1.2_strides_indirection/theory.md)
+  - [[1.3] Array Reductions & Swaps](file:///home/rahul/dev/cuda_training/src/module1/1.3_reductions_swaps/theory.md)
+  - [[1.4] Multi-array & Strided Ops](file:///home/rahul/dev/cuda_training/src/module1/1.4_multi_array_strided/theory.md)
 
-**Exercises** (100+):
-- 30 matrix transpose/flatten (various shapes: 32x32, 784x512 for MNIST-like)
-- 30 3D/4D tensor indexing (batch x channel x height x width)
-- 20 strided access patterns (convolutions, sliding windows)
-- 20 math: matrix multiplication manual implementation
-- ML: Image padding, voxel data in medical imaging simulations
+* **Section 3: Heap vs Stack Memory Management**
+  - [[1.9] Single & Array Allocations](file:///home/rahul/dev/cuda_training/src/module1/1.9_single_array_alloc/theory.md)
+  - [[1.10] Multi-Dim & Alignment](file:///home/rahul/dev/cuda_training/src/module1/1.10_multidim_alignment/theory.md)
+  - [[1.11] Arenas & Placements](file:///home/rahul/dev/cuda_training/src/module1/1.11_arenas_placements/theory.md)
+  - [[1.12] Lifetimes, Ownership & Resize](file:///home/rahul/dev/cuda_training/src/module1/1.12_lifetimes_ownership/theory.md)
 
-**Practice**: Extend your existing notes with code variants.
+* **Section 4: Safety, Edge Cases & Alignment**
+  - [[1.13] Null, Bounds & Alignment Check](file:///home/rahul/dev/cuda_training/src/module1/1.13_null_bounds_checks/theory.md)
+  - [[1.14] Size, Padding & Punning](file:///home/rahul/dev/cuda_training/src/module1/1.14_size_padding_punning/theory.md)
+  - [[1.15] Type Casts & Double Pointers](file:///home/rahul/dev/cuda_training/src/module1/1.15_casts_double_pointers/theory.md)
+  - [[1.16] Pointer Relations & Copying](file:///home/rahul/dev/cuda_training/src/module1/1.16_pointer_relations_copying/theory.md)
+
+#### 1.2 Arrays, Strings & Flattening
+* **Section 2: 2D & 3D Array/Tensor Flattening & Strides**
+  - [[1.5] Row/Col-Major Indexing](file:///home/rahul/dev/cuda_training/src/module1/1.5_row_col_indexing/theory.md)
+  - [[1.6] 3D/4D Permute & Flatten](file:///home/rahul/dev/cuda_training/src/module1/1.6_permute_flatten/theory.md)
+  - [[1.7] Subgrids, Padding & Diagonals](file:///home/rahul/dev/cuda_training/src/module1/1.7_subgrids_padding/theory.md)
+  - [[1.8] Pack, Wrap, Stencil & Crops](file:///home/rahul/dev/cuda_training/src/module1/1.8_pack_wrap_stencil/theory.md)
+
+* **Section 5: Machine Learning GPU Prep & Simulations**
+  - [[1.17] Embeddings & Projections](file:///home/rahul/dev/cuda_training/src/module1/1.17_embeddings_projections/theory.md)
+  - [[1.18] Attention & Quantization](file:///home/rahul/dev/cuda_training/src/module1/1.18_attention_quantization/theory.md)
+  - [[1.19] ML Layer Offsets](file:///home/rahul/dev/cuda_training/src/module1/1.19_ml_layer_offsets/theory.md)
+  - [[1.20] Pooling, Masks & Cycles](file:///home/rahul/dev/cuda_training/src/module1/1.20_pooling_masks_cycles/theory.md)
 
 ---
+
 
 ## Module 2: Modern C++ for GPU Readiness (5–7 days)
 
