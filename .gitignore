@@ -1,6 +1,8 @@
 # Ignore build and compiler output folders
 output/
 /output
+*.o
+*.dSYM  
 
 # Ignore user solution files, but preserve the directory structures (.gitkeep)
 **/solution/*
