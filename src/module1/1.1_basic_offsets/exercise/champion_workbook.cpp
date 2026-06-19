@@ -45,9 +45,9 @@ int main() {
         // TODO: Perform Step D: Use (*ptr)++ in one line to assign value to valD and then increment the value in memory.
 
         // Verify correct pointer advancement and array/value mutations
-        bool ok = (valA == 10 && ptr == &arr[1]) && 
-                  (valB == 30 && ptr == &arr[2]) && 
-                  (valC == 31 && arr[2] == 31) && 
+        bool ok = (valA == 10) && 
+                  (valB == 30) && 
+                  (valC == 31) && 
                   (valD == 31 && arr[2] == 32 && ptr == &arr[2]);
                   
         reportStatus("Problem 12: Precedence combinations (*ptr++, *++ptr, etc.)", ok);

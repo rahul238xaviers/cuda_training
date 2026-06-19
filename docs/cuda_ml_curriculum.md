@@ -25,7 +25,7 @@
    wget https://developer.download.nvidia.com/compute/cuda/repos/wsl-ubuntu/x86_64/cuda-keyring_1.1-1_all.deb
    sudo dpkg -i cuda-keyring_1.1-1_all.deb
    sudo apt update
-   sudo apt install cuda-toolkit-12-8 -y   # Check latest version
+   sudo apt install build-essential cuda-toolkit-12-8 -y   # Install GCC/G++ and CUDA Toolkit
    ```
 
 4. Add to `~/.bashrc`:
@@ -68,7 +68,34 @@ sudo apt install antigravity -y   # If available, or build from source / use fla
 - CUDA syntax highlighting plugins
 - Configure build tasks for `nvcc`
 
-**Test**: Create `vector_add.cu`, compile with `nvcc`, and debug in VS Code.
+**Test**: Verify compiler and setup.
+
+#### Compile CUDA Source (`.cu`) with `nvcc`:
+To compile a CUDA source file (e.g., `vector_add.cu`) and direct the output executable to the `output` directory:
+```bash
+# Ensure the output directory exists
+mkdir -p output
+
+# Compile the CUDA source file and place the binary in the output folder
+nvcc -O3 vector_add.cu -o output/vector_add
+
+# Execute the compiled binary
+./output/vector_add
+```
+
+#### Compile C++ Source (`.cpp`) with `g++` (for C++ Workbooks):
+To compile a C++ workbook file (e.g., `exercise/beginner_workbook.cpp`) and direct the output executable to the `output` directory:
+```bash
+# Ensure the output directory exists
+mkdir -p output
+
+# Compile the C++ source file using C++20 standards
+g++ -std=c++20 -O3 exercise/beginner_workbook.cpp -o output/beginner_workbook
+
+# Execute the compiled binary
+./output/beginner_workbook
+```
+
 
 ### 4. macOS / Apple Silicon Setup (For C++ Workbooks)
 **Important:** On Apple Silicon (M1 through M5 chips), the behavior of parallel C++ code depends entirely on which compiler you use.
