@@ -7,6 +7,16 @@
 
 ---
 
+## Check the Graphics Card details
+
+**Source**: [`src/cuda/gpu_check.cu`](../src/cuda/gpu_check.cu)
+
+Compile & run:
+```bash
+nvcc -O2 -arch=sm_75 src/cuda/gpu_check.cu -o output/gpu_check
+./output/gpu_check
+```
+
 ## 0. Notation Conventions
 
 - CUDA notation is **`(x, y)`** — **x first = columns / width**, **y second = rows / height**.
@@ -14,6 +24,9 @@
 - **`Idx` = which position (offset)** | **`Dim` = how many (count)**.
 - Array shape is stated as **rows × cols**.
 - Exercises either state the array shape **or** say "assume perfect tiling."
+
+> **Device reference**: [gpu_check.cu](../src/cuda/gpu_check.cu) prints every
+> hardware limit on this machine (registers/SM, clocks, bandwidth, budgets).
 
 ---
 
@@ -205,7 +218,11 @@ blocksResident = min of:
   Thread budget:   1024 threads/SM ÷ threads-per-block
   Register budget: 65536 registers/SM ÷ (regs-per-thread × threads-per-block)
   Shared budget:   49152 B/SM ÷ shared-per-block
+  Block budget:    maxBlocksPerMultiProcessor (16 on GTX 1650)
 ```
+
+> The 4th budget came from `gpu_check.cu`'s output: `max blocks/SM: 16`.
+> It only binds for very small blocks (e.g. < 64 threads).
 
 **Conventions:**
 - Every division rounds **DOWN** (fit INTO a budget, never exceed it).
