@@ -1,7 +1,35 @@
 #include <iostream>
 #include <cmath>
+#include <cstdlib>
 #include <cuda_runtime.h>
 #include <algorithm>
+
+#define CUDA_CHECK(call)\
+do{\
+    cudaError_t status = call;\
+    if(status != cudaSuccess){ \
+        std::cerr << "CUDA Error: " << cudaGetErrorString(status) << std::endl;\
+        exit(1);\
+    }\
+}while(0)
+
+#define CUDA_CHECK_LAST()\
+do{\
+    cudaError_t status = cudaGetLastError();\
+    if(status != cudaSuccess){ \
+        std::cerr << "CUDA Error: " << cudaGetErrorString(status) << std::endl;\
+        exit(1);\
+    }\
+}while(0)
+
+#define CUDA_CHECK_KERNEL()\
+do{\
+    cudaError_t status = cudaDeviceSynchronize();\
+    if(status != cudaSuccess){ \
+        exit(1);\
+    }\
+}while(0)
+
 
 // 1. THE GPU KERNEL (This runs in parallel across thousands of GPU cores)
 __global__ void vectorAddKernel(const float* x, const float* y, float* out, int n) {
@@ -28,9 +56,11 @@ int main() {
     float *x, *y, *out;
 
     // Allocate CUDA Unified Memory – accessible by both CPU and GPU automatically
-    cudaMallocManaged(&x, size);
-    cudaMallocManaged(&y, size);
-    cudaMallocManaged(&out, size);
+    CUDA_CHECK(cudaMallocManaged(&x, size));
+    CUDA_CHECK(cudaMallocManaged(&y, size));
+    CUDA_CHECK(cudaMallocManaged(&out, size));
+
+    
 
     // Initialize the host vectors with dummy data
     for (int i = 0; i < N; i++) {
@@ -50,7 +80,7 @@ int main() {
     vectorAddKernel<<<blocksPerGrid, threadsPerBlock>>>(x, y, out, N);
 
     // Wait for the GPU to finish before the CPU accesses the results
-    cudaDeviceSynchronize();
+    CUDA_CHECK(cudaDeviceSynchronize());
 
     // 4. VERIFY RESULTS
     float maxError = 0.0f;
