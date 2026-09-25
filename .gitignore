@@ -1,8 +1,63 @@
-# Ignore build and compiler output folders
+# Build and Compiler Output Directories
 output/
 /output
+**/output/
+build/
+/build
+**/build/
+bin/
+/bin
+**/bin/
+
+# Object files, static & dynamic libraries
 *.o
-*.dSYM  
+*.obj
+*.a
+*.lib
+*.so
+*.so.*
+*.dylib
+*.dll
+
+# Executables & Binary Artifacts
+*.out
+a.out
+*.exe
+*.bin
+*.elf
+*.app
+
+# Specific workbook binaries if compiled in-place
+*_workbook
+*_solution
+
+# Debug symbols and profiler data
+*.dSYM/
+*.dSYM
+*.su
+*.idb
+*.pdb
+*.gch
+*.gcda
+*.gcno
+gmon.out
+
+# CMake & build system artifacts
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile
+*.ninja
+.ninja_*
+compile_commands.json
+
+# OS and Editor Artifacts
+.DS_Store
+**/.DS_Store
+._*
+Thumbs.db
+.vscode/
+.idea/
 
 # Ignore user solution files, but preserve the directory structures (.gitkeep)
 **/solution/*
