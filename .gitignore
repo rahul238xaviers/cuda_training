@@ -62,3 +62,6 @@ Thumbs.db
 # Ignore user solution files, but preserve the directory structures (.gitkeep)
 **/solution/*
 !**/solution/.gitkeep
+
+# Ignore R-learning report (do not track)
+L_report.md
