@@ -1,44 +1,34 @@
 #include <iostream>
+#include <vector>
 #include <cmath>
 #include <iomanip>
-#include <cstdint>
-#include <cstdlib>
+#include <chrono>
+#include <numeric>
 #include <cstring>
-#include <new>
+#include <algorithm>
 
-// Global status reporter
+// =========================================================================
+// INTERMEDIATE WORKBOOK: 3D/4D Permute & Flatten
+//
+// Module: 1.6 - Multi-Dimensional Layout Foundations
+// Level:  Intermediate
+//
+// Focus: Vision Transformer (ViT) multi-channel patch extraction, NCHW to CHWN
+//        systolic array layout permutation, and 4D Depth-last transposition.
+//
+// Compilation:
+//   g++ -std=c++20 -O3 exercise/intermediate_workbook.cpp -o ../../../output/1.6_intermediate
+//   ../../../output/1.6_intermediate
+// =========================================================================
+
 void reportStatus(const std::string& name, bool passed) {
-    std::cout << "  " << std::left << std::setw(65) << name;
+    std::cout << "  " << std::left << std::setw(60) << name;
     if (passed) {
         std::cout << "\033[1;32m[PASSED]\033[0m" << std::endl;
     } else {
         std::cout << "\033[1;31m[FAILED]\033[0m" << std::endl;
     }
 }
-
-// Structs used across exercises
-struct Point2D { int r; int c; };
-struct Point3D { int d; int h; int w; };
-struct Tensor4D { int b; int c; int h; int w; };
-
-struct alignas(16) AlignedStruct {
-    float x;
-    float y;
-    float z;
-    float w;
-};
-
-struct UnalignedStruct {
-    char a;
-    double b;
-    int c;
-};
-
-struct CustomMLBatch {
-    int batch_id;
-    float* data;
-};
-
 
 int main() {
     std::cout << "=================================================================" << std::endl;
@@ -48,45 +38,154 @@ int main() {
     int passed = 0;
     int total = 0;
 
-  // P28: Flat Transpose Index (2D)
-  {
-    int src_idx = 14; // Index inside 3x5 matrix
-    int R_src = 3, C_src = 5;
-    int dst_idx = -1; // Transposed index inside 5x3 matrix
-    // TODO: Calculate dst_idx of the transposed matrix coordinate
+    // -------------------------------------------------------------------------
+    // PROBLEM 1: Vision Transformer (ViT) Multi-Channel Patch Flattening
+    //
+    // Context: In ViT, an RGB image [C=3, H=16, W=16] is split into patches of size P=4.
+    //          Number of patches = (H/P) * (W/P) = 4 * 4 = 16 patches.
+    //          Each patch contains C * P * P = 3 * 4 * 4 = 48 floats.
+    //          The output is a 2D matrix of shape [16, 48].
+    //
+    // Task: Transform `image` [C=3, H=16, W=16] into `patch_tokens` [16, 48].
+    //       Inside each patch vector of 48 floats, channels and pixels are flattened:
+    //       offset = c * (P * P) + pi * P + pj.
+    // -------------------------------------------------------------------------
+    {
+        const int C = 3, H = 16, W = 16, P = 4;
+        const int PATCHES_H = H / P; // 4
+        const int PATCHES_W = W / P; // 4
+        const int NUM_PATCHES = PATCHES_H * PATCHES_W; // 16
+        const int PATCH_DIM = C * P * P; // 48
 
-    bool ok =
-        (dst_idx ==
-         14); // element (2, 4) in 3x5 goes to (4, 2) in 5x3 -> 4 * 3 + 2 = 14
-    reportStatus("Problem 28: 2D Flat transpose index calculation", ok);
-    if (ok)
-      passed++;
-    total++;
-  }
+        std::vector<float> image(C * H * W);
+        for (int c = 0; c < C; ++c) {
+            for (int h = 0; h < H; ++h) {
+                for (int w = 0; w < W; ++w) {
+                    image[c * (H * W) + h * W + w] = static_cast<float>(c * 1000 + h * 10 + w);
+                }
+            }
+        }
 
-  // P29: Permute 3D Index (D, H, W -> W, H, D)
-  {
-    int src_idx = 45; // 3D index in 3x4x5 grid (D=3, H=4, W=5)
-    int D = 3, H = 4, W = 5;
-    int dst_idx = -1; // Index in 5x4x3 grid (permuted)
-    // TODO: Decode src_idx to (d, h, w), then compute flat index in WxHxD grid
+        std::vector<float> patch_tokens(NUM_PATCHES * PATCH_DIM, -1.0f);
 
-    bool ok =
-        (dst_idx ==
-         45); // (2, 1, 0) -> (0, 1, 2) in 5x4x3 grid: 0*(4*3) + 1*3 + 2 = 5
-    // Wait, let's trace: 45 in 3x4x5 -> 45 / (4*5) = 2 (d), remainder 5. 5 / 5
-    // = 1 (h), remainder 0 (w). Coords are (2, 1, 0). Permuted coords: d' = w =
-    // 0, h' = h = 1, w' = d = 2. Index in 5x4x3 grid: d'* (4*3) + h'*3 + w' =
-    // 0*(12) + 1*3 + 2 = 5. Let's set the target check: Decode: d = 45 / 20 =
-    // 2; remainder = 5. h = 5 / 5 = 1; w = 0. New coords (w, h, d) inside
-    // 5x4x3: (0, 1, 2) -> 0 * 12 + 1 * 3 + 2 = 5. So dst_idx should be 5. Let's
-    // fix the test check to assert 5.
-    ok = (dst_idx == 5);
-    reportStatus("Problem 29: 3D Permute index calculation", ok);
-    if (ok)
-      passed++;
-    total++;
-  }
+        // TODO: Extract 16 patches from image into patch_tokens.
+        // --- YOUR CODE STARTS HERE ---
+
+        // --- YOUR CODE ENDS HERE ---
+
+        bool p1_passed = true;
+        for (int ph = 0; ph < PATCHES_H && p1_passed; ++ph) {
+            for (int pw = 0; pw < PATCHES_W && p1_passed; ++pw) {
+                int patch_idx = ph * PATCHES_W + pw;
+                for (int c = 0; c < C && p1_passed; ++c) {
+                    for (int pi = 0; pi < P; ++pi) {
+                        for (int pj = 0; pj < P; ++pj) {
+                            int im_h = ph * P + pi;
+                            int im_w = pw * P + pj;
+                            float expected = image[c * (H * W) + im_h * W + im_w];
+                            int token_col = c * (P * P) + pi * P + pj;
+                            if (patch_tokens[patch_idx * PATCH_DIM + token_col] != expected) {
+                                p1_passed = false;
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        reportStatus("Problem 1: ViT Multi-Channel Patch Flattening", p1_passed);
+        if (p1_passed) passed++;
+        total++;
+    }
+
+    // -------------------------------------------------------------------------
+    // PROBLEM 2: NCHW to CHWN Layout Permutation (Systolic Array Weight-Stationary)
+    //
+    // Context: In custom TPU / NPU accelerators, tensors are organized in CHWN format
+    //          to keep channel weights stationary while batch vectors stream through.
+    //
+    // Task: Given tensor `src_nchw` [N=2, C=4, H=8, W=8] (1,024 floats):
+    //       Permute to `dst_chwn` [C=4, H=8, W=8, N=2].
+    // -------------------------------------------------------------------------
+    {
+        const int N = 2, C = 4, H = 8, W = 8;
+        const size_t total_elements = N * C * H * W;
+        std::vector<float> src_nchw(total_elements);
+        for (size_t i = 0; i < total_elements; ++i) src_nchw[i] = static_cast<float>(i + 1);
+
+        std::vector<float> dst_chwn(total_elements, -1.0f);
+
+        // TODO: Permute NCHW to CHWN.
+        // NCHW offset: n * (C * H * W) + c * (H * W) + h * W + w
+        // CHWN offset: c * (H * W * N) + h * (W * N) + w * N + n
+        // --- YOUR CODE STARTS HERE ---
+
+        // --- YOUR CODE ENDS HERE ---
+
+        bool p2_passed = true;
+        for (int n = 0; n < N && p2_passed; ++n) {
+            for (int c = 0; c < C && p2_passed; ++c) {
+                for (int h = 0; h < H && p2_passed; ++h) {
+                    for (int w = 0; w < W; ++w) {
+                        size_t src_idx = (size_t)n * (C * H * W) + (size_t)c * (H * W) + (size_t)h * W + w;
+                        size_t dst_idx = (size_t)c * (H * W * N) + (size_t)h * (W * N) + (size_t)w * N + n;
+                        if (dst_chwn[dst_idx] != src_nchw[src_idx]) {
+                            p2_passed = false;
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+
+        reportStatus("Problem 2: NCHW to CHWN Layout Permutation", p2_passed);
+        if (p2_passed) passed++;
+        total++;
+    }
+
+    // -------------------------------------------------------------------------
+    // PROBLEM 3: Batched 4D Depthwise Permutation ([B, D, H, W] -> [B, H, W, D])
+    //
+    // Context: In 3D MRI processing, voxels are often transposed from Depth-first
+    //          to Depth-last (channels-last 3D format) for 3D convolution kernels.
+    //
+    // Task: Given tensor `A` [B=2, D=4, H=4, W=4] (128 floats):
+    //       Permute to `B` [B=2, H=4, W=4, D=4].
+    // -------------------------------------------------------------------------
+    {
+        const int B = 2, D = 4, H = 4, W = 4;
+        const size_t total_elements = B * D * H * W;
+        std::vector<float> A(total_elements);
+        for (size_t i = 0; i < total_elements; ++i) A[i] = static_cast<float>(i * 0.5f);
+
+        std::vector<float> out_B(total_elements, -1.0f);
+
+        // TODO: Permute [B, D, H, W] -> [B, H, W, D].
+        // --- YOUR CODE STARTS HERE ---
+
+        // --- YOUR CODE ENDS HERE ---
+
+        bool p3_passed = true;
+        for (int b = 0; b < B && p3_passed; ++b) {
+            for (int d = 0; d < D && p3_passed; ++d) {
+                for (int h = 0; h < H && p3_passed; ++h) {
+                    for (int w = 0; w < W; ++w) {
+                        size_t src_idx = (size_t)b * (D * H * W) + (size_t)d * (H * W) + (size_t)h * W + w;
+                        size_t dst_idx = (size_t)b * (H * W * D) + (size_t)h * (W * D) + (size_t)w * D + d;
+                        if (out_B[dst_idx] != A[src_idx]) {
+                            p3_passed = false;
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+
+        reportStatus("Problem 3: Batched 4D Depthwise Permutation [B,D,H,W]->[B,H,W,D]", p3_passed);
+        if (p3_passed) passed++;
+        total++;
+    }
 
     std::cout << "\n=================================================================" << std::endl;
     std::cout << "--- SCORECARD ---" << std::endl;
