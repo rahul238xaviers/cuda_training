@@ -73,22 +73,13 @@ int main() {
   cudaDeviceSynchronize();
   CUDA_CHECK(cudaMemcpy(h_out, out, sizeof(float), cudaMemcpyDeviceToHost));
 
-  float cpu = 0.0f;
+  double cpu = 0.0;
 
   for (int i = 0; i < N; i++)
     cpu += A[i];
 
-  float rel = std::fabs(*h_out - cpu) / std::fabs(cpu);
+  double rel = std::fabs(*h_out - cpu) / std::fabs(cpu);
   printf("GPU: %f  CPU: %f  rel err: %g\n", *h_out, cpu, rel);
-  // This may show FAILED. The reasons are :-
-  //  1. The CPU reference sums sequentially in float, so it keeps adding small
-  //     terms into a growing total. Once the total is ~1e19, float's resolution
-  //     step (~1e12) is bigger than the late terms (~7e12), so those terms get
-  //     rounded away and the CPU total goes ~0.35% too LOW.
-  //  2. The GPU tree reduction keeps partial sums small until the final merge,
-  //     so it stays within float's precision: rel err ~1e-7.
-  //  The GPU is the accurate one; the float sequential reference is not.
-  //  Fix: compute the reference in double (see note).
   printf(rel < 1e-4 ? "[PASSED]\n" : "[FAILED]\n");
 
   // Release memory
