@@ -65,3 +65,7 @@ Thumbs.db
 
 # Ignore R-learning report (do not track)
 L_report.md
+
+# Assistant teaching rules (local only)
+AGENTS.md
+opencode.json
