@@ -52,16 +52,16 @@ int main() {
 
   for (int i = 0; i < N; i++) {
     if (A[i] != B[(i / TILE) * TILE + (TILE - 1) - (i % TILE)]) {
-      std::cout << "The test failed";
+      std::cout << "The test failed at index " << i << std::endl;
       cudaFree(d_A);
       cudaFree(d_B);
       free(A);
       free(B);
-      return 0;
+      return 1;
     }
   }
 
-  std::cout << "The test passed";
+  std::cout << "The test passed" << std::endl;
 
   cudaFree(d_A);
   cudaFree(d_B);
