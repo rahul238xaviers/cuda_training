@@ -198,6 +198,38 @@ memory, no barriers. Each lane sends its value to lane−delta (`__shfl_down_syn
 with `offset` = 16, 8, 4, 2, 1); lane 0 ends with the warp sum. Then reduce the
 few warp-sums with shared memory.
 
+**Sub-exercise — warp and lane (paper only, before you write any code)**
+
+Rules you may use:
+```
+global = blockIdx.x * blockDim.x + threadIdx.x
+warp   = threadIdx.x >> 5      lane = threadIdx.x & 31
+```
+Every question below is about **one block** unless it says otherwise.
+
+1. Fill in warp and lane for `threadIdx.x` = 0, 31, 32, 64, 70, 100, 127, 255.
+2. Reverse it — which `threadIdx.x` is (warp 0, lane 31), (warp 1, lane 0),
+   (warp 3, lane 7), (warp 7, lane 0)?
+3. How many warps in a block of 32 / 64 / 128 / 256 / 512 threads? Which of
+   those block sizes are warp-clean (a whole number of warps)?
+4. A block of 48 threads: how many warps exist, and how many lanes of the
+   second warp are actually running?
+5. Which of these have `lane == 0` — 0, 31, 32, 100, 128? Now name every
+   thread in a 256-thread block whose lane is 0.
+6. Two blocks of 64 threads. List every warp ID in use, the total number of
+   warps on the device, and the (warp, lane) pair of `threadIdx.x = 40` in
+   each block.
+7. `blockDim.x = 128`, `blockIdx.x = 5`, `threadIdx.x = 70`. What is the
+   global index, and what are its warp and lane? Now start from global index
+   710 with the same `blockDim.x` — which block and which thread is that?
+8. True or false:
+   (a) every block has a thread 0
+   (b) every block has a warp 0
+   (c) a block of 64 threads contains thread 32
+   (d) warps are numbered across the whole grid, so the third block's first
+       warp is warp 8
+   (e) a lane and a thread are the same piece of hardware
+
 **Given**:
 ```
 x[ n ],  n = 2^20
@@ -226,6 +258,25 @@ barriers.
 | `__shfl_down_sync` | `T __shfl_down_sync(unsigned mask, T v, int delta, int width=32)` | lane receives `v` from lane+delta |
 | `threadIdx.x & 31` | bitmask | lane id |
 | `threadIdx.x >> 5` | right shift | warp id |
+
+**Answers** — check only after attempting all eight.
+
+1. `0` → warp 0, lane 0 · `31` → warp 0, lane 31 · `32` → warp 1, lane 0 ·
+   `64` → warp 2, lane 0 · `70` → warp 2, lane 6 · `100` → warp 3, lane 4 ·
+   `127` → warp 3, lane 31 · `255` → warp 7, lane 31
+2. `31`, `32`, `103`, `224`
+3. 1, 2, 4, 8, 16 warps — all of them warp-clean, since every block size is a
+   multiple of 32
+4. 2 warps exist; warp 1 runs lanes 0–15 only. Lanes 16–31 were never launched
+5. 0, 32 and 128 have lane 0; 31 and 100 do not. In a 256-thread block the
+   lane-0 threads are 0, 32, 64, 96, 128, 160, 192, 224 — exactly 8, one per
+   warp
+6. Warp IDs in use: {0, 1}. Total warps: 2 × 2 = 4. `threadIdx.x = 40` is
+   warp 1, lane 8 in **both** blocks — same coordinates, different hardware
+7. global = 5 × 128 + 70 = **710**; warp 2, lane 6 (70 = 2 × 32 + 6).
+   Backwards from 710: blockIdx.x = 710 ÷ 128 = 5, threadIdx.x = 710 − 640 = 70
+8. (a) true (b) true (c) true — threads 32–63 exist, they are warp 1 ·
+   (d) **false** — warp IDs restart in every block · (e) true
 
 ---
 
