@@ -46,15 +46,22 @@ int main() {
   CUDA_CHECK(cudaMemcpy(d_A, A, sizeInBytes, cudaMemcpyHostToDevice));
 
   tilekernel<<<32, 128>>>(d_A, d_B, N);
+  cudaDeviceSynchronize();
 
   CUDA_CHECK(cudaMemcpy(B, d_B, sizeInBytes, cudaMemcpyDeviceToHost));
 
-  for (int i = 0; i < N; i++)
-    if (B[i] != A[i]) {
+  for (int i = 0; i < N; i++) {
+    if (A[i] != B[(i / TILE) * TILE + (TILE - 1) - (i % TILE)]) {
       std::cout << "The test failed";
+      cudaFree(d_A);
+      cudaFree(d_B);
+      free(A);
+      free(B);
+      return 0;
     }
+  }
 
-  cudaDeviceSynchronize();
+  std::cout << "The test passed";
 
   cudaFree(d_A);
   cudaFree(d_B);
