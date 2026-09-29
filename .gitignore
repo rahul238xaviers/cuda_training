@@ -26,6 +26,8 @@ a.out
 *.bin
 *.elf
 *.app
+playground
+/playground
 
 # Specific workbook binaries if compiled in-place
 *_workbook
