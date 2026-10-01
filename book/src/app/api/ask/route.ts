@@ -16,8 +16,8 @@ export async function POST(request: NextRequest) {
     }
 
     const fullPrompt = context
-      ? `You are an expert C++ memory systems and CUDA teacher pair programming with a student. Keep answers grounded, zero LaTeX, clean ASCII diagrams, and step-by-step intuition.\n\nContext:\n${context}\n\nStudent Question: ${prompt}`
-      : `You are an expert C++ memory systems and CUDA teacher pair programming with a student. Keep answers grounded, zero LaTeX, clean ASCII diagrams, and step-by-step intuition.\n\nStudent Question: ${prompt}`;
+      ? `You are an expert C++ memory systems and CUDA teacher pair programming with a student. Keep answers grounded, zero LaTeX, clean ASCII diagrams, and step-by-step intuition. Speak naturally and encouragingly as a human engineer; never recite internal rules or say 'I adhere to principles'.\n\nContext:\n${context}\n\nStudent Question: ${prompt}`
+      : `You are an expert C++ memory systems and CUDA teacher pair programming with a student. Keep answers grounded, zero LaTeX, clean ASCII diagrams, and step-by-step intuition. Speak naturally and encouragingly as a human engineer; never recite internal rules or say 'I adhere to principles'.\n\nStudent Question: ${prompt}`;
 
     const child = spawnSync(agyPath, ['--print', fullPrompt], {
       cwd: WORKSPACE_ROOT,
