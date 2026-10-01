@@ -161,14 +161,14 @@ int main() {
     // -------------------------------------------------------------------------
     {
         std::vector<uintptr_t> addresses = {
-            0x1000, // Already aligned (0x1000 % 64 == 0)
-            0x1001, // 63 bytes padding needed
-            0x103F, // 1 byte padding needed
-            0x1040, // Already aligned
-            0x2A1B4 // 0x2A1B4 = 172468 -> nearest 64 boundary = 172480 (0x2A1C0)
+            0x1000, // Already aligned (0x1000 % 256 == 0)
+            0x1001, // 255 bytes padding needed
+            0x103F, // 193 bytes padding needed
+            0x1100, // Already aligned (0x1100 = 4352 % 256 == 0)
+            0x2A1B4 // 0x2A1B4 = 172468 -> nearest 256 boundary = 172544 (0x2A200)
         };
 
-        const size_t ALIGNMENT = 64;
+        const size_t ALIGNMENT = 256;
         std::vector<uintptr_t> aligned_results(addresses.size(), 0);
         std::vector<size_t> padding_results(addresses.size(), 0);
 
