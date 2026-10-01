@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { X, Sparkles, Send, Bot, User, Loader2 } from 'lucide-react';
 import { marked } from 'marked';
+import hljs from 'highlight.js';
 
 interface TeacherDrawerProps {
   isOpen: boolean;
@@ -114,7 +115,17 @@ export function TeacherDrawer({ isOpen, onClose, chapterId, context }: TeacherDr
               {m.role === 'assistant' ? (
                 <div
                   dangerouslySetInnerHTML={{
-                    __html: marked.parse(m.content) as string,
+                    __html: marked.parse(m.content, {
+                      renderer: Object.assign(new marked.Renderer(), {
+                        code({ text, lang }: { text: string; lang?: string }) {
+                          const language = lang && hljs.getLanguage(lang) ? lang : undefined;
+                          const highlighted = language
+                            ? hljs.highlight(text, { language }).value
+                            : hljs.highlightAuto(text).value;
+                          return `<pre class="my-2 p-2.5 rounded bg-[#090d16] border border-[#1e293b] overflow-x-auto text-[11px]"><code class="hljs ${language || ''}">${highlighted}</code></pre>`;
+                        },
+                      }),
+                    }) as string,
                   }}
                 />
               ) : (
