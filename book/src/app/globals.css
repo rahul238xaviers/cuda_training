@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import "highlight.js/styles/tokyo-night-dark.css";
 
 @layer base {
   :root {

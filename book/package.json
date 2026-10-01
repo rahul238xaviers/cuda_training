@@ -9,6 +9,8 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@monaco-editor/react": "^4.7.0",
+    "highlight.js": "^11.12.0",
     "lucide-react": "^1.49.0",
     "marked": "^18.0.14",
     "next": "16.3.8",
