@@ -25,6 +25,7 @@ interface HeaderBarProps {
   onRun: () => void;
   onSave: () => void;
   onReset?: () => void;
+  onStartOver?: () => void;
   onClearConsole?: () => void;
   onSwitchNode: (node: ActiveNode) => void;
   onToggleTeacher: () => void;
@@ -40,6 +41,7 @@ export function HeaderBar({
   onRun,
   onSave,
   onReset,
+  onStartOver,
   onClearConsole,
   onSwitchNode,
   onToggleTeacher,
@@ -227,6 +229,16 @@ export function HeaderBar({
         {/* Workbook Mode Actions */}
         {activeNode.type === 'workbook' && (
           <>
+            {onStartOver && (
+              <button
+                onClick={onStartOver}
+                title="Reset code to original exercise starter template"
+                className="px-2.5 py-1.5 rounded-md bg-[#161d2d] hover:bg-rose-950/40 text-xs font-medium text-slate-300 hover:text-rose-300 border border-[#1e293b] hover:border-rose-500/40 flex items-center gap-1.5 transition-all shadow-sm"
+              >
+                <RotateCcw className="w-3.5 h-3.5 text-slate-400 group-hover:text-rose-400" />
+                <span>Start Over</span>
+              </button>
+            )}
             {onReset && (
               <button
                 onClick={onReset}

@@ -131,11 +131,21 @@ export async function GET(request: NextRequest) {
   }
 
   if (type === 'workbook') {
-    const solPath = path.join(chapterDir, 'solution', `${tier}_workbook.cpp`);
+    const solDir = path.join(chapterDir, 'solution');
+    const solPath = path.join(solDir, `${tier}_workbook.cpp`);
     const exPath = path.join(chapterDir, 'exercise', `${tier}_workbook.cpp`);
 
-    const solutionCode = fs.existsSync(solPath) ? fs.readFileSync(solPath, 'utf-8') : '';
     const exerciseCode = fs.existsSync(exPath) ? fs.readFileSync(exPath, 'utf-8') : '';
+
+    // If solution file does NOT exist yet, auto-initialize by copying from exercise!
+    if (!fs.existsSync(solPath) && exerciseCode) {
+      if (!fs.existsSync(solDir)) {
+        fs.mkdirSync(solDir, { recursive: true });
+      }
+      fs.writeFileSync(solPath, exerciseCode, 'utf-8');
+    }
+
+    const solutionCode = fs.existsSync(solPath) ? fs.readFileSync(solPath, 'utf-8') : exerciseCode;
 
     return NextResponse.json({
       type: 'workbook',
@@ -145,7 +155,7 @@ export async function GET(request: NextRequest) {
       title: `Chapter ${chapterId}: ${tier.charAt(0).toUpperCase() + tier.slice(1)} Workbook`,
       solutionCode,
       exerciseCode,
-      defaultTarget: solutionCode ? 'solution' : 'exercise',
+      defaultTarget: 'solution',
       testsCount: chMeta?.tiers[tier]?.tests || 0,
       status: chMeta?.tiers[tier]?.status || 'pending',
     });
