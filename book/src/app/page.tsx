@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { SidebarTree, ActiveNode } from '@/components/SidebarTree';
 import { HeaderBar } from '@/components/HeaderBar';
 import { ReaderView } from '@/components/ReaderView';
@@ -20,6 +20,10 @@ export default function BookPlatform() {
   const [activeCode, setActiveCode] = useState<string>('');
   const [target, setTarget] = useState<'solution' | 'exercise'>('solution');
   const [isLoadingNode, setIsLoadingNode] = useState<boolean>(true);
+
+  // Live Disk Save State
+  const [saveStatus, setSaveStatus] = useState<'saved' | 'saving' | 'unsaved'>('saved');
+  const autoSaveTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   // Terminal & Execution State
   const [terminalOutput, setTerminalOutput] = useState<string>('');
@@ -49,6 +53,7 @@ export default function BookPlatform() {
   const fetchNodeContent = useCallback(async (node: ActiveNode, currentTarget: 'solution' | 'exercise') => {
     setIsLoadingNode(true);
     setRunStatus('idle');
+    setSaveStatus('saved');
     try {
       const params = new URLSearchParams();
       params.set('type', node.type);
@@ -84,11 +89,83 @@ export default function BookPlatform() {
     if (nodeData && activeNode.type === 'workbook') {
       const code = newTarget === 'solution' ? nodeData.solutionCode : nodeData.exerciseCode;
       setActiveCode(code || '');
+      setSaveStatus('saved');
     }
   };
 
+  // Save code directly to local file on disk
+  const handleSave = useCallback(
+    async (codeToSave?: string) => {
+      const code = codeToSave !== undefined ? codeToSave : activeCode;
+      setSaveStatus('saving');
+
+      try {
+        const payload: any = {
+          type: activeNode.type,
+          code,
+        };
+
+        if (activeNode.type === 'workbook') {
+          payload.chapterId = activeNode.chapterId;
+          payload.tier = activeNode.tier;
+          payload.target = target;
+        }
+
+        const res = await fetch('/api/save', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+        const data = await res.json();
+        if (data.success) {
+          setSaveStatus('saved');
+        } else {
+          setSaveStatus('unsaved');
+          console.error('Save failed:', data.error);
+        }
+      } catch (err: any) {
+        setSaveStatus('unsaved');
+        console.error('Save error:', err.message);
+      }
+    },
+    [activeCode, activeNode, target]
+  );
+
+  // Debounced auto-save on code changes
+  const handleCodeChange = (newCode: string) => {
+    setActiveCode(newCode);
+    setSaveStatus('unsaved');
+
+    if (autoSaveTimerRef.current) {
+      clearTimeout(autoSaveTimerRef.current);
+    }
+
+    autoSaveTimerRef.current = setTimeout(() => {
+      handleSave(newCode);
+    }, 1200);
+  };
+
+  // Global keydown listener to intercept Cmd+S / Ctrl+S and prevent browser Download dialog
+  useEffect(() => {
+    const handleGlobalKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 's') {
+        e.preventDefault();
+        e.stopPropagation();
+        handleSave();
+      }
+    };
+
+    window.addEventListener('keydown', handleGlobalKeyDown, { capture: true });
+    return () => {
+      window.removeEventListener('keydown', handleGlobalKeyDown, { capture: true });
+    };
+  }, [handleSave]);
+
   // Compile and run active node
   const handleRun = async () => {
+    // Save to disk first
+    await handleSave();
+
     setRunStatus('running');
     setTerminalOutput(`Compiling with clang++ -std=c++20 -O3...\nExecuting binary...`);
     setDurationMs(undefined);
@@ -119,11 +196,13 @@ export default function BookPlatform() {
       if (result.success) {
         setRunStatus('success');
         setTerminalOutput(result.stdout || '(Executed with return code 0 and no standard output)');
+        loadTree();
       } else {
         setRunStatus('error');
-        const errText = result.stage === 'compilation'
-          ? `[COMPILATION ERROR]:\n${result.stderr || result.stdout}`
-          : `[RUNTIME ERROR (Exit ${result.exitCode})]:\n${result.stderr || result.stdout}`;
+        const errText =
+          result.stage === 'compilation'
+            ? `[COMPILATION ERROR]:\n${result.stderr || result.stdout}`
+            : `[RUNTIME ERROR (Exit ${result.exitCode})]:\n${result.stderr || result.stdout}`;
         setTerminalOutput(errText);
       }
     } catch (err: any) {
@@ -132,41 +211,12 @@ export default function BookPlatform() {
     }
   };
 
-  // Save current code
-  const handleSave = async () => {
-    try {
-      const payload: any = {
-        type: activeNode.type,
-        code: activeCode,
-      };
-
-      if (activeNode.type === 'workbook') {
-        payload.chapterId = activeNode.chapterId;
-        payload.tier = activeNode.tier;
-        payload.target = target;
-      }
-
-      const res = await fetch('/api/save', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
-      const data = await res.json();
-      if (data.success) {
-        alert('File saved successfully to disk!');
-      } else {
-        alert(`Failed to save: ${data.error}`);
-      }
-    } catch (err: any) {
-      alert(`Save error: ${err.message}`);
-    }
-  };
-
+  // Start Over: Reset to original exercise template
   const handleStartOver = async () => {
     if (activeNode.type !== 'workbook' || !activeNode.chapterId || !activeNode.tier) return;
 
     const confirmed = window.confirm(
-      `Start over Chapter ${activeNode.chapterId} (${activeNode.tier})?\n\nThis will reset your working code back to the original exercise starter template.`
+      `Start over Chapter ${activeNode.chapterId} (${activeNode.tier})?\n\nThis will reset your local working file back to the original exercise starter template.`
     );
     if (!confirmed) return;
 
@@ -182,6 +232,7 @@ export default function BookPlatform() {
       const data = await res.json();
       if (data.success) {
         setActiveCode(data.code || '');
+        setSaveStatus('saved');
         setRunStatus('idle');
         setTerminalOutput(`🔄 Workbook reset to fresh exercise template. Ready to begin!`);
         loadTree();
@@ -197,6 +248,7 @@ export default function BookPlatform() {
     if (nodeData && activeNode.type === 'workbook') {
       const original = target === 'solution' ? nodeData.solutionCode : nodeData.exerciseCode;
       setActiveCode(original || '');
+      setSaveStatus('saved');
     }
   };
 
@@ -225,7 +277,7 @@ export default function BookPlatform() {
           onTargetChange={handleTargetChange}
           isRunning={runStatus === 'running'}
           onRun={handleRun}
-          onSave={handleSave}
+          onSave={() => handleSave()}
           onReset={handleReset}
           onStartOver={handleStartOver}
           onClearConsole={handleClearConsole}
@@ -262,7 +314,9 @@ export default function BookPlatform() {
                       : `src/module1/${activeNode.chapterId}/${target}/${activeNode.tier}_workbook.cpp`
                   }
                   code={activeCode}
-                  onChange={(newCode) => setActiveCode(newCode)}
+                  onChange={handleCodeChange}
+                  onSave={() => handleSave()}
+                  saveStatus={saveStatus}
                   output={terminalOutput}
                   runStatus={runStatus}
                   durationMs={durationMs}
