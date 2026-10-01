@@ -5,7 +5,6 @@ import {
   BookOpen,
   Zap,
   CheckCircle2,
-  Clock,
   ChevronDown,
   ChevronRight,
   Terminal,
@@ -14,6 +13,7 @@ import {
   Sparkles,
   Flame,
   Search,
+  Check,
 } from 'lucide-react';
 import { ChapterMeta, MetalKernelMeta } from '@/lib/workspace';
 
@@ -42,7 +42,7 @@ export function SidebarTree({ treeData, activeNode, onSelectNode }: SidebarTreeP
   const [expandedVolumes, setExpandedVolumes] = useState<Record<string, boolean>>({
     vol1: true,
     vol2: false,
-    vol3: true,
+    vol3: false,
   });
 
   const toggleVolume = (volId: string) => {
@@ -53,15 +53,22 @@ export function SidebarTree({ treeData, activeNode, onSelectNode }: SidebarTreeP
     setExpandedChapters((prev) => ({ ...prev, [chId]: !prev[chId] }));
   };
 
-  const filteredChapters = (treeData?.volume1?.chapters || []).filter((ch: ChapterMeta) =>
-    ch.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    ch.id.includes(searchQuery)
+  const chapters: ChapterMeta[] = treeData?.volume1?.chapters || [];
+  const kernels: MetalKernelMeta[] = treeData?.volume3?.kernels || [];
+
+  const filteredChapters = chapters.filter(
+    (ch) =>
+      ch.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      ch.id.includes(searchQuery)
   );
 
-  const filteredKernels = (treeData?.volume3?.kernels || []).filter((k: MetalKernelMeta) =>
-    k.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    k.category.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredKernels = kernels.filter(
+    (k) =>
+      k.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      k.category.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  const bookmarkChapter = chapters.find((c) => c.id === treeData?.currentBookmark);
 
   return (
     <aside className="w-80 min-w-80 h-full bg-[#0b1019] border-r border-[#1e293b] flex flex-col select-none">
@@ -96,7 +103,7 @@ export function SidebarTree({ treeData, activeNode, onSelectNode }: SidebarTreeP
           </button>
         </div>
 
-        {/* Master Progress Card */}
+        {/* Master Progress Card (Dynamic from BFF) */}
         <div className="mt-3.5 p-3 rounded-lg bg-[#111726] border border-[#1e293b]">
           <div className="flex items-center justify-between text-[11px] font-medium mb-1.5">
             <span className="text-slate-400 flex items-center gap-1">
@@ -104,18 +111,26 @@ export function SidebarTree({ treeData, activeNode, onSelectNode }: SidebarTreeP
               Curriculum Mastery
             </span>
             <span className="font-mono text-emerald-400 font-semibold">
-              {treeData?.stats?.percent ?? 5}% (10 Tests)
+              {treeData?.stats?.percent ?? 0}% ({treeData?.stats?.testsPassed ?? 0} / {treeData?.stats?.totalTests ?? 0} Tests)
             </span>
           </div>
           <div className="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden">
             <div
               className="h-full bg-gradient-to-r from-emerald-500 via-sky-500 to-indigo-500 rounded-full transition-all duration-500"
-              style={{ width: `${treeData?.stats?.percent ?? 5}%` }}
+              style={{ width: `${treeData?.stats?.percent ?? 0}%` }}
             />
           </div>
           <div className="mt-2 flex items-center justify-between text-[10px] text-slate-400">
-            <span>Bookmark: <strong className="text-sky-300 font-mono">1.2 Strides</strong></span>
-            <span className="text-emerald-400 font-medium">1 / 20 Ch Complete</span>
+            <span>
+              Bookmark:{' '}
+              <strong className="text-sky-300 font-mono">
+                {treeData?.currentBookmark ?? '1.1'}{' '}
+                {bookmarkChapter ? bookmarkChapter.title.split(' ')[0] : ''}
+              </strong>
+            </span>
+            <span className="text-emerald-400 font-medium">
+              {treeData?.stats?.chaptersDone ?? 0} / {treeData?.stats?.totalChapters ?? 0} Ch Done
+            </span>
           </div>
         </div>
 
@@ -146,9 +161,13 @@ export function SidebarTree({ treeData, activeNode, onSelectNode }: SidebarTreeP
             </div>
             <div className="flex items-center gap-1.5">
               <span className="text-[10px] px-1.5 py-0.2 bg-emerald-500/10 text-emerald-400 rounded font-mono">
-                1/20
+                {treeData?.stats?.chaptersDone ?? 0}/{treeData?.stats?.totalChapters ?? 0}
               </span>
-              {expandedVolumes.vol1 ? <ChevronDown className="w-3.5 h-3.5 text-slate-500" /> : <ChevronRight className="w-3.5 h-3.5 text-slate-500" />}
+              {expandedVolumes.vol1 ? (
+                <ChevronDown className="w-3.5 h-3.5 text-slate-500" />
+              ) : (
+                <ChevronRight className="w-3.5 h-3.5 text-slate-500" />
+              )}
             </div>
           </div>
 
@@ -159,7 +178,10 @@ export function SidebarTree({ treeData, activeNode, onSelectNode }: SidebarTreeP
                 const isCurrentChapter = activeNode.chapterId === ch.id;
 
                 return (
-                  <div key={ch.id} className="rounded-lg bg-[#0e1422]/60 border border-[#1a2333] overflow-hidden">
+                  <div
+                    key={ch.id}
+                    className="rounded-lg bg-[#0e1422]/60 border border-[#1a2333] overflow-hidden"
+                  >
                     {/* Chapter Header Card */}
                     <div
                       onClick={() => toggleChapter(ch.id)}
@@ -180,14 +202,16 @@ export function SidebarTree({ treeData, activeNode, onSelectNode }: SidebarTreeP
                       <div className="flex items-center gap-1.5 shrink-0">
                         {ch.completed ? (
                           <span className="flex items-center gap-1 text-[10px] text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/20 font-medium">
-                            <CheckCircle2 className="w-2.5 h-2.5" /> Passed
+                            <CheckCircle2 className="w-2.5 h-2.5" /> Passed ({ch.passedTests})
                           </span>
                         ) : ch.id === treeData?.currentBookmark ? (
                           <span className="text-[10px] text-sky-400 bg-sky-500/10 px-1.5 py-0.5 rounded border border-sky-500/20 font-medium">
                             Current
                           </span>
                         ) : (
-                          <span className="text-[10px] text-slate-500 font-mono">Queued</span>
+                          <span className="text-[10px] text-slate-500 font-mono">
+                            {ch.totalTests > 0 ? `${ch.totalTests} Tests` : 'Queued'}
+                          </span>
                         )}
                         {isExpanded ? (
                           <ChevronDown className="w-3 h-3 text-slate-500" />
@@ -202,7 +226,9 @@ export function SidebarTree({ treeData, activeNode, onSelectNode }: SidebarTreeP
                       <div className="bg-[#090d16] px-2 py-1.5 space-y-0.5 border-t border-[#1a2333]/60">
                         {/* 1. Theory Node */}
                         <div
-                          onClick={() => onSelectNode({ type: 'theory', volumeId: 'vol1', chapterId: ch.id })}
+                          onClick={() =>
+                            onSelectNode({ type: 'theory', volumeId: 'vol1', chapterId: ch.id })
+                          }
                           className={`flex items-center gap-2 px-2.5 py-1.5 rounded-md text-[11px] cursor-pointer transition-all ${
                             activeNode.type === 'theory' && activeNode.chapterId === ch.id
                               ? 'bg-sky-500/15 text-sky-300 font-medium border-l-2 border-sky-400'
@@ -216,7 +242,13 @@ export function SidebarTree({ treeData, activeNode, onSelectNode }: SidebarTreeP
                         {/* 2. Cheat Sheet Node */}
                         {ch.hasCheatSheet && (
                           <div
-                            onClick={() => onSelectNode({ type: 'cheat_sheet', volumeId: 'vol1', chapterId: ch.id })}
+                            onClick={() =>
+                              onSelectNode({
+                                type: 'cheat_sheet',
+                                volumeId: 'vol1',
+                                chapterId: ch.id,
+                              })
+                            }
                             className={`flex items-center gap-2 px-2.5 py-1.5 rounded-md text-[11px] cursor-pointer transition-all ${
                               activeNode.type === 'cheat_sheet' && activeNode.chapterId === ch.id
                                 ? 'bg-amber-500/15 text-amber-300 font-medium border-l-2 border-amber-400'
@@ -249,11 +281,25 @@ export function SidebarTree({ treeData, activeNode, onSelectNode }: SidebarTreeP
                             }`}
                           >
                             <div className="flex items-center gap-2 truncate">
-                              <span className="w-2 h-2 rounded-full bg-emerald-400 shadow-sm shadow-emerald-400/50" />
+                              <span
+                                className={`w-2 h-2 rounded-full ${
+                                  ch.tiers.beginner.status === 'passed'
+                                    ? 'bg-emerald-400 shadow-sm shadow-emerald-400/50'
+                                    : 'bg-slate-600'
+                                }`}
+                              />
                               <span className="truncate">Beginner Workbook</span>
                             </div>
-                            <span className="text-[10px] font-mono text-emerald-400 font-semibold">
-                              {ch.tiers.beginner.tests > 0 ? `${ch.tiers.beginner.tests}/4` : 'WIP'}
+                            <span
+                              className={`text-[10px] font-mono font-semibold ${
+                                ch.tiers.beginner.status === 'passed'
+                                  ? 'text-emerald-400'
+                                  : 'text-slate-500'
+                              }`}
+                            >
+                              {ch.tiers.beginner.status === 'passed'
+                                ? `Passed (${ch.tiers.beginner.tests})`
+                                : `${ch.tiers.beginner.tests} Tests`}
                             </span>
                           </div>
 
@@ -276,11 +322,25 @@ export function SidebarTree({ treeData, activeNode, onSelectNode }: SidebarTreeP
                             }`}
                           >
                             <div className="flex items-center gap-2 truncate">
-                              <span className="w-2 h-2 rounded-full bg-amber-400 shadow-sm shadow-amber-400/50" />
+                              <span
+                                className={`w-2 h-2 rounded-full ${
+                                  ch.tiers.intermediate.status === 'passed'
+                                    ? 'bg-amber-400 shadow-sm shadow-amber-400/50'
+                                    : 'bg-slate-600'
+                                }`}
+                              />
                               <span className="truncate">Intermediate Workbook</span>
                             </div>
-                            <span className="text-[10px] font-mono text-amber-400 font-semibold">
-                              {ch.tiers.intermediate.tests > 0 ? `${ch.tiers.intermediate.tests}/3` : 'WIP'}
+                            <span
+                              className={`text-[10px] font-mono font-semibold ${
+                                ch.tiers.intermediate.status === 'passed'
+                                  ? 'text-amber-400'
+                                  : 'text-slate-500'
+                              }`}
+                            >
+                              {ch.tiers.intermediate.status === 'passed'
+                                ? `Passed (${ch.tiers.intermediate.tests})`
+                                : `${ch.tiers.intermediate.tests} Tests`}
                             </span>
                           </div>
 
@@ -303,11 +363,25 @@ export function SidebarTree({ treeData, activeNode, onSelectNode }: SidebarTreeP
                             }`}
                           >
                             <div className="flex items-center gap-2 truncate">
-                              <Flame className="w-2.5 h-2.5 text-rose-400 shrink-0" />
+                              <Flame
+                                className={`w-2.5 h-2.5 shrink-0 ${
+                                  ch.tiers.champion.status === 'passed'
+                                    ? 'text-rose-400'
+                                    : 'text-slate-600'
+                                }`}
+                              />
                               <span className="truncate">Champion Workbook</span>
                             </div>
-                            <span className="text-[10px] font-mono text-rose-400 font-semibold">
-                              {ch.tiers.champion.tests > 0 ? `${ch.tiers.champion.tests}/3` : 'WIP'}
+                            <span
+                              className={`text-[10px] font-mono font-semibold ${
+                                ch.tiers.champion.status === 'passed'
+                                  ? 'text-rose-400'
+                                  : 'text-slate-500'
+                              }`}
+                            >
+                              {ch.tiers.champion.status === 'passed'
+                                ? `Passed (${ch.tiers.champion.tests})`
+                                : `${ch.tiers.champion.tests} Tests`}
                             </span>
                           </div>
                         </div>
@@ -332,7 +406,11 @@ export function SidebarTree({ treeData, activeNode, onSelectNode }: SidebarTreeP
             </div>
             <div className="flex items-center gap-1.5">
               <span className="text-[10px] text-slate-500 font-mono">Modules 2-4</span>
-              {expandedVolumes.vol2 ? <ChevronDown className="w-3.5 h-3.5 text-slate-500" /> : <ChevronRight className="w-3.5 h-3.5 text-slate-500" />}
+              {expandedVolumes.vol2 ? (
+                <ChevronDown className="w-3.5 h-3.5 text-slate-500" />
+              ) : (
+                <ChevronRight className="w-3.5 h-3.5 text-slate-500" />
+              )}
             </div>
           </div>
 
@@ -340,15 +418,21 @@ export function SidebarTree({ treeData, activeNode, onSelectNode }: SidebarTreeP
             <div className="pl-3 space-y-1 mt-1 text-[11.5px] text-slate-400">
               <div className="p-2 rounded-md bg-[#0e1422] border border-[#1a2333]">
                 <div className="text-slate-300 font-medium">Module 2: CUDA Execution Model</div>
-                <div className="text-[10px] text-slate-500 mt-0.5">Warps, Blocks, Grids & Hardware Occupancy</div>
+                <div className="text-[10px] text-slate-500 mt-0.5">
+                  Warps, Blocks, Grids & Hardware Occupancy
+                </div>
               </div>
               <div className="p-2 rounded-md bg-[#0e1422] border border-[#1a2333]">
                 <div className="text-slate-300 font-medium">Module 3: CUDA Memory Hierarchy</div>
-                <div className="text-[10px] text-slate-500 mt-0.5">Global DRAM, Shared SRAM Bank Conflicts, Registers</div>
+                <div className="text-[10px] text-slate-500 mt-0.5">
+                  Global DRAM, Shared SRAM Bank Conflicts, Registers
+                </div>
               </div>
               <div className="p-2 rounded-md bg-[#0e1422] border border-[#1a2333]">
                 <div className="text-slate-300 font-medium">Module 4: Parallel Primitives</div>
-                <div className="text-[10px] text-slate-500 mt-0.5">Tree Reductions, Prefix Scan, Tiled GEMM</div>
+                <div className="text-[10px] text-slate-500 mt-0.5">
+                  Tree Reductions, Prefix Scan, Tiled GEMM
+                </div>
               </div>
             </div>
           )}
@@ -366,9 +450,13 @@ export function SidebarTree({ treeData, activeNode, onSelectNode }: SidebarTreeP
             </div>
             <div className="flex items-center gap-1.5">
               <span className="text-[10px] px-1.5 py-0.2 bg-amber-500/10 text-amber-400 rounded font-mono">
-                22 Kernels
+                {kernels.length} Kernels
               </span>
-              {expandedVolumes.vol3 ? <ChevronDown className="w-3.5 h-3.5 text-slate-500" /> : <ChevronRight className="w-3.5 h-3.5 text-slate-500" />}
+              {expandedVolumes.vol3 ? (
+                <ChevronDown className="w-3.5 h-3.5 text-slate-500" />
+              ) : (
+                <ChevronRight className="w-3.5 h-3.5 text-slate-500" />
+              )}
             </div>
           </div>
 
