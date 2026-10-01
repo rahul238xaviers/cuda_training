@@ -141,10 +141,22 @@ export function scanDynamicChapters(): ChapterMeta[] {
       const solPath = path.join(folderPath, 'solution', `${tier}_workbook.cpp`);
       const exPath = path.join(folderPath, 'exercise', `${tier}_workbook.cpp`);
 
-      const hasSol = fs.existsSync(solPath) && fs.statSync(solPath).size > 200;
-      const count = hasSol ? countTestsInWorkbook(solPath) : countTestsInWorkbook(exPath);
+      const solExists = fs.existsSync(solPath);
+      const exExists = fs.existsSync(exPath);
+      let isSolved = false;
 
-      const status: 'passed' | 'pending' = hasSol ? 'passed' : 'pending';
+      if (solExists) {
+        if (!exExists) {
+          isSolved = fs.statSync(solPath).size > 200;
+        } else {
+          const solContent = fs.readFileSync(solPath, 'utf-8').trim();
+          const exContent = fs.readFileSync(exPath, 'utf-8').trim();
+          isSolved = solContent !== exContent && solContent.length > 200;
+        }
+      }
+
+      const count = solExists ? countTestsInWorkbook(solPath) : countTestsInWorkbook(exPath);
+      const status: 'passed' | 'pending' = isSolved ? 'passed' : 'pending';
       tiers[tier] = { status, tests: count };
 
       totalTests += count;

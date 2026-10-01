@@ -162,6 +162,37 @@ export default function BookPlatform() {
     }
   };
 
+  const handleStartOver = async () => {
+    if (activeNode.type !== 'workbook' || !activeNode.chapterId || !activeNode.tier) return;
+
+    const confirmed = window.confirm(
+      `Start over Chapter ${activeNode.chapterId} (${activeNode.tier})?\n\nThis will reset your working code back to the original exercise starter template.`
+    );
+    if (!confirmed) return;
+
+    try {
+      const res = await fetch('/api/reset', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          chapterId: activeNode.chapterId,
+          tier: activeNode.tier,
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setActiveCode(data.code || '');
+        setRunStatus('idle');
+        setTerminalOutput(`🔄 Workbook reset to fresh exercise template. Ready to begin!`);
+        loadTree();
+      } else {
+        alert(`Failed to reset: ${data.error}`);
+      }
+    } catch (err: any) {
+      alert(`Reset error: ${err.message}`);
+    }
+  };
+
   const handleReset = () => {
     if (nodeData && activeNode.type === 'workbook') {
       const original = target === 'solution' ? nodeData.solutionCode : nodeData.exerciseCode;
@@ -181,6 +212,7 @@ export default function BookPlatform() {
         treeData={treeData}
         activeNode={activeNode}
         onSelectNode={(node) => setActiveNode(node)}
+        onRefreshTree={loadTree}
       />
 
       {/* 2. Main Experience Container */}
@@ -195,6 +227,7 @@ export default function BookPlatform() {
           onRun={handleRun}
           onSave={handleSave}
           onReset={handleReset}
+          onStartOver={handleStartOver}
           onClearConsole={handleClearConsole}
           onSwitchNode={(node) => setActiveNode(node)}
           onToggleTeacher={() => setIsTeacherOpen((prev) => !prev)}
