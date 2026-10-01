@@ -189,6 +189,30 @@ export function getChapterFolder(chapterId: string): string | null {
   return ch ? ch.folder : null;
 }
 
+export function getClangFormatBin(): string {
+  const candidates = [
+    '/Library/Developer/CommandLineTools/usr/bin/clang-format',
+    '/opt/homebrew/Cellar/llvm/22.1.7_1/bin/clang-format',
+    '/opt/homebrew/bin/clang-format',
+    '/usr/local/bin/clang-format',
+    '/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang-format',
+  ];
+  for (const c of candidates) {
+    if (fs.existsSync(c)) return c;
+  }
+  try {
+    const llvmPath = '/opt/homebrew/Cellar/llvm';
+    if (fs.existsSync(llvmPath)) {
+      const versions = fs.readdirSync(llvmPath);
+      for (const v of versions) {
+        const bin = path.join(llvmPath, v, 'bin/clang-format');
+        if (fs.existsSync(bin)) return bin;
+      }
+    }
+  } catch {}
+  return 'clang-format';
+}
+
 export const METAL_KERNELS: MetalKernelMeta[] = [
   { id: 1, name: 'Embedding Forward', category: 'Embedding', metalFile: 'embedding_forward.metal', cudaFile: 'embedding_forward.cu', status: 'planned' },
   { id: 2, name: 'RMSNorm Forward', category: 'Normalization', metalFile: 'rms_norm_forward.metal', cudaFile: 'rms_norm_forward.cu', status: 'planned' },

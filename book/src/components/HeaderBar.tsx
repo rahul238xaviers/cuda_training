@@ -27,6 +27,7 @@ interface HeaderBarProps {
   onReset?: () => void;
   onStartOver?: () => void;
   onClearConsole?: () => void;
+  onFormat?: () => void;
   onSwitchNode: (node: ActiveNode) => void;
   onToggleTeacher: () => void;
   isTeacherOpen: boolean;
@@ -43,6 +44,7 @@ export function HeaderBar({
   onReset,
   onStartOver,
   onClearConsole,
+  onFormat,
   onSwitchNode,
   onToggleTeacher,
   isTeacherOpen,
@@ -233,7 +235,7 @@ export function HeaderBar({
               <button
                 onClick={onStartOver}
                 title="Reset code to original exercise starter template"
-                className="px-2.5 py-1.5 rounded-md bg-[#161d2d] hover:bg-rose-950/40 text-xs font-medium text-slate-300 hover:text-rose-300 border border-[#1e293b] hover:border-rose-500/40 flex items-center gap-1.5 transition-all shadow-sm"
+                className="px-2.5 py-1.5 rounded-md bg-[#161d2d] hover:bg-rose-950/40 text-xs font-medium text-slate-300 hover:text-rose-300 border border-[#1e293b] hover:border-rose-500/40 flex items-center gap-1.5 transition-all shadow-sm cursor-pointer"
               >
                 <RotateCcw className="w-3.5 h-3.5 text-slate-400 group-hover:text-rose-400" />
                 <span>Start Over</span>
@@ -243,14 +245,24 @@ export function HeaderBar({
               <button
                 onClick={onReset}
                 title="Reload from disk"
-                className="p-1.5 rounded-md bg-[#141d2e] hover:bg-[#1a263c] text-slate-400 hover:text-slate-200 border border-[#1e293b] transition-colors"
+                className="p-1.5 rounded-md bg-[#141d2e] hover:bg-[#1a263c] text-slate-400 hover:text-slate-200 border border-[#1e293b] transition-colors cursor-pointer"
               >
                 <RotateCcw className="w-3.5 h-3.5" />
               </button>
             )}
+            {onFormat && (
+              <button
+                onClick={onFormat}
+                title="Format code with clang-format (Shift+Alt+F)"
+                className="px-2.5 py-1.5 rounded-md bg-[#141d2e] hover:bg-[#1a263c] text-xs font-medium text-slate-200 border border-[#1e293b] flex items-center gap-1.5 transition-colors cursor-pointer"
+              >
+                <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                <span>Format</span>
+              </button>
+            )}
             <button
               onClick={onSave}
-              className="px-3 py-1.5 rounded-md bg-[#141d2e] hover:bg-[#1a263c] text-xs font-medium text-slate-200 border border-[#1e293b] flex items-center gap-1.5 transition-colors"
+              className="px-3 py-1.5 rounded-md bg-[#141d2e] hover:bg-[#1a263c] text-xs font-medium text-slate-200 border border-[#1e293b] flex items-center gap-1.5 transition-colors cursor-pointer"
             >
               <Save className="w-3.5 h-3.5 text-slate-400" />
               Save
@@ -258,7 +270,7 @@ export function HeaderBar({
             <button
               onClick={onRun}
               disabled={isRunning}
-              className={`px-3.5 py-1.5 rounded-md text-xs font-semibold flex items-center gap-1.5 transition-all shadow-md ${
+              className={`px-3.5 py-1.5 rounded-md text-xs font-semibold flex items-center gap-1.5 transition-all shadow-md cursor-pointer ${
                 isRunning
                   ? 'bg-emerald-700/50 text-emerald-200 cursor-not-allowed'
                   : 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-emerald-900/30'
@@ -282,9 +294,19 @@ export function HeaderBar({
                 <Trash2 className="w-3.5 h-3.5" />
               </button>
             )}
+            {onFormat && (
+              <button
+                onClick={onFormat}
+                title="Format code with clang-format (Shift+Alt+F)"
+                className="px-2.5 py-1.5 rounded-md bg-[#141d2e] hover:bg-[#1a263c] text-xs font-medium text-slate-200 border border-[#1e293b] flex items-center gap-1.5 transition-colors cursor-pointer"
+              >
+                <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                <span>Format</span>
+              </button>
+            )}
             <button
               onClick={onSave}
-              className="px-3 py-1.5 rounded-md bg-[#141d2e] hover:bg-[#1a263c] text-xs font-medium text-slate-200 border border-[#1e293b] flex items-center gap-1.5 transition-colors"
+              className="px-3 py-1.5 rounded-md bg-[#141d2e] hover:bg-[#1a263c] text-xs font-medium text-slate-200 border border-[#1e293b] flex items-center gap-1.5 transition-colors cursor-pointer"
             >
               <Save className="w-3.5 h-3.5 text-slate-400" />
               Save
