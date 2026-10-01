@@ -21,7 +21,7 @@ export function TeacherDrawer({ isOpen, onClose, chapterId, context }: TeacherDr
   const [messages, setMessages] = useState<Message[]>([
     {
       role: 'assistant',
-      content: `Hello! I am Antigravity, your patient C++ and CUDA teacher. I adhere strictly to our principles: zero LaTeX, plain text intuition, and step-by-step hardware models.\n\nWhat would you like to explore about Chapter ${chapterId || '1.1'}?`,
+      content: `Welcome to the lab! I'm Antigravity, your pair programming companion for C++ memory systems and CUDA kernel development.\n\nWe're currently exploring **Chapter ${chapterId || '1.1'}**. Whether you want to visualize memory layouts, reason through cache line alignment, or walk through an exercise step-by-step, feel free to ask anytime.\n\nWhat would you like to dive into?`,
     },
   ]);
   const [inputPrompt, setInputPrompt] = useState('');
