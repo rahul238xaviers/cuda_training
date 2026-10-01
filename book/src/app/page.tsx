@@ -257,6 +257,23 @@ export default function BookPlatform() {
     setRunStatus('idle');
   };
 
+  const handleFormat = async () => {
+    if (!activeCode) return;
+    try {
+      const res = await fetch('/api/format', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code: activeCode }),
+      });
+      const data = await res.json();
+      if (data.success && data.formatted) {
+        handleCodeChange(data.formatted);
+      }
+    } catch (err) {
+      console.error('Format failed:', err);
+    }
+  };
+
   return (
     <div className="flex h-screen w-screen overflow-hidden bg-[#080b11]">
       {/* 1. Left Tree Navigation Sidebar */}
@@ -278,6 +295,7 @@ export default function BookPlatform() {
           isRunning={runStatus === 'running'}
           onRun={handleRun}
           onSave={() => handleSave()}
+          onFormat={handleFormat}
           onReset={handleReset}
           onStartOver={handleStartOver}
           onClearConsole={handleClearConsole}
