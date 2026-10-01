@@ -1,23 +1,43 @@
 import { NextResponse } from 'next/server';
-import { CHAPTERS_CONFIG, METAL_KERNELS } from '@/lib/workspace';
+import { scanDynamicChapters, METAL_KERNELS } from '@/lib/workspace';
 
 export async function GET() {
-  const completedCount = CHAPTERS_CONFIG.filter((c) => c.completed).length;
-  const percent = Math.round((completedCount / CHAPTERS_CONFIG.length) * 100);
+  const chapters = scanDynamicChapters();
+
+  const totalChapters = chapters.length;
+  const completedCount = chapters.filter((c) => c.completed).length;
+
+  let totalTestsAcrossCourse = 0;
+  let totalPassedTests = 0;
+
+  for (const ch of chapters) {
+    totalTestsAcrossCourse += ch.totalTests;
+    totalPassedTests += ch.passedTests;
+  }
+
+  // Find first uncompleted chapter for bookmark
+  const firstPending = chapters.find((c) => !c.completed);
+  const currentBookmark = firstPending ? firstPending.id : '1.1';
+
+  const percent =
+    totalTestsAcrossCourse > 0
+      ? Math.round((totalPassedTests / totalTestsAcrossCourse) * 100)
+      : Math.round((completedCount / (totalChapters || 1)) * 100);
 
   return NextResponse.json({
-    currentBookmark: '1.2',
+    currentBookmark,
     stats: {
       chaptersDone: completedCount,
-      totalChapters: CHAPTERS_CONFIG.length,
+      totalChapters,
       percent,
-      testsPassed: 10,
+      testsPassed: totalPassedTests,
+      totalTests: totalTestsAcrossCourse,
     },
     volume1: {
       id: 'vol1',
       title: 'Volume 1: C++ Low-Level Systems Foundations',
       description: 'Pointer arithmetic, strides, memory alignment, cache lines, custom arenas, zero-copy buffers',
-      chapters: CHAPTERS_CONFIG,
+      chapters,
     },
     volume2: {
       id: 'vol2',

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import fs from 'fs';
 import path from 'path';
-import { MODULE1_DIR, PLAYGROUND_PATH, getChapterFolder, METAL_KERNELS, CHAPTERS_CONFIG } from '@/lib/workspace';
+import { MODULE1_DIR, PLAYGROUND_PATH, getChapterFolder, METAL_KERNELS, scanDynamicChapters } from '@/lib/workspace';
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
@@ -98,7 +98,8 @@ export async function GET(request: NextRequest) {
   }
 
   const chapterDir = path.join(MODULE1_DIR, folder);
-  const chMeta = CHAPTERS_CONFIG.find((c) => c.id === chapterId);
+  const chapters = scanDynamicChapters();
+  const chMeta = chapters.find((c) => c.id === chapterId);
 
   if (type === 'theory') {
     const theoryPath = path.join(chapterDir, 'theory.md');

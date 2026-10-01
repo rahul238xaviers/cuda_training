@@ -6,16 +6,23 @@ export const SRC_DIR = path.join(WORKSPACE_ROOT, 'src');
 export const MODULE1_DIR = path.join(SRC_DIR, 'module1');
 export const PLAYGROUND_PATH = path.join(WORKSPACE_ROOT, 'playground.cpp');
 
+export interface TierMeta {
+  status: 'passed' | 'pending';
+  tests: number;
+}
+
 export interface ChapterMeta {
   id: string;
   folder: string;
   title: string;
   completed: boolean;
   hasCheatSheet: boolean;
+  totalTests: number;
+  passedTests: number;
   tiers: {
-    beginner: { status: 'passed' | 'pending'; tests: number };
-    intermediate: { status: 'passed' | 'pending'; tests: number };
-    champion: { status: 'passed' | 'pending'; tests: number };
+    beginner: TierMeta;
+    intermediate: TierMeta;
+    champion: TierMeta;
   };
 }
 
@@ -28,28 +35,147 @@ export interface MetalKernelMeta {
   status: 'planned' | 'in_progress' | 'completed';
 }
 
-export const CHAPTERS_CONFIG: ChapterMeta[] = [
-  { id: '1.1', folder: '1.1_basic_offsets', title: 'Basic Memory Offsets & Pointer Arithmetic', completed: true, hasCheatSheet: true, tiers: { beginner: { status: 'passed', tests: 4 }, intermediate: { status: 'passed', tests: 3 }, champion: { status: 'passed', tests: 3 } } },
-  { id: '1.2', folder: '1.2_strides_indirection', title: 'Strides & Pointer Indirection', completed: false, hasCheatSheet: false, tiers: { beginner: { status: 'pending', tests: 0 }, intermediate: { status: 'pending', tests: 0 }, champion: { status: 'pending', tests: 0 } } },
-  { id: '1.3', folder: '1.3_reductions_swaps', title: 'Reductions & Swaps', completed: false, hasCheatSheet: false, tiers: { beginner: { status: 'pending', tests: 0 }, intermediate: { status: 'pending', tests: 0 }, champion: { status: 'pending', tests: 0 } } },
-  { id: '1.4', folder: '1.4_multi_array_strided', title: 'Multi-Array Strided Traversal', completed: false, hasCheatSheet: false, tiers: { beginner: { status: 'pending', tests: 0 }, intermediate: { status: 'pending', tests: 0 }, champion: { status: 'pending', tests: 0 } } },
-  { id: '1.5', folder: '1.5_row_col_indexing', title: 'Row/Column Matrix Indexing', completed: false, hasCheatSheet: false, tiers: { beginner: { status: 'pending', tests: 0 }, intermediate: { status: 'pending', tests: 0 }, champion: { status: 'pending', tests: 0 } } },
-  { id: '1.6', folder: '1.6_permute_flatten', title: 'Permute & Flatten Operations', completed: false, hasCheatSheet: false, tiers: { beginner: { status: 'pending', tests: 0 }, intermediate: { status: 'pending', tests: 0 }, champion: { status: 'pending', tests: 0 } } },
-  { id: '1.7', folder: '1.7_subgrids_padding', title: 'Subgrids & Padding', completed: false, hasCheatSheet: false, tiers: { beginner: { status: 'pending', tests: 0 }, intermediate: { status: 'pending', tests: 0 }, champion: { status: 'pending', tests: 0 } } },
-  { id: '1.8', folder: '1.8_pack_wrap_stencil', title: 'Packing, Wrapping & Stencils', completed: false, hasCheatSheet: false, tiers: { beginner: { status: 'pending', tests: 0 }, intermediate: { status: 'pending', tests: 0 }, champion: { status: 'pending', tests: 0 } } },
-  { id: '1.9', folder: '1.9_single_array_alloc', title: 'Single Array Allocation Schemes', completed: false, hasCheatSheet: false, tiers: { beginner: { status: 'pending', tests: 0 }, intermediate: { status: 'pending', tests: 0 }, champion: { status: 'pending', tests: 0 } } },
-  { id: '1.10', folder: '1.10_multidim_alignment', title: 'Multidimensional Alignment', completed: false, hasCheatSheet: false, tiers: { beginner: { status: 'pending', tests: 0 }, intermediate: { status: 'pending', tests: 0 }, champion: { status: 'pending', tests: 0 } } },
-  { id: '1.11', folder: '1.11_arenas_placements', title: 'Arenas & Custom Placements', completed: false, hasCheatSheet: false, tiers: { beginner: { status: 'pending', tests: 0 }, intermediate: { status: 'pending', tests: 0 }, champion: { status: 'pending', tests: 0 } } },
-  { id: '1.12', folder: '1.12_lifetimes_ownership', title: 'Lifetimes & Ownership Semantics', completed: false, hasCheatSheet: false, tiers: { beginner: { status: 'pending', tests: 0 }, intermediate: { status: 'pending', tests: 0 }, champion: { status: 'pending', tests: 0 } } },
-  { id: '1.13', folder: '1.13_null_bounds_checks', title: 'Null & Bounds Verification', completed: false, hasCheatSheet: false, tiers: { beginner: { status: 'pending', tests: 0 }, intermediate: { status: 'pending', tests: 0 }, champion: { status: 'pending', tests: 0 } } },
-  { id: '1.14', folder: '1.14_size_padding_punning', title: 'Size, Padding & Type Punning', completed: false, hasCheatSheet: false, tiers: { beginner: { status: 'pending', tests: 0 }, intermediate: { status: 'pending', tests: 0 }, champion: { status: 'pending', tests: 0 } } },
-  { id: '1.15', folder: '1.15_casts_double_pointers', title: 'Casts & Double Pointers', completed: false, hasCheatSheet: false, tiers: { beginner: { status: 'pending', tests: 0 }, intermediate: { status: 'pending', tests: 0 }, champion: { status: 'pending', tests: 0 } } },
-  { id: '1.16', folder: '1.16_pointer_relations_copying', title: 'Pointer Relations & Copying', completed: false, hasCheatSheet: false, tiers: { beginner: { status: 'pending', tests: 0 }, intermediate: { status: 'pending', tests: 0 }, champion: { status: 'pending', tests: 0 } } },
-  { id: '1.17', folder: '1.17_embeddings_projections', title: 'Embeddings & Projections', completed: false, hasCheatSheet: false, tiers: { beginner: { status: 'pending', tests: 0 }, intermediate: { status: 'pending', tests: 0 }, champion: { status: 'pending', tests: 0 } } },
-  { id: '1.18', folder: '1.18_attention_quantization', title: 'Attention & Quantization Packing', completed: false, hasCheatSheet: false, tiers: { beginner: { status: 'pending', tests: 0 }, intermediate: { status: 'pending', tests: 0 }, champion: { status: 'pending', tests: 0 } } },
-  { id: '1.19', folder: '1.19_ml_layer_offsets', title: 'ML Layer Offsets & Layouts', completed: false, hasCheatSheet: false, tiers: { beginner: { status: 'pending', tests: 0 }, intermediate: { status: 'pending', tests: 0 }, champion: { status: 'pending', tests: 0 } } },
-  { id: '1.20', folder: '1.20_pooling_masks_cycles', title: 'Pooling, Masks & Cyclic Buffers', completed: false, hasCheatSheet: false, tiers: { beginner: { status: 'pending', tests: 0 }, intermediate: { status: 'pending', tests: 0 }, champion: { status: 'pending', tests: 0 } } },
-];
+/**
+ * Dynamically counts tests or problems defined in a C++ workbook.
+ * Inspects both reportStatus(...) assertions and // PROBLEM X headers.
+ */
+export function countTestsInWorkbook(filePath: string): number {
+  if (!fs.existsSync(filePath)) return 0;
+  try {
+    const content = fs.readFileSync(filePath, 'utf-8');
+
+    // Count problem sections first
+    const problemMatches = content.match(/\/\/\s*PROBLEM\s+\d+:/gi);
+    if (problemMatches && problemMatches.length > 0) {
+      return problemMatches.length;
+    }
+
+    // Fallback to reportStatus calls
+    const reportMatches = content.match(/reportStatus\s*\(/g);
+    if (reportMatches && reportMatches.length > 0) {
+      return reportMatches.length;
+    }
+
+    // Default to at least 1 if file is non-empty
+    return content.trim().length > 100 ? 3 : 0;
+  } catch {
+    return 0;
+  }
+}
+
+/**
+ * Extracts a human-readable title from theory.md or folder slug
+ */
+function extractChapterTitle(folderPath: string, folderName: string): string {
+  const theoryPath = path.join(folderPath, 'theory.md');
+  if (fs.existsSync(theoryPath)) {
+    try {
+      const firstLines = fs.readFileSync(theoryPath, 'utf-8').split('\n').slice(0, 10);
+      for (const line of firstLines) {
+        const trimmed = line.trim();
+        if (trimmed.startsWith('# ')) {
+          // Clean title like "# Chapter 1.2: Strides & Pointer Indirection"
+          let title = trimmed
+            .replace(/^#\s*((Module\s+)?Chapter\s*[\d\.]+:?\s*|Module\s*[\d\.]+:?\s*)?/i, '')
+            .trim();
+          if (title) return title;
+        }
+      }
+    } catch {}
+  }
+
+  // Fallback to formatting folder name: "1.2_strides_indirection" -> "Strides & Indirection"
+  const slug = folderName.replace(/^[\d\.]+_+/, '');
+  return slug
+    .split('_')
+    .map((w) => (w === 'and' ? '&' : w.charAt(0).toUpperCase() + w.slice(1)))
+    .join(' ');
+}
+
+/**
+ * Dynamically scans src/module1 on the filesystem and builds the curriculum tree.
+ */
+export function scanDynamicChapters(): ChapterMeta[] {
+  if (!fs.existsSync(MODULE1_DIR)) {
+    return [];
+  }
+
+  const entries = fs.readdirSync(MODULE1_DIR, { withFileTypes: true });
+  const chapterFolders = entries.filter(
+    (e) => e.isDirectory() && /^1\.\d+(_.*)?$/.test(e.name)
+  );
+
+  // Sort naturally by chapter number: 1.1, 1.2, ..., 1.10, ..., 1.20
+  chapterFolders.sort((a, b) => {
+    const numA = parseFloat(a.name.match(/^1\.(\d+)/)?.[1] || '0');
+    const numB = parseFloat(b.name.match(/^1\.(\d+)/)?.[1] || '0');
+    return numA - numB;
+  });
+
+  const chapters: ChapterMeta[] = chapterFolders.map((entry) => {
+    const folder = entry.name;
+    const folderPath = path.join(MODULE1_DIR, folder);
+    const idMatch = folder.match(/^1\.(\d+)/);
+    const id = idMatch ? `1.${idMatch[1]}` : folder;
+    const title = extractChapterTitle(folderPath, folder);
+
+    const hasCheatSheet = fs.existsSync(path.join(folderPath, 'cheat_sheet.md'));
+
+    const tiersList: Array<'beginner' | 'intermediate' | 'champion'> = [
+      'beginner',
+      'intermediate',
+      'champion',
+    ];
+
+    const tiers: Record<'beginner' | 'intermediate' | 'champion', TierMeta> = {
+      beginner: { status: 'pending', tests: 0 },
+      intermediate: { status: 'pending', tests: 0 },
+      champion: { status: 'pending', tests: 0 },
+    };
+
+    let totalTests = 0;
+    let passedTests = 0;
+    let passedTiersCount = 0;
+
+    for (const tier of tiersList) {
+      const solPath = path.join(folderPath, 'solution', `${tier}_workbook.cpp`);
+      const exPath = path.join(folderPath, 'exercise', `${tier}_workbook.cpp`);
+
+      const hasSol = fs.existsSync(solPath) && fs.statSync(solPath).size > 200;
+      const count = hasSol ? countTestsInWorkbook(solPath) : countTestsInWorkbook(exPath);
+
+      const status: 'passed' | 'pending' = hasSol ? 'passed' : 'pending';
+      tiers[tier] = { status, tests: count };
+
+      totalTests += count;
+      if (status === 'passed') {
+        passedTests += count;
+        passedTiersCount++;
+      }
+    }
+
+    const completed = passedTiersCount === 3;
+
+    return {
+      id,
+      folder,
+      title,
+      completed,
+      hasCheatSheet,
+      totalTests,
+      passedTests,
+      tiers,
+    };
+  });
+
+  return chapters;
+}
+
+export function getChapterFolder(chapterId: string): string | null {
+  const chapters = scanDynamicChapters();
+  const ch = chapters.find((c) => c.id === chapterId);
+  return ch ? ch.folder : null;
+}
 
 export const METAL_KERNELS: MetalKernelMeta[] = [
   { id: 1, name: 'Embedding Forward', category: 'Embedding', metalFile: 'embedding_forward.metal', cudaFile: 'embedding_forward.cu', status: 'planned' },
@@ -75,8 +201,3 @@ export const METAL_KERNELS: MetalKernelMeta[] = [
   { id: 21, name: 'Compute Loss', category: 'Loss', metalFile: 'compute_loss.metal', cudaFile: 'compute_loss.cu', status: 'planned' },
   { id: 22, name: 'AdamW Optimizer Step', category: 'Optimizer', metalFile: 'adamw_step.metal', cudaFile: 'adamw_step.cu', status: 'planned' },
 ];
-
-export function getChapterFolder(chapterId: string): string | null {
-  const ch = CHAPTERS_CONFIG.find((c) => c.id === chapterId);
-  return ch ? ch.folder : null;
-}
