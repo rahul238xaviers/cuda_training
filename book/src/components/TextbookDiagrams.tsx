@@ -90,11 +90,11 @@ export function PointerAddressingDiagram({ data }: { data: PointerAddressingSpec
             <marker
               id="pointer-arrow"
               viewBox="0 0 10 10"
-              refX="8"
+              refX="6"
               refY="5"
               markerWidth="7"
               markerHeight="7"
-              orient="auto-start-reverse"
+              orient="auto"
             >
               <path d="M 0 1 L 10 5 L 0 9 z" fill="#38bdf8" />
             </marker>
@@ -169,13 +169,14 @@ export function PointerAddressingDiagram({ data }: { data: PointerAddressingSpec
               Stores Value: <tspan fill="#38bdf8" fontWeight="bold">{ptrValue}</tspan>
             </text>
 
-            {/* Circle origin for arrow */}
-            <circle cx="280" cy="88" r="5" fill="#f59e0b" stroke="#ffffff" strokeWidth="1.5" />
+            {/* Circle origin port for arrow on the right edge of slot */}
+            <circle cx="334" cy="88" r="4.5" fill="#f59e0b" stroke="#ffffff" strokeWidth="1.5" />
           </g>
 
           {/* ================= BEZIER CURVED ARROW ================= */}
+          {/* Origin at slot right edge (334, 88), curves through (480, 88) and approaches cell 0 vertically at (140, 252) */}
           <path
-            d="M 285 88 C 450 88 470 200 135 200"
+            d="M 334 88 C 480 88 140 150 140 252"
             fill="none"
             stroke="url(#arrowGrad)"
             strokeWidth="2.5"
@@ -183,9 +184,9 @@ export function PointerAddressingDiagram({ data }: { data: PointerAddressingSpec
             markerEnd="url(#pointer-arrow)"
           />
 
-          <g transform="translate(320, 140)">
-            <rect x="0" y="0" width="135" height="24" rx="12" fill="#0b1329" stroke="#38bdf8" strokeWidth="1" />
-            <text x="67" y="16" textAnchor="middle" fill="#38bdf8" fontSize="10" fontWeight="600" fontFamily="ui-monospace, monospace">
+          <g transform="translate(290, 138)">
+            <rect x="0" y="0" width="145" height="24" rx="12" fill="#0b1329" stroke="#38bdf8" strokeWidth="1" />
+            <text x="72.5" y="16" textAnchor="middle" fill="#38bdf8" fontSize="10" fontWeight="600" fontFamily="ui-monospace, monospace">
               Dereferences (*{ptrName})
             </text>
           </g>
@@ -204,12 +205,12 @@ export function PointerAddressingDiagram({ data }: { data: PointerAddressingSpec
               strokeWidth="1.5"
             />
 
-            {/* Region Label */}
-            <text x="20" y="26" fill="#6ee7b7" fontSize="11" fontWeight="700" fontFamily="ui-monospace, monospace">
+            {/* Region Label (positioned to the right of ptr[0] entry path) */}
+            <text x="200" y="24" fill="#6ee7b7" fontSize="11" fontWeight="700" fontFamily="ui-monospace, monospace">
               TARGET BUFFER: {targetLocation.toUpperCase()}
             </text>
-            <text x="20" y="40" fill="#34d399" fontSize="10" fontFamily="sans-serif">
-              Base Virtual Address: {baseAddress} • Type: {targetTypeName}
+            <text x="200" y="38" fill="#34d399" fontSize="10" fontFamily="sans-serif">
+              Base Virtual Address: <tspan fill="#38bdf8" fontWeight="bold">{baseAddress}</tspan> • Type: {targetTypeName}
             </text>
 
             {/* Memory Byte Ladder Cells */}
