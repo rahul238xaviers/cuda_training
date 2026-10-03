@@ -266,13 +266,37 @@ export function PointerAddressingDiagram({ data }: { data: PointerAddressingSpec
           {/* Landing Target Ring on ptr[0] */}
           <circle cx="140" cy="255" r="3.5" fill="#38bdf8" stroke="#ffffff" strokeWidth="1" />
 
-          {/* Dereferences (*ptr) Pill centered on curve at (160, 165) */}
-          <g transform="translate(85, 153)">
-            <rect x="0" y="0" width="150" height="24" rx="12" fill="#0b1329" stroke="#38bdf8" strokeWidth="1.5" />
-            <text x="75" y="16" textAnchor="middle" fill="#38bdf8" fontSize="10" fontWeight="700" fontFamily="ui-monospace, monospace">
-              Dereferences (*{ptrName})
-            </text>
-          </g>
+          {/* Dereferences (*ptr) Pill dynamically sized and centered on curve at (160, 165) */}
+          {(() => {
+            const derefLabel = `Dereferences (*${ptrName})`;
+            const pillWidth = Math.max(165, derefLabel.length * 8.2 + 36);
+            const pillX = Math.max(20, 160 - pillWidth / 2);
+            return (
+              <g transform={`translate(${pillX}, 152)`}>
+                <rect
+                  x="0"
+                  y="0"
+                  width={pillWidth}
+                  height="26"
+                  rx="13"
+                  fill="#0b1329"
+                  stroke="#38bdf8"
+                  strokeWidth="1.5"
+                />
+                <text
+                  x={pillWidth / 2}
+                  y="17"
+                  textAnchor="middle"
+                  fill="#38bdf8"
+                  fontSize="11"
+                  fontWeight="700"
+                  fontFamily="ui-monospace, monospace"
+                >
+                  {derefLabel}
+                </text>
+              </g>
+            );
+          })()}
         </svg>
 
         {/* Dynamic Detail Card on Hover */}
