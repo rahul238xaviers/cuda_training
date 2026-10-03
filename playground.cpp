@@ -1,91 +1,83 @@
 #include <chrono>
 #include <cmath>
-#include <cstdint>
 #include <iomanip>
 #include <iostream>
 #include <vector>
 using namespace std;
 
 int main() {
-  // -------------------------------------------------------------------------
-  // Problem 3: Memory Stride & Cache Thrashing Benchmark
+  // =========================================================================
+  // Problem 3: Cache-Blocked 2D Matrix Transposition
   //
   // Context:
-  // Your Apple M-series CPU has a cache line size of 128 bytes (32 floats).
-  // When STRIDE = 32, every read jumps 128 bytes, landing on a completely
-  // different cache line!
+  // Matrix size is 1024 x 1024 floats (4 MB total).
+  // Naive transpose writes down columns across 1,024 different cache lines,
+  // causing continuous L1 cache evictions.
+  //
+  // The Golden Formula gave us:
+  //   TILE = 32 (32x32 floats = 4 KB, comfortably staying hot in L1 cache).
   //
   // Task:
-  // Touch every element in `buffer` across 32 strided passes:
-  //   Pass 0 (s = 0):  0,  32,  64,  96, ...
-  //   Pass 1 (s = 1):  1,  33,  65,  97, ...
-  //   ...
-  //   Pass 31 (s = 31): 31, 63, 95, 127, ...
+  // Transpose `src` of shape [1024, 1024] into `dst` of shape [1024, 1024]
+  // using 2D cache tiles of size TILE x TILE.
   //
-  // Total elements visited = N (524,288).
-  // Since each element is 1.0f, the expected sum is 524288.0f.
-  // -------------------------------------------------------------------------
+  // For each element at logical position (r, c):
+  //   Source index:      r * Cols + c
+  //   Destination index: c * Rows + r
+  // =========================================================================
 
-  const int N = 524288;
-  const int STRIDE = 32;
-  std::vector<float> buffer(N, 1.0f);
+  const int Rows = 1024;
+  const int Cols = 1024;
+  const int TILE = 32;
+  const size_t total_elements = (size_t)Rows * Cols;
 
-  float strided_sum = 0.0f;
+  std::vector<float> src(total_elements);
+  for (size_t i = 0; i < total_elements; ++i) {
+    src[i] = static_cast<float>(i + 1);
+  }
+  std::vector<float> dst(total_elements, 0.0f);
 
   auto start = std::chrono::high_resolution_clock::now();
 
-  // TODO: Implement the two nested loops:
-  //   1. Outer loop over offset 's' from 0 to STRIDE - 1
-  //   2. Inner loop over index 'i' starting from 's', up to N, stepping by
-  //   STRIDE
-  //   3. Accumulate buffer[i] into strided_sum
+  // TODO: Implement the 2D Tiled Transpose:
+  //   1. Outer loop 'r0' steps from 0 to Rows with step TILE
+  //   2. Next loop 'c0' steps from 0 to Cols with step TILE
+  //   3. Inner loop 'r' goes from r0 to r0 + TILE
+  //   4. Inner loop 'c' goes from c0 to c0 + TILE
+  //   5. Copy: dst[c * Rows + r] = src[r * Cols + c];
   // --- YOUR CODE STARTS HERE ---
 
-  for (int s = 0; s <= STRIDE - 1; s++) {
-    for (int i = s; i < N; i += STRIDE) {
-      strided_sum += buffer[i];
-    }
-  }
+  // --- YOUR CODE ENDS HERE ---
 
   auto end = std::chrono::high_resolution_clock::now();
   double elapsed_sec = std::chrono::duration<double>(end - start).count();
-  double throughput_gbps = (N * sizeof(float) / elapsed_sec) / 1e9;
+  double bytes_moved = 2.0 * total_elements * sizeof(float);
+  double throughput = (bytes_moved / elapsed_sec) / 1e9;
 
-  // --- Contiguous Benchmark (Stride = 1) ---
-  float contiguous_sum = 0.0f;
-  auto start_contig = std::chrono::high_resolution_clock::now();
-
-  for (int i = 0; i < N; ++i) {
-    contiguous_sum += buffer[i];
+  bool passed = true;
+  for (int r = 0; r < Rows && passed; ++r) {
+    for (int c = 0; c < Cols; ++c) {
+      if (dst[c * Rows + r] != src[r * Cols + c]) {
+        passed = false;
+        break;
+      }
+    }
   }
 
-  auto end_contig = std::chrono::high_resolution_clock::now();
-  double elapsed_contig_sec =
-      std::chrono::duration<double>(end_contig - start_contig).count();
-  double throughput_contig_gbps =
-      (N * sizeof(float) / elapsed_contig_sec) / 1e9;
-
-  cout << fixed << setprecision(4);
+  cout << fixed << setprecision(2);
   cout << "========================================\n";
-  cout << "1. STRIDED TRAVERSAL (STRIDE = 32):\n";
-  cout << "   Time:       " << elapsed_sec * 1000.0 << " ms\n";
-  cout << "   Throughput: " << throughput_gbps << " GB/s\n";
-  cout << "----------------------------------------\n";
-  cout << "2. CONTIGUOUS TRAVERSAL (STRIDE = 1):\n";
-  cout << "   Time:       " << elapsed_contig_sec * 1000.0 << " ms\n";
-  cout << "   Throughput: " << throughput_contig_gbps << " GB/s\n";
-  cout << "----------------------------------------\n";
-  cout << "   Speedup:    " << (elapsed_sec / elapsed_contig_sec) << "x faster!\n";
-  cout << "========================================\n\n";
+  cout << "Problem 3: Cache-Blocked 2D Transpose\n";
+  cout << "========================================\n";
+  cout << "Matrix Size: " << Rows << " x " << Cols << " (" << (total_elements * sizeof(float)) / (1024 * 1024) << " MB)\n";
+  cout << "Tile Size:   " << TILE << " x " << TILE << " (" << (TILE * TILE * sizeof(float)) / 1024 << " KB)\n";
+  cout << "Time:        " << elapsed_sec * 1000.0 << " ms\n";
+  cout << "Throughput:  " << throughput << " GB/s\n\n";
 
-  bool passed = (std::abs(strided_sum - static_cast<float>(N)) < 1e-3f);
   if (passed) {
-    cout << "\033[1;32m[TEST PASSED] Cache-thrashing strided sum is "
-            "correct!\033[0m\n";
+    cout << "\033[1;32m[TEST PASSED] Matrix Transpose is 100% correct!\033[0m\n";
   } else {
-    cout
-        << "\033[1;31m[TEST FAILED] Sum did not match expected value.\033[0m\n";
+    cout << "\033[1;31m[TEST FAILED] Transpose values do not match expected.\033[0m\n";
   }
 
-  return 0;
+  return passed ? 0 : 1;
 }
