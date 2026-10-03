@@ -67,7 +67,17 @@ int main() {
 
         // TODO: Compute y[r] using CSR indirection traversal.
         // --- YOUR CODE STARTS HERE ---
+        for (int row_ptr_incr = 0; row_ptr_incr < 4; row_ptr_incr++) {
+            int current_row_ptr_index_value = row_ptr[row_ptr_incr];
+            int next_row_ptr_index_value = row_ptr[row_ptr_incr + 1];
+            float verctorMultiplicationValue = 0.0f;
+            for (int start = current_row_ptr_index_value; start < next_row_ptr_index_value;
+                 start++) {
+                verctorMultiplicationValue += values[start] * x[col_indices[start]];
+            }
 
+            y[row_ptr_incr] = verctorMultiplicationValue;
+        }
         // --- YOUR CODE ENDS HERE ---
 
         // Row 0: 10*1 + 20*3 = 70
@@ -109,7 +119,15 @@ int main() {
 
         // TODO: Permute (d0, d1, d2) -> (d0, d2, d1).
         // --- YOUR CODE STARTS HERE ---
-
+        for (int d0 = 0; d0 < D0; ++d0) {
+            for (int d1 = 0; d1 < D1; ++d1) {
+                for (int d2 = 0; d2 < D2; ++d2) {
+                    int srcIndex = d0 * D1 * D2 + d1 * D2 + d2;
+                    int destIndex = d0 * D1 * D2 + d2 * D1 + d1;
+                    dst[destIndex] = src[srcIndex];
+                }
+            }
+        }
         // --- YOUR CODE ENDS HERE ---
 
         auto end = std::chrono::high_resolution_clock::now();
@@ -137,36 +155,56 @@ int main() {
     }
 
     // -------------------------------------------------------------------------
-    // PROBLEM 3: Memory Stride Cache Thrashing Benchmark
+    // PROBLEM 3: Cache-Blocked 2D Matrix Transposition (Golden Tile Rule: TILE=32)
     //
-    // Context: In GPU memory architectures, non-coalesced strides cause significant
-    //          throughput degradation.
+    // Context: In GPU & CPU systems, naive matrix transpose causes strided writes
+    //          that thrash cache lines across memory. Using the Golden Formula:
+    //            T <= sqrt( (alpha * C_L1) / (2 * sizeof(float)) ) = 32
+    //          We decompose a 1024x1024 matrix into 32x32 tiles that stay 100%
+    //          resident inside L1 cache lines with zero eviction thrashing.
     //
-    // Task: Read 524,288 floats from `buffer` with STRIDE=32 (128 bytes jump).
-    //       Compare bandwidth with contiguous traversal.
+    // Task: Transpose `src` of shape [1024, 1024] into `dst` of shape [1024, 1024]
+    //       using 2D tiled traversal (TILE = 32).
     // -------------------------------------------------------------------------
     {
-        const int N = 524288;
-        std::vector<float> buffer(N);
-        for (int i = 0; i < N; ++i) buffer[i] = 1.0f;
+        const int Rows = 1024;
+        const int Cols = 1024;
+        const int TILE = 32;
+        const size_t total_elements = (size_t)Rows * Cols;
 
-        const int STRIDE = 32;
-        float strided_sum = 0.0f;
+        std::vector<float> src(total_elements);
+        for (size_t i = 0; i < total_elements; ++i) {
+            src[i] = static_cast<float>(i + 1);
+        }
+        std::vector<float> dst(total_elements, 0.0f);
 
         auto start = std::chrono::high_resolution_clock::now();
 
-        // TODO: Sum all elements using outer loop over s in [0, STRIDE)
-        // and inner loop over i from s to N with step STRIDE.
+        // TODO: Implement 2D cache-blocked matrix transpose using TILE = 32:
+        //   1. Outer loops step across tile coordinates: r0 and c0 with step TILE
+        //   2. Inner loops step through elements within the tile: r and c
+        //   3. Transpose element: dst[c * Rows + r] = src[r * Cols + c];
         // --- YOUR CODE STARTS HERE ---
 
         // --- YOUR CODE ENDS HERE ---
 
         auto end = std::chrono::high_resolution_clock::now();
         double elapsed_sec = std::chrono::duration<double>(end - start).count();
-        double throughput = (N * sizeof(float) / elapsed_sec) / 1e9;
+        double bytes_moved = 2.0 * total_elements * sizeof(float);
+        double throughput = (bytes_moved / elapsed_sec) / 1e9;
 
-        bool p3_passed = (std::abs(strided_sum - static_cast<float>(N)) < 1e-3f);
-        reportStatus("Problem 3: Memory Stride Cache-Thrashing Profiling", p3_passed, throughput);
+        bool p3_passed = true;
+        for (int r = 0; r < Rows && p3_passed; ++r) {
+            for (int c = 0; c < Cols; ++c) {
+                if (dst[c * Rows + r] != src[r * Cols + c]) {
+                    p3_passed = false;
+                    break;
+                }
+            }
+        }
+
+        reportStatus("Problem 3: Cache-Blocked 2D Matrix Transpose (TILE=32)", p3_passed,
+                     p3_passed ? throughput : -1.0);
         if (p3_passed) passed++;
         total++;
     }

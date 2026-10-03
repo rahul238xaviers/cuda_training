@@ -218,10 +218,65 @@ Bandwidth utilization: 4B / 128B = 3.125%
 Bus waste: 96.875% -- bus is choked with unused data!
 ```
 
-### Direct Bridge to CUDA: Warp Memory Coalescing
-In CUDA architecture, a warp consists of **32 parallel threads** executing the exact same instruction simultaneously:
-* **Coalesced Access (Golden Rule of CUDA)**: If Thread 0 reads `ptr[0]`, Thread 1 reads `ptr[1]`, ..., Thread 31 reads `ptr[31]`, their 32 requests fall cleanly into a single aligned 128-byte segment. The GPU hardware memory controller fulfills all 32 threads in **1 single memory transaction**!
-* **Non-Coalesced / Strided Access**: If each thread reads with a stride of 32 (Thread 0 reads `ptr[0]`, Thread 1 reads `ptr[32]`, etc.), the 32 addresses land in 32 separate cache lines. The memory controller is forced to issue **32 separate memory transactions**, serializing the warp and throttling kernel throughput down to a fraction of the GPU's memory bandwidth.
+### The Tiling Solution: Eliminating Stride Penalties
+
+When an operation requires strided traversal (such as transposing a matrix where row elements must be written into strided column positions), a naive loop touches hundreds or thousands of different cache lines across memory. Because the CPU L1 cache only holds a limited number of cache lines (e.g. 512 lines for a 64 KB cache), early lines are evicted before they can be reused, resulting in catastrophic cache thrashing.
+
+**The Solution: 2D Cache-Blocking (Tiling)**.
+Instead of processing an entire matrix at once, we decompose the matrix into small square sub-grids called **tiles** (e.g. `32 x 32` or `64 x 64`). By keeping all operations confined within a single tile, all source and destination memory lines remain hot in L1 cache with zero evictions.
+
+---
+
+### The Golden Tile Sizing Formula: In-Place vs. Out-of-Place
+
+In systems architecture, how do engineers mathematically determine the optimal tile dimension `T` without guessing?
+
+We use the **50% Working Set Rule**:
+> **Rule of Thumb**: The active memory required by a tile should never exceed **50% of the cache capacity** (ideally target between **25% and 50%**).
+> 
+> *Hardware Rationale*: L1 caches are set-associative (typically 8-way or 16-way). Addresses separated by large powers of 2 often map to the exact same cache sets. Exceeding 50% capacity causes **Cache Set Conflict Misses**, where lines evict each other even if other cache sets are empty. Headroom is also required for stack variables, prefetch buffers, and loop registers.
+
+#### Formula Variables:
+* `C_L1`: Total L1 Data Cache capacity in bytes (e.g. 65,536 bytes for 64 KB).
+* `S`: Size of one data element in bytes (4 bytes for single-precision `float`).
+* `alpha`: Target cache safety factor (`0.25 <= alpha <= 0.50`).
+* `T`: Tile width and height (`T x T` elements).
+
+#### Case 1: Out-of-Place Transpose (2 Active Buffers: `src` and `dst`)
+Both the source tile and the destination tile reside in L1 cache simultaneously:
+
+```text
+Memory Footprint = 2 * (T * T * S) <= alpha * C_L1
+
+T <= sqrt( (alpha * C_L1) / (2 * S) )
+```
+
+Plugging in real hardware parameters (`C_L1 = 65,536 bytes`, `S = 4 bytes`, `alpha = 0.25`):
+```text
+T <= sqrt( (0.25 * 65,536) / (2 * 4) )
+T <= sqrt( 16,384 / 8 )
+T <= sqrt( 2,048 )
+T <= 45.2 elements -> Rounded down to power-of-2: T = 32
+```
+**Golden Result for Out-of-Place**: **`T = 32`** (`32 x 32` floats = 4 KB per buffer, 8 KB total = 12.5% of L1).
+
+#### Case 2: In-Place Transpose (1 Active Buffer: In-Place Swap)
+Only a single matrix buffer exists in memory. Elements are swapped in-place using `std::swap(A[r * N + c], A[c * N + r])`:
+
+```text
+Memory Footprint = T * T * S <= alpha * C_L1
+
+T <= sqrt( (alpha * C_L1) / S )
+```
+
+Plugging in real hardware parameters (`C_L1 = 65,536 bytes`, `S = 4 bytes`, `alpha = 0.25`):
+```text
+T <= sqrt( (0.25 * 65,536) / 4 )
+T <= sqrt( 16,384 / 4 )
+T <= sqrt( 4,096 )
+T <= 64 elements
+```
+**Golden Result for In-Place**: **`T = 64`** (`64 x 64` floats = 16 KB total = 25% of L1).
 
 ---
 
@@ -233,3 +288,4 @@ In CUDA architecture, a warp consists of **32 parallel threads** executing the e
 4. **Memory Pitch**: Use padded row strides to ensure every row aligns cleanly with 64-byte or 128-byte hardware cache lines.
 5. **Hardware Granularity**: Memory is moved in cache lines (64B or 128B). Non-unit strides discard up to 96.8% of memory bus bandwidth.
 6. **CUDA Warp Coalescing**: Align thread memory access so 32 threads in a warp touch contiguous addresses, consolidating 32 memory requests into a single hardware transaction.
+7. **The 50% Working Set Rule**: Size 2D processing tiles between 25% and 50% of L1 cache capacity (`T = 32` for out-of-place, `T = 64` for in-place) to eliminate cache thrashing and set-conflict misses.
