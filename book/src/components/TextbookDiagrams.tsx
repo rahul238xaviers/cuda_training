@@ -751,6 +751,189 @@ export function DoubleBufferingDiagram({
   );
 }
 
+// ============================================================================
+// Pointer Swap Diagram — Chapter 1.3: O(1) zero-copy register-level swap
+// ============================================================================
+export function PointerSwapDiagram({ data }: { data: any }) {
+  const title = data?.title || 'O(1) Zero-Copy Pointer Swap';
+  const subtitle = data?.subtitle || 'Swapping two 64-bit register variables redirects entire data buffers without touching physical memory.';
+  const bufALabel = data?.bufA || 'Buffer A (4 KB)';
+  const bufBLabel = data?.bufB || 'Buffer B (4 KB)';
+  const addrA = data?.addrA || '0x1000';
+  const addrB = data?.addrB || '0x5000';
+
+  return (
+    <div className="my-8 rounded-2xl border border-[#30363d] bg-[#0c1017] shadow-2xl overflow-hidden select-none">
+      <div className="flex items-center justify-between px-5 py-3.5 bg-[#141923] border-b border-[#21262d]">
+        <div className="flex items-center gap-2.5">
+          <span className="p-1.5 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+            <Layers className="w-4 h-4" />
+          </span>
+          <div>
+            <h4 className="text-xs font-bold text-slate-100 tracking-wide uppercase font-mono">{title}</h4>
+            <p className="text-[11px] text-slate-400 font-sans mt-0.5">{subtitle}</p>
+          </div>
+        </div>
+        <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-semibold">REGISTER SWAP</span>
+      </div>
+
+      <div className="p-6 bg-[#090d14]">
+        <svg viewBox="0 0 760 220" className="w-full" aria-label="Pointer swap diagram">
+          {/* === BEFORE SWAP === */}
+          <text x="30" y="20" fill="#94a3b8" fontSize="11" fontWeight="bold" fontFamily="ui-monospace, monospace" letterSpacing="1">BEFORE std::swap()</text>
+
+          {/* read_ptr register */}
+          <rect x="30" y="30" width="150" height="44" rx="8" fill="#1c2233" stroke="#3b82f6" strokeWidth="1.5" />
+          <text x="105" y="48" textAnchor="middle" fill="#93c5fd" fontSize="10" fontWeight="bold" fontFamily="ui-monospace, monospace">read_ptr</text>
+          <text x="105" y="62" textAnchor="middle" fill="#60a5fa" fontSize="11" fontFamily="ui-monospace, monospace">{addrA}</text>
+
+          {/* write_ptr register */}
+          <rect x="30" y="90" width="150" height="44" rx="8" fill="#1c2233" stroke="#8b5cf6" strokeWidth="1.5" />
+          <text x="105" y="108" textAnchor="middle" fill="#c4b5fd" fontSize="10" fontWeight="bold" fontFamily="ui-monospace, monospace">write_ptr</text>
+          <text x="105" y="122" textAnchor="middle" fill="#a78bfa" fontSize="11" fontFamily="ui-monospace, monospace">{addrB}</text>
+
+          {/* Buffer A block */}
+          <rect x="250" y="30" width="160" height="44" rx="8" fill="#14291f" stroke="#10b981" strokeWidth="1.5" />
+          <text x="330" y="48" textAnchor="middle" fill="#6ee7b7" fontSize="10" fontWeight="bold" fontFamily="ui-monospace, monospace">BUFFER A</text>
+          <text x="330" y="62" textAnchor="middle" fill="#34d399" fontSize="10" fontFamily="ui-monospace, monospace">{addrA} — {bufALabel}</text>
+
+          {/* Buffer B block */}
+          <rect x="250" y="90" width="160" height="44" rx="8" fill="#1e1b2e" stroke="#a855f7" strokeWidth="1.5" />
+          <text x="330" y="108" textAnchor="middle" fill="#e9d5ff" fontSize="10" fontWeight="bold" fontFamily="ui-monospace, monospace">BUFFER B</text>
+          <text x="330" y="122" textAnchor="middle" fill="#c084fc" fontSize="10" fontFamily="ui-monospace, monospace">{addrB} — {bufBLabel}</text>
+
+          {/* Arrow: read_ptr → A */}
+          <line x1="180" y1="52" x2="248" y2="52" stroke="#3b82f6" strokeWidth="2" markerEnd="url(#arrowBlue)" />
+          {/* Arrow: write_ptr → B */}
+          <line x1="180" y1="112" x2="248" y2="112" stroke="#8b5cf6" strokeWidth="2" markerEnd="url(#arrowPurple)" />
+
+          {/* === SWAP OPERATION === */}
+          <rect x="475" y="55" width="180" height="46" rx="10" fill="#062318" stroke="#10b981" strokeWidth="2" />
+          <text x="565" y="74" textAnchor="middle" fill="#86efac" fontSize="10" fontWeight="bold" fontFamily="ui-monospace, monospace">std::swap(read_ptr,</text>
+          <text x="565" y="88" textAnchor="middle" fill="#86efac" fontSize="10" fontWeight="bold" fontFamily="ui-monospace, monospace">           write_ptr)</text>
+
+          {/* === AFTER SWAP === */}
+          <text x="475" y="145" fill="#94a3b8" fontSize="11" fontWeight="bold" fontFamily="ui-monospace, monospace" letterSpacing="1">AFTER: read_ptr → B, write_ptr → A</text>
+          <text x="475" y="163" fill="#10b981" fontSize="10" fontFamily="ui-monospace, monospace">Only 3 register moves (temp = a; a = b; b = temp)</text>
+          <text x="475" y="177" fill="#10b981" fontSize="10" fontFamily="ui-monospace, monospace">0 bytes of physical data copied</text>
+          <text x="475" y="191" fill="#10b981" fontSize="10" fontFamily="ui-monospace, monospace">O(1) — independent of buffer size!</text>
+
+          {/* Arrows markers */}
+          <defs>
+            <marker id="arrowBlue" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+              <path d="M0,0 L0,6 L8,3 z" fill="#3b82f6" />
+            </marker>
+            <marker id="arrowPurple" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+              <path d="M0,0 L0,6 L8,3 z" fill="#8b5cf6" />
+            </marker>
+          </defs>
+        </svg>
+
+        <div className="mt-3 p-3 rounded-xl bg-[#121824] border border-[#212836] text-xs text-slate-300 flex items-center gap-2">
+          <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+          <span>The addresses stored in <code className="text-sky-300 font-mono">read_ptr</code> and <code className="text-purple-300 font-mono">write_ptr</code> are exchanged in 3 register instructions. The data in DRAM/VRAM is untouched — only the 8-byte pointer variables change.</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ============================================================================
+// Strided Access Diagram — Chapter 1.4: Dual-stream SAXPY traversal
+// ============================================================================
+export function StridedAccessDiagram({ data }: { data: any }) {
+  const title = data?.title || 'Dual-Stream Vector Traversal: SAXPY';
+  const subtitle = data?.subtitle || 'Two independent pointer streams traverse separate arrays simultaneously, limited by memory bus bandwidth.';
+
+  const numCells = 6;
+  const cellW = 64;
+  const gutter = 8;
+  const startX = 30;
+
+  return (
+    <div className="my-8 rounded-2xl border border-[#30363d] bg-[#0c1017] shadow-2xl overflow-hidden select-none">
+      <div className="flex items-center justify-between px-5 py-3.5 bg-[#141923] border-b border-[#21262d]">
+        <div className="flex items-center gap-2.5">
+          <span className="p-1.5 rounded-lg bg-sky-500/10 text-sky-400 border border-sky-500/20">
+            <Database className="w-4 h-4" />
+          </span>
+          <div>
+            <h4 className="text-xs font-bold text-slate-100 tracking-wide uppercase font-mono">{title}</h4>
+            <p className="text-[11px] text-slate-400 font-sans mt-0.5">{subtitle}</p>
+          </div>
+        </div>
+        <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-sky-500/10 text-sky-400 border border-sky-500/20 font-semibold">MEMORY BANDWIDTH BOUND</span>
+      </div>
+
+      <div className="p-6 bg-[#090d14]">
+        <svg viewBox="0 0 760 230" className="w-full" aria-label="Dual stream memory diagram">
+          {/* === Array X === */}
+          <text x={startX} y="24" fill="#38bdf8" fontSize="11" fontWeight="bold" fontFamily="ui-monospace, monospace">READ: x[ ] — Base 0x1000</text>
+          {[...Array(numCells)].map((_, i) => (
+            <g key={`x${i}`} transform={`translate(${startX + i * (cellW + gutter)}, 30)`}>
+              <rect width={cellW} height="40" rx="6" fill={i === 0 ? '#0c2a4a' : '#0d1520'} stroke={i === 0 ? '#38bdf8' : '#1e3046'} strokeWidth={i === 0 ? 2 : 1} />
+              <text x={cellW / 2} y="17" textAnchor="middle" fill="#94a3b8" fontSize="9" fontFamily="ui-monospace, monospace">x[{i}]</text>
+              <text x={cellW / 2} y="30" textAnchor="middle" fill={i === 0 ? '#7dd3fc' : '#475569'} fontSize="10" fontWeight={i === 0 ? 'bold' : 'normal'} fontFamily="ui-monospace, monospace">
+                {i === 0 ? 'LOAD' : '...'}
+              </text>
+            </g>
+          ))}
+          {/* Pointer x_ptr arrow */}
+          <rect x="30" y="80" width="80" height="28" rx="6" fill="#1c2233" stroke="#38bdf8" strokeWidth="1.5" />
+          <text x="70" y="98" textAnchor="middle" fill="#7dd3fc" fontSize="10" fontFamily="ui-monospace, monospace">x_ptr →</text>
+          <line x1="110" y1="94" x2="52" y2="71" stroke="#38bdf8" strokeWidth="1.5" strokeDasharray="4 2" markerEnd="url(#arrowSky)" />
+
+          {/* === Array Y === */}
+          <text x={startX} y="140" fill="#f59e0b" fontSize="11" fontWeight="bold" fontFamily="ui-monospace, monospace">READ+WRITE: y[ ] — Base 0x4000</text>
+          {[...Array(numCells)].map((_, i) => (
+            <g key={`y${i}`} transform={`translate(${startX + i * (cellW + gutter)}, 148)`}>
+              <rect width={cellW} height="40" rx="6" fill={i === 0 ? '#2a1a04' : '#0d1520'} stroke={i === 0 ? '#f59e0b' : '#362a10'} strokeWidth={i === 0 ? 2 : 1} />
+              <text x={cellW / 2} y="17" textAnchor="middle" fill="#94a3b8" fontSize="9" fontFamily="ui-monospace, monospace">y[{i}]</text>
+              <text x={cellW / 2} y="30" textAnchor="middle" fill={i === 0 ? '#fcd34d' : '#475569'} fontSize="10" fontWeight={i === 0 ? 'bold' : 'normal'} fontFamily="ui-monospace, monospace">
+                {i === 0 ? 'LD+ST' : '...'}
+              </text>
+            </g>
+          ))}
+          {/* Pointer y_ptr arrow */}
+          <rect x="30" y="198" width="80" height="28" rx="6" fill="#1c2233" stroke="#f59e0b" strokeWidth="1.5" />
+          <text x="70" y="216" textAnchor="middle" fill="#fcd34d" fontSize="10" fontFamily="ui-monospace, monospace">y_ptr →</text>
+          <line x1="110" y1="212" x2="52" y2="189" stroke="#f59e0b" strokeWidth="1.5" strokeDasharray="4 2" markerEnd="url(#arrowAmber)" />
+
+          {/* FMA operation box */}
+          <rect x="490" y="85" width="240" height="58" rx="10" fill="#0d1a28" stroke="#1d4ed8" strokeWidth="1.5" />
+          <text x="610" y="107" textAnchor="middle" fill="#93c5fd" fontSize="11" fontWeight="bold" fontFamily="ui-monospace, monospace">y[i] = α·x[i] + y[i]</text>
+          <text x="610" y="124" textAnchor="middle" fill="#60a5fa" fontSize="10" fontFamily="ui-monospace, monospace">2 FLOPs / 12 bytes = 0.17 FLOPs/B</text>
+          <text x="610" y="137" textAnchor="middle" fill="#3b82f6" fontSize="9" fontFamily="ui-monospace, monospace">→ Memory Bandwidth Bound</text>
+
+          <defs>
+            <marker id="arrowSky" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto">
+              <path d="M0,0 L0,6 L7,3 z" fill="#38bdf8" />
+            </marker>
+            <marker id="arrowAmber" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto">
+              <path d="M0,0 L0,6 L7,3 z" fill="#f59e0b" />
+            </marker>
+          </defs>
+        </svg>
+
+        <div className="mt-3 grid grid-cols-3 gap-3 text-xs">
+          <div className="p-2.5 rounded-lg bg-sky-950/30 border border-sky-500/20 text-sky-300 font-mono text-center">
+            <div className="font-bold mb-0.5">Load x[i]</div>
+            <div className="text-[10px] text-sky-400 opacity-80">4 bytes / element</div>
+          </div>
+          <div className="p-2.5 rounded-lg bg-amber-950/30 border border-amber-500/20 text-amber-300 font-mono text-center">
+            <div className="font-bold mb-0.5">Load + Store y[i]</div>
+            <div className="text-[10px] text-amber-400 opacity-80">8 bytes / element</div>
+          </div>
+          <div className="p-2.5 rounded-lg bg-rose-950/30 border border-rose-500/20 text-rose-300 font-mono text-center">
+            <div className="font-bold mb-0.5">Total Bus Traffic</div>
+            <div className="text-[10px] text-rose-400 opacity-80">12 bytes for 2 FLOPs</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function GenericDiagramRenderer({ type, payload }: { type: string; payload: string }) {
   let parsed: any = {};
   try {
@@ -772,7 +955,18 @@ export function GenericDiagramRenderer({ type, payload }: { type: string; payloa
     return <DoubleBufferingDiagram title={parsed.title} subtitle={parsed.subtitle} />;
   }
 
-  if (cleanType.includes('pointer') || cleanType.includes('offset') || cleanType.includes('ladder') || cleanType.includes('memory')) {
+  // Pointer swap / register swap (Chapter 1.3) — distinct from stack-frame pointer diagram
+  if (cleanType === 'pointer-swap' || cleanType.includes('swap') || cleanType.includes('ping-pong-swap')) {
+    return <PointerSwapDiagram data={parsed} />;
+  }
+
+  // Dual-stream / SAXPY / strided access (Chapter 1.4)
+  if (cleanType.includes('strided') || cleanType.includes('saxpy') || cleanType.includes('dual-stream') || cleanType.includes('multistream')) {
+    return <StridedAccessDiagram data={parsed} />;
+  }
+
+  // Stack-frame pointer addressing — Chapter 1.1 and 1.2 pointer diagrams
+  if (cleanType === 'pointer-addressing' || cleanType.includes('ladder') || cleanType.includes('byte-ladder')) {
     return <PointerAddressingDiagram data={parsed} />;
   }
 
@@ -782,6 +976,11 @@ export function GenericDiagramRenderer({ type, payload }: { type: string; payloa
 
   if (cleanType.includes('gemm') || cleanType.includes('tile') || cleanType.includes('matrix')) {
     return <TiledGemmDiagram title={parsed.title} subtitle={parsed.subtitle} />;
+  }
+
+  // Generic pointer/memory fallback
+  if (cleanType.includes('pointer') || cleanType.includes('offset') || cleanType.includes('memory')) {
+    return <PointerAddressingDiagram data={parsed} />;
   }
 
   return <PointerAddressingDiagram data={parsed} />;

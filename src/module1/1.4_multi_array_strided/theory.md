@@ -35,29 +35,10 @@ Vector operations like SAXPY have extremely low **Arithmetic Intensity**:
 * **Bytes Transferred**: Load `x` (4 bytes) + Load `y` (4 bytes) + Store `y` (4 bytes) = 12 bytes per element.
 * **Intensity**: `2 FLOPs / 12 Bytes = 0.167 FLOPs / Byte`.
 
-```diagram:pointer-addressing
+```diagram:saxpy
 {
-  "title": "Textbook Schematic: Dual-Stream Vector Traversal",
-  "subtitle": "Concurrent streaming from Input Buffer X and Input/Output Buffer Y over the memory bus.",
-  "pointer": {
-    "name": "stream_ptrs",
-    "type": "float* (x, y)",
-    "location": "Registers",
-    "address": "0x7ffee2bc6000",
-    "value": "x: 0x1000 | y: 0x4000",
-    "size": "8 bytes each"
-  },
-  "target": {
-    "location": "DRAM / VRAM Channels",
-    "baseAddress": "0x1000 (x) | 0x4000 (y)",
-    "typeName": "float[N] Independent Arrays",
-    "cells": [
-      { "name": "x[i]", "offset": "+0", "address": "0x1000", "bytes": "4B", "hex": "Load", "val": "1.5f" },
-      { "name": "x[i+1]", "offset": "+4", "address": "0x1004", "bytes": "4B", "hex": "Load", "val": "2.5f" },
-      { "name": "y[i]", "offset": "+0", "address": "0x4000", "bytes": "4B", "hex": "Load/Store", "val": "10.0f" },
-      { "name": "y[i+1]", "offset": "+4", "address": "0x4004", "bytes": "4B", "hex": "Load/Store", "val": "20.0f" }
-    ]
-  }
+  "title": "Dual-Stream Vector Traversal: SAXPY",
+  "subtitle": "Concurrent streaming from read-only x[ ] and read-write y[ ] over the memory bus. 2 FLOPs per 12 bytes."
 }
 ```
 

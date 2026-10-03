@@ -47,29 +47,14 @@ Copying all `N` elements from buffer B back to buffer A using `memcpy` or a loop
 ### The Systems Way: 64-Bit Pointer Swap (Optimal)
 Rather than copying the physical data, you swap the pointer variables themselves.
 
-```diagram:pointer-addressing
+```diagram:pointer-swap
 {
-  "title": "Textbook Schematic: O(1) Zero-Copy Pointer Swap",
+  "title": "O(1) Zero-Copy Pointer Swap",
   "subtitle": "Swapping two 64-bit pointer variables in registers redirects data targets without copying a single byte.",
-  "pointer": {
-    "name": "read_ptr <-> write_ptr",
-    "type": "float*",
-    "location": "CPU / GPU Registers",
-    "address": "0x7ffee2bc7000",
-    "value": "Swapped (0x1000 <-> 0x5000)",
-    "size": "8 bytes each"
-  },
-  "target": {
-    "location": "Global Memory Buffers (DRAM)",
-    "baseAddress": "0x1000 / 0x5000",
-    "typeName": "float[1024] (4 KB Buffers)",
-    "cells": [
-      { "name": "Buffer A [0]", "offset": "+0", "address": "0x1000", "bytes": "4B", "hex": "0x00", "val": "Active Read" },
-      { "name": "Buffer A [1]", "offset": "+4", "address": "0x1004", "bytes": "4B", "hex": "0x04", "val": "..." },
-      { "name": "Buffer B [0]", "offset": "+0", "address": "0x5000", "bytes": "4B", "hex": "0x00", "val": "Active Write" },
-      { "name": "Buffer B [1]", "offset": "+4", "address": "0x5004", "bytes": "4B", "hex": "0x04", "val": "..." }
-    ]
-  }
+  "bufA": "Buffer A — float[1024] (4 KB)",
+  "bufB": "Buffer B — float[1024] (4 KB)",
+  "addrA": "0x1000",
+  "addrB": "0x5000"
 }
 ```
 
