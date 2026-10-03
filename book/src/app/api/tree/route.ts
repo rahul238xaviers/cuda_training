@@ -1,8 +1,9 @@
 import { NextResponse } from 'next/server';
-import { scanDynamicChapters, METAL_KERNELS } from '@/lib/workspace';
+import { scanDynamicChapters, scanDynamicCudaModules, METAL_KERNELS } from '@/lib/workspace';
 
 export async function GET() {
   const chapters = scanDynamicChapters();
+  const cudaModules = scanDynamicCudaModules();
 
   const totalChapters = chapters.length;
   const completedCount = chapters.filter((c) => c.completed).length;
@@ -15,20 +16,46 @@ export async function GET() {
     totalPassedTests += ch.passedTests;
   }
 
-  // Find first uncompleted chapter for bookmark
-  const firstPending = chapters.find((c) => !c.completed);
-  const currentBookmark = firstPending ? firstPending.id : '1.1';
+  let totalCudaTopics = 0;
+  let completedCudaTopics = 0;
+  let totalCudaTests = 0;
+  let passedCudaTests = 0;
+
+  for (const mod of cudaModules) {
+    totalCudaTopics += mod.topics.length;
+    completedCudaTopics += mod.topics.filter((t) => t.completed).length;
+    totalCudaTests += mod.totalTests;
+    passedCudaTests += mod.passedTests;
+  }
+
+  totalTestsAcrossCourse += totalCudaTests;
+  totalPassedTests += passedCudaTests;
+
+  // Find first uncompleted chapter for bookmark (prioritizing C++, then CUDA)
+  const firstPendingCh = chapters.find((c) => !c.completed);
+  let currentBookmark = firstPendingCh ? firstPendingCh.id : '1.1';
+  if (!firstPendingCh) {
+    for (const mod of cudaModules) {
+      const pendingTopic = mod.topics.find((t) => !t.completed);
+      if (pendingTopic) {
+        currentBookmark = pendingTopic.id;
+        break;
+      }
+    }
+  }
 
   const percent =
     totalTestsAcrossCourse > 0
       ? Math.round((totalPassedTests / totalTestsAcrossCourse) * 100)
-      : Math.round((completedCount / (totalChapters || 1)) * 100);
+      : Math.round(((completedCount + completedCudaTopics) / ((totalChapters + totalCudaTopics) || 1)) * 100);
 
   return NextResponse.json({
     currentBookmark,
     stats: {
       chaptersDone: completedCount,
       totalChapters,
+      cudaTopicsDone: completedCudaTopics,
+      totalCudaTopics,
       percent,
       testsPassed: totalPassedTests,
       totalTests: totalTestsAcrossCourse,
@@ -41,13 +68,9 @@ export async function GET() {
     },
     volume2: {
       id: 'vol2',
-      title: 'Volume 2: CUDA Architecture & Execution Foundations',
-      description: 'Warps, thread blocks, shared SRAM bank conflicts, register pressure, memory coalescing',
-      modules: [
-        { id: '2', title: 'Module 2: CUDA Execution Model (Warps, Blocks, Grids)', status: 'queued', testCount: 0 },
-        { id: '3', title: 'Module 3: CUDA Memory Hierarchy (Global DRAM, Shared SRAM, Registers)', status: 'queued', testCount: 0 },
-        { id: '4', title: 'Module 4: Parallel Primitives (Reductions, Scan, GEMM Tiling)', status: 'queued', testCount: 0 },
-      ],
+      title: 'Volume 2: CUDA Architecture & LLM Execution Model',
+      description: 'Warps, thread blocks, shared SRAM bank conflicts, register pressure, memory coalescing, WMMA, and LLM inference/training primitives',
+      modules: cudaModules,
     },
     volume3: {
       id: 'vol3',
@@ -57,3 +80,4 @@ export async function GET() {
     },
   });
 }
+

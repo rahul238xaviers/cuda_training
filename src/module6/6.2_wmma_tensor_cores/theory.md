@@ -5,7 +5,11 @@
 Starting with the Volta (sm_70) and Turing (sm_75) architectures and continuing through Ampere (sm_80), Hopper (sm_90), and Blackwell, NVIDIA GPUs feature dedicated mixed-precision matrix arithmetic units called **Tensor Cores**.
 
 Unlike standard FP32/FP64 CUDA cores which execute 1 scalar operation per thread per cycle, Tensor Cores execute an entire matrix multiply-accumulate across a 32-thread warp in specialized hardware pipelines:
-$$D = A \times B + C$$
+
+```text
+D = A x B + C
+```
+
 
 ---
 

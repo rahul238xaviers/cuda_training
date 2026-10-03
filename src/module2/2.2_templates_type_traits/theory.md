@@ -69,9 +69,9 @@ using ComputeType = typename AccumulatorTraits<T>::ComputeT;
 
 ### Numerical Epsilon & Stability Bounds
 Different data types have vastly different machine epsilons and exponent ranges:
-- FP32: Epsilon $\approx 1.19 \times 10^{-7}$, min positive $\approx 1.18 \times 10^{-38}$
-- FP16: Epsilon $\approx 9.77 \times 10^{-4}$, min normal $\approx 6.10 \times 10^{-5}$
-- BF16: Epsilon $\approx 7.81 \times 10^{-3}$, min normal $\approx 1.18 \times 10^{-38}$ (same range as FP32!)
+- FP32: Epsilon `~= 1.19 x 10^{-7}`, min positive `~= 1.18 x 10^{-38}`
+- FP16: Epsilon `~= 9.77 x 10^{-4}`, min normal `~= 6.10 x 10^{-5}`
+- BF16: Epsilon `~= 7.81 x 10^{-3}`, min normal `~= 1.18 x 10^{-38}` (same range as FP32!)
 
 Using a traits struct allows passing safe clamping bounds and normalization epsilons directly into GPU kernels at compile time:
 ```cpp

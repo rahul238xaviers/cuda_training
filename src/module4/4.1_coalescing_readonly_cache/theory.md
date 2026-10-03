@@ -11,8 +11,8 @@ When threads in a warp access global memory:
 ### 1.1 Uncoalesced / Strided Access Penalty
 If threads in a warp access non-contiguous memory (e.g. strided access `in[threadIdx.x * stride]` where `stride = 32`):
 - Each of the 32 threads accesses a different 128-byte memory segment.
-- The GPU must issue **32 separate memory transactions** to read 32 floats (128 bytes of useful data requires $32 \times 128 = 4096$ bytes transferred!).
-- Efficiency drops to $\frac{128}{4096} = 3.125\%$! The kernel becomes severely memory-bandwidth bound.
+- The GPU must issue **32 separate memory transactions** to read 32 floats (128 bytes of useful data requires `32 x 128 = 4096` bytes transferred!).
+- Efficiency drops to `(128) / (4096) = 3.125%`! The kernel becomes severely memory-bandwidth bound.
 
 ---
 

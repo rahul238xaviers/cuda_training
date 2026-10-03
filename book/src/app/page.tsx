@@ -68,7 +68,9 @@ export default function BookPlatform() {
       if (node.type === 'workbook') {
         const code = currentTarget === 'solution' ? data.solutionCode : data.exerciseCode;
         setActiveCode(code || '');
-        setTerminalOutput(`Ready to compile ${node.tier}_workbook.cpp with clang++ -std=c++20 -O3.`);
+        const ext = data.ext || 'cpp';
+        const compiler = ext === 'cu' ? 'nvcc -O3 -std=c++17 --extended-lambda' : 'clang++ -std=c++20 -O3';
+        setTerminalOutput(`Ready to compile ${node.tier}_workbook.${ext} with ${compiler}.`);
       } else if (node.type === 'playground') {
         setActiveCode(data.code || '');
         setTerminalOutput('Ready to compile playground.cpp with clang++ -std=c++20 -O3.');
@@ -166,8 +168,9 @@ export default function BookPlatform() {
     // Save to disk first
     await handleSave();
 
-    setRunStatus('running');
-    setTerminalOutput(`Compiling with clang++ -std=c++20 -O3...\nExecuting binary...`);
+    const isCuda = nodeData?.isCuda || nodeData?.ext === 'cu';
+    const compiler = isCuda ? 'nvcc -O3 -std=c++17 --extended-lambda' : 'clang++ -std=c++20 -O3';
+    setTerminalOutput(`Compiling with ${compiler}...\nExecuting binary...`);
     setDurationMs(undefined);
     setExitCode(null);
 
@@ -329,7 +332,7 @@ export default function BookPlatform() {
                   filePath={
                     activeNode.type === 'playground'
                       ? 'playground.cpp'
-                      : `src/module1/${activeNode.chapterId}/${target}/${activeNode.tier}_workbook.cpp`
+                      : nodeData?.relPath || `src/module1/${activeNode.chapterId}/${target}/${activeNode.tier}_workbook.cpp`
                   }
                   code={activeCode}
                   onChange={handleCodeChange}

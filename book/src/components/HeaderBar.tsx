@@ -73,12 +73,24 @@ export function HeaderBar({
       );
     }
 
+    const isVol2 = activeNode.volumeId === 'vol2' || /^[2-7]\./.test(activeNode.chapterId || '');
+    const rawModNum = activeNode.chapterId ? parseInt(activeNode.chapterId.split('.')[0], 10) : 2;
+    const cudaModNum = isVol2 && rawModNum >= 2 ? rawModNum - 1 : rawModNum;
+    const subNum = activeNode.chapterId ? activeNode.chapterId.split('.')[1] : '1';
+    const displayTopicId = isVol2 && rawModNum >= 2 ? `${cudaModNum}.${subNum}` : activeNode.chapterId;
+
     return (
       <div className="flex items-center gap-1.5 text-xs text-slate-400">
-        <Layers className="w-3.5 h-3.5 text-sky-400" />
-        <span>Volume 1</span>
+        {isVol2 ? (
+          <Cpu className="w-3.5 h-3.5 text-indigo-400" />
+        ) : (
+          <Layers className="w-3.5 h-3.5 text-sky-400" />
+        )}
+        <span>{isVol2 ? 'Volume 2: CUDA' : 'Volume 1: C++'}</span>
         <span className="text-slate-600">/</span>
-        <span className="text-slate-300 font-mono">Ch {activeNode.chapterId}</span>
+        <span className="text-slate-300 font-mono">
+          {isVol2 ? `Module ${cudaModNum} • Topic ${displayTopicId}` : `Ch ${activeNode.chapterId}`}
+        </span>
         <span className="text-slate-600">/</span>
         <span className="text-slate-100 font-medium">
           {activeNode.type === 'theory' && '📖 Theory & Models'}
@@ -94,6 +106,9 @@ export function HeaderBar({
       </div>
     );
   };
+
+  const targetVol =
+    activeNode.volumeId || (/^[2-7]\./.test(activeNode.chapterId || '') ? 'vol2' : 'vol1');
 
   return (
     <header className="h-14 min-h-14 bg-[#0b1019] border-b border-[#1e293b] px-5 flex items-center justify-between gap-4 select-none">
@@ -169,7 +184,7 @@ export function HeaderBar({
               onClick={() =>
                 onSwitchNode({
                   type: 'cheat_sheet',
-                  volumeId: 'vol1',
+                  volumeId: targetVol,
                   chapterId: activeNode.chapterId,
                 })
               }
@@ -182,7 +197,7 @@ export function HeaderBar({
               onClick={() =>
                 onSwitchNode({
                   type: 'workbook',
-                  volumeId: 'vol1',
+                  volumeId: targetVol,
                   chapterId: activeNode.chapterId,
                   tier: 'champion',
                 })
@@ -202,7 +217,7 @@ export function HeaderBar({
               onClick={() =>
                 onSwitchNode({
                   type: 'theory',
-                  volumeId: 'vol1',
+                  volumeId: targetVol,
                   chapterId: activeNode.chapterId,
                 })
               }
@@ -215,7 +230,7 @@ export function HeaderBar({
               onClick={() =>
                 onSwitchNode({
                   type: 'workbook',
-                  volumeId: 'vol1',
+                  volumeId: targetVol,
                   chapterId: activeNode.chapterId,
                   tier: 'champion',
                 })

@@ -40,7 +40,11 @@ void parallel_for(IndexType start, IndexType end, size_t num_threads, Func&& fn)
 
 Parallel reduction splits an array into contiguous chunks across host threads. Each thread computes a local partial reduction, and the main thread accumulates the partial results into the final scalar:
 
-$$\text{Total} = \bigoplus_{t=0}^{P-1} \left( \bigoplus_{i=\text{start}_t}^{\text{end}_t} x_i \right)$$
+
+```text
+Total = bigoplus_{t=0}^{P-1} <=ft( bigoplus_{i=start_t}^{end_t} x_i )
+```
+
 
 This scales linearly with CPU cores and provides an analytical ground-truth baseline to validate GPU reductions.
 
@@ -53,13 +57,13 @@ This scales linearly with CPU cores and provides an analytical ground-truth base
 | **Core Architecture** | 8–128 heavy cores, huge out-of-order execution, deep branch predictors | Thousands of lightweight SIMT cores organized into SMs |
 | **Memory Bandwidth** | DDR4/DDR5: ~50–120 GB/s | GDDR6 / HBM3: ~300–3,300 GB/s |
 | **Optimal Workload** | Low-latency branch-heavy logic, string tokenization, dynamic graph dispatch | Massive data-parallel compute: GEMM, Softmax, RMSNorm, Attention |
-| **Launch Latency** | Sub-microsecond function dispatch | 3–15 $\mu$s kernel launch overhead |
+| **Launch Latency** | Sub-microsecond function dispatch | 3–15 `mu`s kernel launch overhead |
 
 ---
 
 ## 4. Asynchronous Host Pipelines & Multi-Stream Overlap
 
-To achieve 100% GPU saturation, host threads prepare batch $N+1$ in parallel while the GPU computes batch $N$.
+To achieve 100% GPU saturation, host threads prepare batch `N+1` in parallel while the GPU computes batch `N`.
 
 ```mermaid
 sequenceDiagram

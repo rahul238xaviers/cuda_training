@@ -71,3 +71,7 @@ L_report.md
 # Assistant teaching rules (local only)
 AGENTS.md
 opencode.json
+
+# Tool outputs & sandboxes
+graphify-out/
+sandbox/

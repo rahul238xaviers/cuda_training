@@ -13,28 +13,32 @@ Threads in the same block share high-speed on-chip SRAM called **Shared Memory (
 ## 2. Shared Memory Banking & 32 Banks
 
 Shared memory is split into **32 equally sized memory banks** organized in 4-byte (32-bit) words:
-$$\text{Bank ID} = \left( \frac{\text{Byte Address}}{4} \right) \pmod{32}$$
+
+```text
+Bank ID = <=ft( (Byte Address) / (4) ) % 32
+```
+
 
 ### 2.1 Conflict-Free Access
-- **Linear / Stride 1 Access**: Thread $i$ in a warp reads word $i$.
-  - Thread 0 $\rightarrow$ Bank 0
-  - Thread 1 $\rightarrow$ Bank 1
+- **Linear / Stride 1 Access**: Thread `i` in a warp reads word `i`.
+  - Thread 0 `->` Bank 0
+  - Thread 1 `->` Bank 1
   - ...
-  - Thread 31 $\rightarrow$ Bank 31
+  - Thread 31 `->` Bank 31
   All 32 requests are serviced simultaneously in **1 cycle**.
 - **Broadcast**: Multiple threads reading the exact same address in the same bank are serviced in 1 broadcast cycle.
 
 ### 2.2 Bank Conflicts & The Stride Disaster
 A **Bank Conflict** occurs when multiple threads in a warp access *different addresses* that map to the *same bank*. The memory controller serializes the conflicting requests!
 
-Example: Column access of a $32 \times 32$ matrix in shared memory:
+Example: Column access of a `32 x 32` matrix in shared memory:
 ```cpp
 __shared__ float tile[32][32]; // row-major
 float val = tile[threadIdx.x][0]; // Column access!
 ```
-- Thread 0 accesses index `0 * 32 + 0 = 0` $\rightarrow$ Bank 0
-- Thread 1 accesses index `1 * 32 + 0 = 32` $\rightarrow$ Bank $(32 \pmod{32}) = 0$
-- Thread 2 accesses index `2 * 32 + 0 = 64` $\rightarrow$ Bank $(64 \pmod{32}) = 0$
+- Thread 0 accesses index `0 * 32 + 0 = 0` `->` Bank 0
+- Thread 1 accesses index `1 * 32 + 0 = 32` `->` Bank `(32 % 32) = 0`
+- Thread 2 accesses index `2 * 32 + 0 = 64` `->` Bank `(64 % 32) = 0`
 All 32 threads target Bank 0! This is a **32-way bank conflict** causing a 32x throughput slowdown.
 
 ### 2.3 The Padding Solution
@@ -42,9 +46,9 @@ By adding 1 dummy column (`+1` padding), successive rows are offset by 1 bank:
 ```cpp
 __shared__ float tile[32][33]; // Padded column
 ```
-- Thread 0 accesses index $0 \times 33 = 0 \rightarrow$ Bank 0
-- Thread 1 accesses index $1 \times 33 = 33 \rightarrow$ Bank 1
-- Thread 2 accesses index $2 \times 33 = 66 \rightarrow$ Bank 2
+- Thread 0 accesses index `0 x 33 = 0 ->` Bank 0
+- Thread 1 accesses index `1 x 33 = 33 ->` Bank 1
+- Thread 2 accesses index `2 x 33 = 66 ->` Bank 2
 Zero bank conflicts! All 32 accesses occur in parallel.
 
 ---

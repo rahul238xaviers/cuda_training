@@ -42,7 +42,7 @@ float broadcasted = __shfl_sync(0xffffffff, my_val, 0); // Lane 0 broadcasts its
 ```
 
 ### 3.2 `__shfl_down_sync`
-Shifts a value down from a lane with higher index: lane $i$ receives the value from lane $i + \text{delta}$:
+Shifts a value down from a lane with higher index: lane `i` receives the value from lane `i + delta`:
 ```cpp
 float neighbor = __shfl_down_sync(0xffffffff, my_val, delta);
 ```
@@ -58,7 +58,7 @@ float exchanged = __shfl_xor_sync(0xffffffff, my_val, 16);
 
 ## 4. Canonical 32-Thread Warp Reduction
 
-A warp of 32 threads can compute the sum (or max/min) of all 32 elements in exactly $\log_2(32) = 5$ instructions:
+A warp of 32 threads can compute the sum (or max/min) of all 32 elements in exactly `log_2(32) = 5` instructions:
 ```cpp
 __device__ inline float warp_reduce_sum(float val) {
     val += __shfl_down_sync(0xffffffff, val, 16);

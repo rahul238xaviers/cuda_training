@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import fs from 'fs';
 import path from 'path';
-import { MODULE1_DIR, PLAYGROUND_PATH, getChapterFolder } from '@/lib/workspace';
+import { MODULE1_DIR, PLAYGROUND_PATH, getTopicLocation } from '@/lib/workspace';
 
 export async function POST(request: NextRequest) {
   try {
@@ -14,15 +14,15 @@ export async function POST(request: NextRequest) {
     }
 
     if (type === 'workbook') {
-      const folder = getChapterFolder(chapterId);
-      if (!folder) {
-        return NextResponse.json({ success: false, error: `Chapter ${chapterId} not found` }, { status: 404 });
+      const loc = getTopicLocation(chapterId);
+      if (!loc) {
+        return NextResponse.json({ success: false, error: `Topic or Chapter ${chapterId} not found` }, { status: 404 });
       }
-      const dir = path.join(MODULE1_DIR, folder, target);
+      const dir = path.join(loc.fullPath, target);
       if (!fs.existsSync(dir)) {
         fs.mkdirSync(dir, { recursive: true });
       }
-      const filePath = path.join(dir, `${tier}_workbook.cpp`);
+      const filePath = path.join(dir, `${tier}_workbook.${loc.ext}`);
       fs.writeFileSync(filePath, code, 'utf-8');
       return NextResponse.json({ success: true, path: filePath });
     }

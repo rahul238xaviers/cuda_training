@@ -29,4 +29,4 @@ To achieve peak throughput in loss aggregations and optimizer gradient steps:
 2. **Warp-Level Aggregation**: Use `__shfl_down_sync` to sum within each 32-thread warp (reduces atomic calls by 32x).
 3. **Block-Level Aggregation**: Shared memory scratchpad reduces all warps in the block (reduces atomic calls by 256x–1024x).
 4. **Single Global Atomic**: Only thread 0 of each block issues an `atomicAdd` to global DRAM.
-   - 100,000 elements $\rightarrow$ only $\approx 100$ global atomic transactions!
+   - 100,000 elements `->` only `~= 100` global atomic transactions!
