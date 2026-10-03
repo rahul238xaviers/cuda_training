@@ -41,22 +41,13 @@ To achieve compute-bound performance:
    - Accumulate the partial dot products in thread registers.
    - Synchronize (`__syncthreads()`).
 
+```diagram:tiled-gemm
+{
+  "title": "2D Shared Memory Matrix Tiling Schematic (BM x BN Tile)",
+  "subtitle": "Thread Block loads BM x BK tile from Matrix A and BK x BN tile from Matrix B into SRAM, computing BM x BN output tile."
+}
 ```
-Matrix A [M x K]              Matrix B [K x N]
-+-------------------+         +-----------+-------+
-|                   |         |           | BK    |
-|   sh_A [BM x BK]  |    x    |           | x     |  --> Thread Block [BM x BN]
-|                   |         |           | BN    |
-+-------------------+         +-----------+-------+
-                                        |
-                                        v
-                              Matrix C [M x N]
-                              +-----------+-------+
-                              |           |       |
-                              |           |BM x BN|
-                              |           |       |
-                              +-----------+-------+
-```
+
 
 ### Bank-Conflict-Free Shared Memory Allocation
 Shared memory in NVIDIA architectures (sm_70 through sm_90) has 32 banks of 4-byte width.

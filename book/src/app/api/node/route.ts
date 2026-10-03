@@ -2,13 +2,12 @@ import { NextRequest, NextResponse } from 'next/server';
 import fs from 'fs';
 import path from 'path';
 import {
-  MODULE1_DIR,
   WORKSPACE_ROOT,
-  PLAYGROUND_PATH,
   getTopicLocation,
   countTestsInWorkbook,
+  getPlaygroundInfo,
+  PlaygroundType,
   METAL_KERNELS,
-  scanDynamicChapters,
 } from '@/lib/workspace';
 
 export async function GET(request: NextRequest) {
@@ -17,90 +16,53 @@ export async function GET(request: NextRequest) {
   const chapterId = searchParams.get('chapter') || '1.1';
   const tier = (searchParams.get('tier') || 'beginner') as 'beginner' | 'intermediate' | 'champion';
   const kernelId = searchParams.get('kernelId');
+  const volumeId = searchParams.get('volumeId') || undefined;
+  const playgroundType = (searchParams.get('playgroundType') || searchParams.get('subType') || 'cpp') as PlaygroundType;
 
+  // 1. Multi-Playground Support (C++, CUDA, Kernel)
   if (type === 'playground') {
-    const code = fs.existsSync(PLAYGROUND_PATH) ? fs.readFileSync(PLAYGROUND_PATH, 'utf-8') : '// playground.cpp\n#include <iostream>\n\nint main() {\n    std::cout << "Hello CUDA & C++!" << std::endl;\n    return 0;\n}\n';
+    const pgInfo = getPlaygroundInfo(playgroundType);
+    let code = '';
+    if (fs.existsSync(pgInfo.filePath)) {
+      code = fs.readFileSync(pgInfo.filePath, 'utf-8');
+    } else {
+      if (pgInfo.type === 'cuda') {
+        code = `// playground.cu - Interactive CUDA GPU Scratchpad\n#include <iostream>\n#include <cuda_runtime.h>\n\n__global__ void hello_cuda() {\n    printf("Hello from GPU Thread %d in Block %d!\\n", threadIdx.x, blockIdx.x);\n}\n\nint main() {\n    hello_cuda<<<2, 4>>>();\n    cudaDeviceSynchronize();\n    return 0;\n}\n`;
+      } else if (pgInfo.type === 'kernel') {
+        code = `// playground_kernel.cu - Kernel Benchmark & Verification Lab\n#include <iostream>\n#include <cuda_runtime.h>\n\nint main() {\n    std::cout << "Kernel benchmark harness ready." << std::endl;\n    return 0;\n}\n`;
+      } else {
+        code = `// playground.cpp - Interactive C++ Systems Playground\n#include <iostream>\n\nint main() {\n    std::cout << "Hello C++ Memory Systems!" << std::endl;\n    return 0;\n}\n`;
+      }
+      fs.writeFileSync(pgInfo.filePath, code, 'utf-8');
+    }
+
     return NextResponse.json({
       type: 'playground',
-      title: 'Interactive Playground Sandbox',
-      filePath: 'playground.cpp',
+      playgroundType: pgInfo.type,
+      title: pgInfo.title,
+      subtitle: pgInfo.subtitle,
+      filePath: pgInfo.filename,
+      language: pgInfo.language,
+      ext: pgInfo.ext,
       code,
+      relPath: pgInfo.filename,
     });
   }
 
-  if (type === 'kernel') {
+  // 2. Legacy Metal Kernel blueprint specs (if specifically requested by numeric id)
+  if (type === 'kernel' && kernelId && !chapterId.startsWith('k')) {
     const idNum = parseInt(kernelId || '1', 10);
     const kernelMeta = METAL_KERNELS.find((k) => k.id === idNum) || METAL_KERNELS[0];
-
-    const kernelSpecs: Record<number, {
-      overview: string;
-      memoryPattern: string;
-      threadLayout: string;
-      optimizations: string;
-      metalVsCuda: string;
-    }> = {
-      1: {
-        overview: 'Maps vocabulary token IDs (int32) to dense embedding vectors of dimension d_model. Performs coalesced reads and writes across warp threads.',
-        memoryPattern: 'Contiguous DRAM reads from embedding table, coalesced writes into activation tensor.',
-        threadLayout: '1D Grid, 256 threads per block. Each warp handles 32 consecutive embedding dimensions.',
-        optimizations: 'Vectorized float4 loads for hidden dimensions, cache hit optimization on active tokens.',
-        metalVsCuda: 'Metal uses threadgroup dispatch and device pointers; CUDA uses grid-stride loop with __ldg() read-only cache loads.',
-      },
-      2: {
-        overview: 'Root Mean Square Normalization. Computes root mean square over hidden dimension and scales elements without mean-centering.',
-        memoryPattern: 'Two-pass reduction across hidden dimension: sum-of-squares reduction followed by scale multiply.',
-        threadLayout: 'Block per token/row, 256-1024 threads with warp-shuffle reduction (__shfl_down_sync) in Shared Memory SRAM.',
-        optimizations: 'Single-pass Welford/RMS with registers, eliminates redundant DRAM trips.',
-        metalVsCuda: 'Metal uses simdgroup_matrix or simdgroup reductions; CUDA maps to __shfl_down_sync warp shuffle intrinsics.',
-      },
-      6: {
-        overview: 'Tri-Dao style FlashAttention forward kernel using online softmax and SRAM tiling to eliminate NxN DRAM materialization.',
-        memoryPattern: 'Tiled Q, K, V blocks loaded into Shared Memory SRAM; streaming online softmax keeps running max and sum in registers.',
-        threadLayout: '2D/3D Grid over batch x heads x sequence chunks. Warps perform tiled matrix multiplications.',
-        optimizations: 'Zero bank conflicts in shared SRAM, tensor core mma.sync or warp-level outer products.',
-        metalVsCuda: 'Metal uses threadgroup memory buffers with simdgroup matrix ops; CUDA leverages cp.async and shared memory swizzling.',
-      },
-      8: {
-        overview: 'High-performance Bfloat16 General Matrix Multiply (GEMM) using 2D block-tiling and double-buffering.',
-        memoryPattern: 'A-tile and B-tile copied from Global DRAM to Shared Memory SRAM with ping-pong buffering.',
-        threadLayout: '128x128 output tile per thread block, 64x64 warp tiles, 8x8 thread micro-tiles.',
-        optimizations: 'Asynchronous copy (cp.async), zero bank conflict swizzling, register allocation tuning.',
-        metalVsCuda: 'Metal dispatch_threadgroups maps to CUDA dim3 grid/block; shared memory tile allocation maps to __shared__ arrays.',
-      },
-      14: {
-        overview: 'SwiGLU activation function: f(x) = (x * sigmoid(beta * x)) * gate. Widely used in modern LLMs (LLaMA, Mistral).',
-        memoryPattern: 'Elementwise fused streaming read of gate and up-projection buffers, single write to activation buffer.',
-        threadLayout: '1D Grid, 256 threads per block. Vectorized 128-bit loads (float4 / bfloat16_8).',
-        optimizations: 'Fused math avoids intermediate memory write, fast silu approximation via hardware intrinsic.',
-        metalVsCuda: 'Straightforward 1:1 translation with vectorized type matching (simd::float4 -> float4).',
-      },
-      22: {
-        overview: 'Fused AdamW optimizer update applying first and second momentum corrections directly in GPU DRAM in a single pass.',
-        memoryPattern: 'Streaming read/write of params, gradients, first moments (m), and second moments (v).',
-        threadLayout: '1D Grid over all model parameters, vectorized reads/writes.',
-        optimizations: 'Memory-bandwidth bound kernel; saturated through vectorized float4/half8 and coalesced 128-byte transactions.',
-        metalVsCuda: 'Kernel is bandwidth bound; performance matches theoretical DRAM roofline when vectorized on both architectures.',
-      },
-    };
-
-    const spec = kernelSpecs[kernelMeta.id] || {
-      overview: `Production kernel implementation for ${kernelMeta.name} (${kernelMeta.category}).`,
-      memoryPattern: 'Coalesced DRAM transactions, register caching, SRAM scratchpad.',
-      threadLayout: 'Grid-stride loop with 256-512 threads per block.',
-      optimizations: 'Vectorized memory access, ILP (instruction level parallelism), warp-synchronous intrinsics.',
-      metalVsCuda: 'Porting involves translating metal threadgroup qualifiers to __shared__ and simdgroup primitives to warp shuffles.',
-    };
 
     return NextResponse.json({
       type: 'kernel',
       title: `Kernel #${kernelMeta.id}: ${kernelMeta.name}`,
       kernel: kernelMeta,
-      spec,
     });
   }
 
-  // Topic / Chapter specific nodes (C++ Module 1 & CUDA Modules 2-7)
-  const loc = getTopicLocation(chapterId);
+  // 3. Topic Nodes (Volume 1: C++, Volume 2: CUDA, Volume 3: Kernels)
+  const loc = getTopicLocation(chapterId, volumeId);
   if (!loc) {
     return NextResponse.json({ error: `Topic or Chapter ${chapterId} not found` }, { status: 404 });
   }
@@ -108,23 +70,27 @@ export async function GET(request: NextRequest) {
   const topicDir = loc.fullPath;
   const topicTitle = loc.title;
   const isCuda = loc.isCuda;
+  const isKernel = loc.isKernel;
   const ext = loc.ext;
   const displayTopicId = loc.displayTopicId;
+
+  const prefix = isKernel ? 'Kernel' : isCuda ? 'Topic' : 'Chapter';
 
   if (type === 'theory') {
     const theoryPath = path.join(topicDir, 'theory.md');
     const content = fs.existsSync(theoryPath)
       ? fs.readFileSync(theoryPath, 'utf-8')
-      : `# ${isCuda ? 'Topic' : 'Chapter'} ${displayTopicId}: ${topicTitle}\n\n*Theory module coming soon.*`;
+      : `# ${prefix} ${displayTopicId}: ${topicTitle}\n\n*Theory module coming soon.*`;
     return NextResponse.json({
       type: 'theory',
       chapterId,
       displayId: displayTopicId,
       chapterTitle: topicTitle,
-      title: `${isCuda ? 'Topic' : 'Chapter'} ${displayTopicId}: Theory & Mental Models`,
+      title: `${prefix} ${displayTopicId}: Theory & Mental Models`,
       content,
-      readTimeMin: 7,
+      readTimeMin: isKernel ? 9 : 7,
       isCuda,
+      isKernel,
       relPath: path.relative(WORKSPACE_ROOT, theoryPath),
     });
   }
@@ -133,15 +99,16 @@ export async function GET(request: NextRequest) {
     const cheatPath = path.join(topicDir, 'cheat_sheet.md');
     const content = fs.existsSync(cheatPath)
       ? fs.readFileSync(cheatPath, 'utf-8')
-      : `# ${isCuda ? 'Topic' : 'Chapter'} ${displayTopicId}: Revision Cheat Sheet\n\n*Cheat sheet coming soon.*`;
+      : `# ${prefix} ${displayTopicId}: Revision Cheat Sheet\n\n*Cheat sheet coming soon.*`;
     return NextResponse.json({
       type: 'cheat_sheet',
       chapterId,
       displayId: displayTopicId,
       chapterTitle: topicTitle,
-      title: `${isCuda ? 'Topic' : 'Chapter'} ${displayTopicId}: Revision Cheat Sheet`,
+      title: `${prefix} ${displayTopicId}: Revision Cheat Sheet`,
       content,
       isCuda,
+      isKernel,
       relPath: path.relative(WORKSPACE_ROOT, cheatPath),
     });
   }
@@ -161,7 +128,7 @@ export async function GET(request: NextRequest) {
 
     const exerciseCode = fs.existsSync(exPath) ? fs.readFileSync(exPath, 'utf-8') : '';
 
-    // If solution file does NOT exist yet or is empty, auto-initialize by copying from exercise!
+    // If solution file does NOT exist yet or is empty, auto-initialize from exercise
     if ((!fs.existsSync(solPath) || fs.statSync(solPath).size === 0) && exerciseCode) {
       if (!fs.existsSync(solDir)) {
         fs.mkdirSync(solDir, { recursive: true });
@@ -201,7 +168,8 @@ export async function GET(request: NextRequest) {
       tier,
       ext: actualExt,
       isCuda,
-      title: `${isCuda ? 'Topic' : 'Chapter'} ${displayTopicId}: ${tier.charAt(0).toUpperCase() + tier.slice(1)} Workbook`,
+      isKernel,
+      title: `${prefix} ${displayTopicId}: ${tier.charAt(0).toUpperCase() + tier.slice(1)} Workbook`,
       solutionCode,
       exerciseCode,
       defaultTarget: 'solution',

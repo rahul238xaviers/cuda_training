@@ -85,6 +85,50 @@ export function LabEditorView({
   const [activeBottomTab, setActiveBottomTab] = useState<'terminal' | 'problems'>('terminal');
   const [isDockOpen, setIsDockOpen] = useState<boolean>(true);
 
+  // Terminal Dock Vertical Resizing State
+  const [dockHeight, setDockHeight] = useState<number>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('terminal_dock_height');
+      if (saved) return parseInt(saved, 10);
+    }
+    return 240;
+  });
+  const [isDraggingDock, setIsDraggingDock] = useState(false);
+  const isDraggingDockRef = useRef(false);
+
+  const startResizingDock = (e: React.MouseEvent) => {
+    e.preventDefault();
+    isDraggingDockRef.current = true;
+    setIsDraggingDock(true);
+    document.body.style.cursor = 'row-resize';
+    document.body.style.userSelect = 'none';
+
+    const startY = e.clientY;
+    const startHeight = dockHeight;
+
+    const handleMouseMove = (ev: MouseEvent) => {
+      if (!isDraggingDockRef.current) return;
+      const delta = startY - ev.clientY;
+      const newHeight = Math.max(90, Math.min(650, startHeight + delta));
+      setDockHeight(newHeight);
+    };
+
+    const handleMouseUp = () => {
+      isDraggingDockRef.current = false;
+      setIsDraggingDock(false);
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+      try {
+        localStorage.setItem('terminal_dock_height', String(dockHeight));
+      } catch {}
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mouseup', handleMouseUp);
+  };
+
   // Counts
   const errorCount = useMemo(
     () => diagnostics.filter((d) => d.severity === 'error').length,
@@ -426,7 +470,10 @@ export function LabEditorView({
         </div>
 
         {/* Monaco Editor Container */}
-        <div className="flex-1 relative overflow-hidden bg-[#070a10]">
+        <div
+          style={{ pointerEvents: isDraggingDock ? 'none' : 'auto' }}
+          className="flex-1 relative overflow-hidden bg-[#070a10]"
+        >
           <Editor
             height="100%"
             language="cpp"
@@ -461,7 +508,20 @@ export function LabEditorView({
 
       {/* Lower Dock Pane: Collapsible Terminal vs Problems Tabs */}
       {isDockOpen ? (
-        <div className="h-64 min-h-48 bg-[#05070c] flex flex-col border-t border-[#1e293b]">
+        <div
+          style={{ height: dockHeight }}
+          className="bg-[#05070c] flex flex-col border-t border-[#1e293b] relative transition-[height] duration-75"
+        >
+          {/* Draggable Row Resize Handle */}
+          <div
+            onMouseDown={startResizingDock}
+            onDoubleClick={() => setDockHeight(240)}
+            className="absolute -top-1 left-0 right-0 h-2 cursor-row-resize hover:bg-sky-500/50 active:bg-sky-500 transition-colors z-40 group"
+            title="Drag to resize terminal panel (Double click to reset)"
+          >
+            <div className="absolute top-0.5 left-1/2 -translate-x-1/2 w-16 h-0.5 rounded-full bg-slate-700/60 group-hover:bg-sky-400/80 transition-colors" />
+          </div>
+
           {/* Tab Header */}
           <div className="h-8 px-4 bg-[#0b0f17] border-b border-[#1e293b] flex items-center justify-between select-none">
             <div className="flex items-center gap-1">

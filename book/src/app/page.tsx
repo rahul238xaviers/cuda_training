@@ -7,6 +7,7 @@ import { ReaderView } from '@/components/ReaderView';
 import { LabEditorView } from '@/components/LabEditorView';
 import { KernelSpecView } from '@/components/KernelSpecView';
 import { TeacherDrawer } from '@/components/TeacherDrawer';
+import { OrientationGuide } from '@/components/OrientationGuide';
 import { Loader2 } from 'lucide-react';
 
 export default function BookPlatform() {
@@ -34,6 +35,38 @@ export default function BookPlatform() {
   // Teacher Drawer State
   const [isTeacherOpen, setIsTeacherOpen] = useState<boolean>(false);
 
+  // Navigation Sidebar Resizing & Collapse State
+  const [sidebarWidth, setSidebarWidth] = useState<number>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('sidebar_width');
+      if (saved) return Math.max(220, Math.min(520, parseInt(saved, 10)));
+    }
+    return 290;
+  });
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('sidebar_collapsed') === 'true';
+    }
+    return false;
+  });
+
+  const handleResizeSidebar = (w: number) => {
+    setSidebarWidth(w);
+    try {
+      localStorage.setItem('sidebar_width', String(w));
+    } catch {}
+  };
+
+  const handleToggleSidebar = useCallback(() => {
+    setIsSidebarCollapsed((prev) => {
+      const next = !prev;
+      try {
+        localStorage.setItem('sidebar_collapsed', String(next));
+      } catch {}
+      return next;
+    });
+  }, []);
+
   // Load Tree on mount
   const loadTree = async () => {
     try {
@@ -54,12 +87,21 @@ export default function BookPlatform() {
     setIsLoadingNode(true);
     setRunStatus('idle');
     setSaveStatus('saved');
+
+    if (node.type === 'guide') {
+      setIsLoadingNode(false);
+      setNodeData({ title: 'Curriculum Orientation & Roadmap' });
+      return;
+    }
+
     try {
       const params = new URLSearchParams();
       params.set('type', node.type);
       if (node.chapterId) params.set('chapter', node.chapterId);
       if (node.tier) params.set('tier', node.tier);
       if (node.kernelId) params.set('kernelId', String(node.kernelId));
+      if (node.volumeId) params.set('volumeId', node.volumeId);
+      if (node.playgroundType) params.set('playgroundType', node.playgroundType);
 
       const res = await fetch(`/api/node?${params.toString()}`);
       const data = await res.json();
@@ -73,8 +115,26 @@ export default function BookPlatform() {
         setTerminalOutput(`Ready to compile ${node.tier}_workbook.${ext} with ${compiler}.`);
       } else if (node.type === 'playground') {
         setActiveCode(data.code || '');
-        setTerminalOutput('Ready to compile playground.cpp with clang++ -std=c++20 -O3.');
+        const compiler =
+          data.playgroundType === 'cuda'
+            ? 'nvcc -O3 -std=c++17 --extended-lambda'
+            : data.playgroundType === 'kernel'
+            ? 'nvcc -O3 -std=c++17 (Kernel Benchmark Lab)'
+            : 'clang++ -std=c++20 -O3';
+        setTerminalOutput(`Ready to compile ${data.filePath} with ${compiler}.`);
       }
+
+      // Persist active position to user_progress.json
+      fetch('/api/progress', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'set_position',
+          activeTopic: node.chapterId,
+          activeVolume: node.volumeId,
+          activePlayground: node.playgroundType,
+        }),
+      }).catch(() => {});
     } catch (err) {
       console.error('Failed to load node content:', err);
     } finally {
@@ -107,10 +167,13 @@ export default function BookPlatform() {
           code,
         };
 
-        if (activeNode.type === 'workbook') {
+        if (activeNode.type === 'playground') {
+          payload.playgroundType = activeNode.playgroundType || 'cpp';
+        } else if (activeNode.type === 'workbook') {
           payload.chapterId = activeNode.chapterId;
           payload.tier = activeNode.tier;
           payload.target = target;
+          payload.volumeId = activeNode.volumeId;
         }
 
         const res = await fetch('/api/save', {
@@ -147,13 +210,17 @@ export default function BookPlatform() {
     }, 1200);
   };
 
-  // Global keydown listener to intercept Cmd+S / Ctrl+S and prevent browser Download dialog
+  // Global keydown listener to intercept Cmd+S and Cmd+B
   useEffect(() => {
     const handleGlobalKeyDown = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 's') {
         e.preventDefault();
         e.stopPropagation();
         handleSave();
+      } else if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'b') {
+        e.preventDefault();
+        e.stopPropagation();
+        handleToggleSidebar();
       }
     };
 
@@ -161,16 +228,15 @@ export default function BookPlatform() {
     return () => {
       window.removeEventListener('keydown', handleGlobalKeyDown, { capture: true });
     };
-  }, [handleSave]);
+  }, [handleSave, handleToggleSidebar]);
 
-  // Compile and run active node
+  // Compile and run active node in isolated sandbox
   const handleRun = async () => {
-    // Save to disk first
     await handleSave();
 
-    const isCuda = nodeData?.isCuda || nodeData?.ext === 'cu';
+    const isCuda = nodeData?.isCuda || nodeData?.ext === 'cu' || activeNode.playgroundType === 'cuda' || activeNode.playgroundType === 'kernel';
     const compiler = isCuda ? 'nvcc -O3 -std=c++17 --extended-lambda' : 'clang++ -std=c++20 -O3';
-    setTerminalOutput(`Compiling with ${compiler}...\nExecuting binary...`);
+    setTerminalOutput(`📦 Preparing isolated sandbox...\nCompiling with ${compiler}...\nExecuting binary with 10s watchdog limit...`);
     setDurationMs(undefined);
     setExitCode(null);
 
@@ -180,10 +246,13 @@ export default function BookPlatform() {
         code: activeCode,
       };
 
-      if (activeNode.type === 'workbook') {
+      if (activeNode.type === 'playground') {
+        payload.playgroundType = activeNode.playgroundType || 'cpp';
+      } else if (activeNode.type === 'workbook') {
         payload.chapterId = activeNode.chapterId;
         payload.tier = activeNode.tier;
         payload.target = target;
+        payload.volumeId = activeNode.volumeId;
       }
 
       const res = await fetch('/api/run', {
@@ -198,19 +267,50 @@ export default function BookPlatform() {
 
       if (result.success) {
         setRunStatus('success');
-        setTerminalOutput(result.stdout || '(Executed with return code 0 and no standard output)');
+        setTerminalOutput(result.stdout || '(Executed in sandbox with return code 0)');
         loadTree();
       } else {
         setRunStatus('error');
         const errText =
           result.stage === 'compilation'
-            ? `[COMPILATION ERROR]:\n${result.stderr || result.stdout}`
-            : `[RUNTIME ERROR (Exit ${result.exitCode})]:\n${result.stderr || result.stdout}`;
+            ? `[SANDBOX COMPILATION ERROR]:\n${result.stderr || result.stdout}`
+            : `[SANDBOX RUNTIME ERROR (Exit ${result.exitCode})]:\n${result.stderr || result.stdout}`;
         setTerminalOutput(errText);
       }
     } catch (err: any) {
       setRunStatus('error');
-      setTerminalOutput(`[EXECUTION FAILED]: ${err.message}`);
+      setTerminalOutput(`[SANDBOX EXECUTION FAILED]: ${err.message}`);
+    }
+  };
+
+  // Fork to Sandbox: copies current code into playground file and switches to sandbox mode
+  const handleForkToSandbox = async () => {
+    if (!activeCode) return;
+    try {
+      const isKernel = activeNode.volumeId === 'vol3' || activeNode.chapterId?.startsWith('k') || activeNode.type === 'kernel';
+      const isCuda = isKernel || activeNode.volumeId === 'vol2' || /^[2-7]\./.test(activeNode.chapterId || '') || nodeData?.ext === 'cu';
+
+      const res = await fetch('/api/save', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: 'fork_to_sandbox',
+          code: activeCode,
+          isKernel,
+          isCuda,
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setActiveNode({
+          type: 'playground',
+          volumeId: 'sandbox',
+          playgroundType: data.playgroundType,
+        });
+        setTerminalOutput(`🚀 [FORKED TO SANDBOX]: Successfully copied into ${data.path}!\nYou are now in isolated sandbox mode with live compiler access.`);
+      }
+    } catch (err: any) {
+      console.error('Fork to sandbox failed:', err);
     }
   };
 
@@ -219,7 +319,7 @@ export default function BookPlatform() {
     if (activeNode.type !== 'workbook' || !activeNode.chapterId || !activeNode.tier) return;
 
     const confirmed = window.confirm(
-      `Start over Chapter ${activeNode.chapterId} (${activeNode.tier})?\n\nThis will reset your local working file back to the original exercise starter template.`
+      `Start over ${activeNode.chapterId} (${activeNode.tier})?\n\nThis will reset your local working file back to the clean exercise starter template.`
     );
     if (!confirmed) return;
 
@@ -230,6 +330,7 @@ export default function BookPlatform() {
         body: JSON.stringify({
           chapterId: activeNode.chapterId,
           tier: activeNode.tier,
+          volumeId: activeNode.volumeId,
         }),
       });
       const data = await res.json();
@@ -285,10 +386,14 @@ export default function BookPlatform() {
         activeNode={activeNode}
         onSelectNode={(node) => setActiveNode(node)}
         onRefreshTree={loadTree}
+        width={sidebarWidth}
+        onResize={handleResizeSidebar}
+        isCollapsed={isSidebarCollapsed}
+        onToggleCollapse={handleToggleSidebar}
       />
 
       {/* 2. Main Experience Container */}
-      <div className="flex-1 flex flex-col h-full overflow-hidden">
+      <div className="flex-1 flex flex-col h-full overflow-hidden min-w-0">
         {/* Context-Segregated Header Bar */}
         <HeaderBar
           activeNode={activeNode}
@@ -301,10 +406,13 @@ export default function BookPlatform() {
           onFormat={handleFormat}
           onReset={handleReset}
           onStartOver={handleStartOver}
+          onForkToSandbox={handleForkToSandbox}
           onClearConsole={handleClearConsole}
           onSwitchNode={(node) => setActiveNode(node)}
           onToggleTeacher={() => setIsTeacherOpen((prev) => !prev)}
           isTeacherOpen={isTeacherOpen}
+          isSidebarCollapsed={isSidebarCollapsed}
+          onToggleSidebar={handleToggleSidebar}
         />
 
         {/* Dynamic Facade Viewport */}
@@ -316,6 +424,11 @@ export default function BookPlatform() {
             </div>
           ) : (
             <>
+              {/* Orientation & Learning Guide View */}
+              {activeNode.type === 'guide' && (
+                <OrientationGuide onNavigate={(node) => setActiveNode(node)} />
+              )}
+
               {/* Theory or Cheat Sheet Reader View */}
               {(activeNode.type === 'theory' || activeNode.type === 'cheat_sheet') && (
                 <ReaderView
@@ -331,8 +444,13 @@ export default function BookPlatform() {
                 <LabEditorView
                   filePath={
                     activeNode.type === 'playground'
-                      ? 'playground.cpp'
-                      : nodeData?.relPath || `src/module1/${activeNode.chapterId}/${target}/${activeNode.tier}_workbook.cpp`
+                      ? nodeData?.filePath ||
+                        (activeNode.playgroundType === 'cuda'
+                          ? 'playground.cu'
+                          : activeNode.playgroundType === 'kernel'
+                          ? 'playground_kernel.cu'
+                          : 'playground.cpp')
+                      : nodeData?.relPath || `workbook.${nodeData?.ext || 'cpp'}`
                   }
                   code={activeCode}
                   onChange={handleCodeChange}
@@ -345,8 +463,8 @@ export default function BookPlatform() {
                 />
               )}
 
-              {/* Volume 3 Kernel Blueprint View */}
-              {activeNode.type === 'kernel' && (
+              {/* Legacy Kernel Blueprint View (if explicitly opened by id) */}
+              {activeNode.type === 'kernel' && !activeNode.chapterId && (
                 <KernelSpecView kernelData={nodeData} />
               )}
             </>

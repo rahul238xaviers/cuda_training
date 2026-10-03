@@ -1,0 +1,211 @@
+{
+  "$schema": "./curriculum.schema.json",
+  "version": "1.0.0",
+  "title": "C++ Low-Level Systems & GPU Kernel Mastery",
+  "subtitle": "From Zero-Cost Abstractions to Saturating GPU Memory Bandwidth & Tensor Cores",
+  "volumes": [
+    {
+      "id": "vol1",
+      "shortId": "cpp",
+      "title": "Volume 1: C++ Low-Level Systems Foundations",
+      "displayTitle": "C++ Systems",
+      "tagline": "Pointer arithmetic, strides, memory alignment, cache lines, custom arenas, zero-copy buffers",
+      "description": "Master stack/heap dynamics, raw byte arithmetic, memory alignment, SIMD vectorization, cache associativity, and atomic acquire-release semantics.",
+      "sourceDir": "src/module1",
+      "language": "cpp",
+      "ext": "cpp",
+      "modules": [
+        {
+          "num": 1,
+          "title": "Module 1: Fundamental Memory Layout & Value Semantics",
+          "displayTitle": "Memory Layout & Value Semantics",
+          "tagline": "Stack layout, pointer indirection, cache lines, POD alignment & bit structures",
+          "startCh": 1,
+          "endCh": 5
+        },
+        {
+          "num": 2,
+          "title": "Module 2: Resource Ownership, RAII & Custom Allocators",
+          "displayTitle": "Ownership, RAII & Allocators",
+          "tagline": "Exclusive & shared ownership, linear arenas, freelist pools & polymorphic memory resources",
+          "startCh": 6,
+          "endCh": 8
+        },
+        {
+          "num": 3,
+          "title": "Module 3: Virtual Memory, Page Systems & Cache Hierarchy",
+          "displayTitle": "Virtual Memory & Cache Hierarchy",
+          "tagline": "Page tables, mmap zero-copy, TLB profiling, cache associativity & false sharing",
+          "startCh": 9,
+          "endCh": 12
+        },
+        {
+          "num": 4,
+          "title": "Module 4: Hardware-Level Optimization, SIMD & Bit Manipulation",
+          "displayTitle": "Hardware SIMD & Bit Manipulation",
+          "tagline": "AVX2/NEON SIMD vectorization, instruction-level parallelism, branchless programming & bit hacks",
+          "startCh": 13,
+          "endCh": 15
+        },
+        {
+          "num": 5,
+          "title": "Module 5: Concurrency, Atomics, NUMA & High-Throughput I/O",
+          "displayTitle": "Concurrency, NUMA & High-Throughput I/O",
+          "tagline": "Acquire-release memory orders, lock-free ring buffers, NUMA topology & io_uring streaming",
+          "startCh": 16,
+          "endCh": 20
+        }
+      ]
+    },
+    {
+      "id": "vol2",
+      "shortId": "cuda",
+      "title": "Volume 2: CUDA Architecture & LLM Execution Model",
+      "displayTitle": "CUDA Architecture",
+      "tagline": "Warps, thread blocks, shared SRAM bank conflicts, register pressure, memory coalescing, WMMA, and LLM inference/training primitives",
+      "description": "Learn the GPU physical execution pipeline: SMs, warps, divergent branches, coalesced DRAM transactions, bank-conflict-free shared memory, and warp shuffle intrinsics.",
+      "sourceDir": "src",
+      "folderPrefix": "module",
+      "language": "cuda",
+      "ext": "cu",
+      "modules": [
+        {
+          "num": 1,
+          "diskNum": 2,
+          "title": "Module 1: Host-Device Bridge & Modern C++",
+          "displayTitle": "Host-Device Bridge & Modern C++",
+          "tagline": "Lambdas, RAII Streams, Move Semantics, Device Views & Thrust Patterns"
+        },
+        {
+          "num": 2,
+          "diskNum": 3,
+          "title": "Module 2: CUDA Threading Hierarchy & Hardware Execution",
+          "displayTitle": "CUDA Threading Hierarchy & Hardware Execution",
+          "tagline": "Threads, Registers, Warps, Shuffle Intrinsics, Blocks & Grids"
+        },
+        {
+          "num": 3,
+          "diskNum": 4,
+          "title": "Module 3: Memory Hierarchy, Coalescing & SRAM Tiling",
+          "displayTitle": "Memory Hierarchy, Coalescing & SRAM Tiling",
+          "tagline": "Global DRAM Coalescing, Cache Hierarchy, Shared SRAM Tiling"
+        },
+        {
+          "num": 4,
+          "diskNum": 5,
+          "title": "Module 4: High-Performance Parallel Primitives",
+          "displayTitle": "High-Performance Parallel Primitives",
+          "tagline": "Warp/Block Tree Reductions, Atomics & Online Softmax"
+        },
+        {
+          "num": 5,
+          "diskNum": 6,
+          "title": "Module 5: Low-Precision & Tensor Cores",
+          "displayTitle": "Low-Precision & Tensor Cores",
+          "tagline": "BF16/FP16 Packed Math & WMMA Tensor Core Acceleration"
+        },
+        {
+          "num": 6,
+          "diskNum": 7,
+          "title": "Module 6: Production LLM Inference & Training Primitives",
+          "displayTitle": "Production LLM Inference & Training Primitives",
+          "tagline": "Embedding, RoPE, RMSNorm, AdamW, GEMM Projections & FlashAttention"
+        }
+      ]
+    },
+    {
+      "id": "vol3",
+      "shortId": "kernel",
+      "title": "Volume 3: Production GPU Kernels Curriculum",
+      "displayTitle": "GPU Kernels",
+      "tagline": "Dense GEMM, Sparse/MoE, Attention, Normalizations, Audio, Vision, and Quantization/Optimizers",
+      "description": "Production GPU kernels across 7 domains engineered to reach peak arithmetic throughput and memory bandwidth roofline limits.",
+      "sourceDir": "src/kernels",
+      "folderPrefix": "module",
+      "language": "cuda",
+      "ext": "cu",
+      "modules": [
+        {
+          "num": 1,
+          "diskNum": 1,
+          "title": "Module 1: Dense Linear & GEMM Kernels",
+          "displayTitle": "Dense Linear & GEMM Kernels",
+          "tagline": "GEMV, 2D Block-Tiled GEMM, Tensor Core WMMA & Split-K GEMM",
+          "category": "Dense Linear"
+        },
+        {
+          "num": 2,
+          "diskNum": 2,
+          "title": "Module 2: Sparse & Mixture-of-Experts (MoE) Kernels",
+          "displayTitle": "Sparse & Mixture-of-Experts (MoE)",
+          "tagline": "Top-K Gating, MoE SwiGLU GEMM, CSR SpMV & 2:4 Structured Sparsity",
+          "category": "Sparse & MoE"
+        },
+        {
+          "num": 3,
+          "diskNum": 3,
+          "title": "Module 3: Attention & Sequence Transformations",
+          "displayTitle": "Attention & Sequence Transformations",
+          "tagline": "FlashAttention-2, FlashDecoding, RoPE Embeddings & SSM Parallel Scan",
+          "category": "Attention"
+        },
+        {
+          "num": 4,
+          "diskNum": 4,
+          "title": "Module 4: Fused Normalizations & Activations",
+          "displayTitle": "Fused Normalizations & Activations",
+          "tagline": "Fused RMSNorm, LayerNorm Residual Add, SwiGLU & Online Softmax",
+          "category": "Normalizations"
+        },
+        {
+          "num": 5,
+          "diskNum": 5,
+          "title": "Module 5: Multimodal Audio Processing Kernels",
+          "displayTitle": "Multimodal Audio Processing",
+          "tagline": "STFT / Mel Spectrogram Filterbank, 1D Dilated Conv & Fused CTC Decode",
+          "category": "Audio"
+        },
+        {
+          "num": 6,
+          "diskNum": 6,
+          "title": "Module 6: Multimodal Vision & Video Kernels",
+          "displayTitle": "Multimodal Vision & Video",
+          "tagline": "ViT 2D Patchify, 3D Spatio-Temporal Window Attention & Bilinear Grid Sample",
+          "category": "Vision & Video"
+        },
+        {
+          "num": 7,
+          "diskNum": 7,
+          "title": "Module 7: Low-Bit Quantization & Training Optimizers",
+          "displayTitle": "Quantization & Training Optimizers",
+          "tagline": "INT4/FP8 Dequant GEMV, Fused AdamW Step & Gradient L2 Norm Clipping",
+          "category": "Quantization & Optimizers"
+        }
+      ]
+    }
+  ],
+  "metalKernels": [
+    { "id": 1, "name": "Embedding Forward", "category": "Embedding", "metalFile": "embedding_forward.metal", "cudaFile": "embedding_forward.cu", "status": "planned" },
+    { "id": 2, "name": "RMSNorm Forward", "category": "Normalization", "metalFile": "rms_norm_forward.metal", "cudaFile": "rms_norm_forward.cu", "status": "planned" },
+    { "id": 3, "name": "RMSNorm Backward", "category": "Normalization", "metalFile": "rms_norm_backward.metal", "cudaFile": "rms_norm_backward.cu", "status": "planned" },
+    { "id": 4, "name": "RoPE Forward", "category": "Positional", "metalFile": "rope_forward.metal", "cudaFile": "rope_forward.cu", "status": "planned" },
+    { "id": 5, "name": "RoPE Backward", "category": "Positional", "metalFile": "rope_backward.metal", "cudaFile": "rope_backward.cu", "status": "planned" },
+    { "id": 6, "name": "FlashAttention Forward", "category": "Attention", "metalFile": "flash_attn_fwd.metal", "cudaFile": "flash_attn_fwd.cu", "status": "planned" },
+    { "id": 7, "name": "Fused Attention Backward", "category": "Attention", "metalFile": "fused_attn_bwd.metal", "cudaFile": "fused_attn_bwd.cu", "status": "planned" },
+    { "id": 8, "name": "GEMM BF16", "category": "Matrix Multiplication", "metalFile": "gemm_bf16.metal", "cudaFile": "gemm_bf16.cu", "status": "planned" },
+    { "id": 9, "name": "GEMM Projection", "category": "Matrix Multiplication", "metalFile": "gemm_proj.metal", "cudaFile": "gemm_proj.cu", "status": "planned" },
+    { "id": 10, "name": "GEMM Projection Trans B", "category": "Matrix Multiplication", "metalFile": "gemm_proj_trans_b.metal", "cudaFile": "gemm_proj_trans_b.cu", "status": "planned" },
+    { "id": 11, "name": "GEMM GQA", "category": "Matrix Multiplication", "metalFile": "gemm_gqa.metal", "cudaFile": "gemm_gqa.cu", "status": "planned" },
+    { "id": 12, "name": "GEMM FFN", "category": "Matrix Multiplication", "metalFile": "gemm_ffn.metal", "cudaFile": "gemm_ffn.cu", "status": "planned" },
+    { "id": 13, "name": "GEMM Backward", "category": "Matrix Multiplication", "metalFile": "gemm_backward.metal", "cudaFile": "gemm_backward.cu", "status": "planned" },
+    { "id": 14, "name": "SwiGLU Forward", "category": "Activation", "metalFile": "swiglu_forward.metal", "cudaFile": "swiglu_forward.cu", "status": "planned" },
+    { "id": 15, "name": "SwiGLU Backward", "category": "Activation", "metalFile": "swiglu_backward.metal", "cudaFile": "swiglu_backward.cu", "status": "planned" },
+    { "id": 16, "name": "Fused SwiGLU GEMM", "category": "Fused Operator", "metalFile": "fused_swiglu_gemm.metal", "cudaFile": "fused_swiglu_gemm.cu", "status": "planned" },
+    { "id": 17, "name": "Residual Add", "category": "Residual", "metalFile": "residual_add.metal", "cudaFile": "residual_add.cu", "status": "planned" },
+    { "id": 18, "name": "Fused Add Norm", "category": "Fused Operator", "metalFile": "fused_add_norm.metal", "cudaFile": "fused_add_norm.cu", "status": "planned" },
+    { "id": 19, "name": "Fused Backward Add Norm", "category": "Fused Operator", "metalFile": "fused_backward_add_norm.metal", "cudaFile": "fused_backward_add_norm.cu", "status": "planned" },
+    { "id": 20, "name": "Cross Entropy", "category": "Loss", "metalFile": "cross_entropy.metal", "cudaFile": "cross_entropy.cu", "status": "planned" },
+    { "id": 21, "name": "Compute Loss", "category": "Loss", "metalFile": "compute_loss.metal", "cudaFile": "compute_loss.cu", "status": "planned" },
+    { "id": 22, "name": "AdamW Optimizer Step", "category": "Optimizer", "metalFile": "adamw_step.metal", "cudaFile": "adamw_step.cu", "status": "planned" }
+  ]
+}

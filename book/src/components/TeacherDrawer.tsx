@@ -69,11 +69,11 @@ export function TeacherDrawer({ isOpen, onClose, chapterId, context }: TeacherDr
   };
 
   return (
-    <aside className="fixed inset-y-0 right-0 w-96 bg-[#0c101a] border-l border-[#1e293b] shadow-2xl z-50 flex flex-col select-none">
+    <aside className="fixed inset-y-0 right-0 w-96 bg-[#131720] border-l border-[#21262d] shadow-2xl z-50 flex flex-col select-none">
       {/* Drawer Header */}
-      <div className="h-14 px-4 bg-[#0f1524] border-b border-[#1e293b] flex items-center justify-between">
+      <div className="h-14 px-4 bg-[#161b24] border-b border-[#21262d] flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-lg bg-indigo-500/20 text-indigo-400 flex items-center justify-center border border-indigo-500/30">
+          <div className="w-7 h-7 rounded-lg bg-[#21262d] text-indigo-400 flex items-center justify-center border border-[#30363d]">
             <Sparkles className="w-4 h-4" />
           </div>
           <div>
@@ -85,7 +85,7 @@ export function TeacherDrawer({ isOpen, onClose, chapterId, context }: TeacherDr
         </div>
         <button
           onClick={onClose}
-          className="p-1 rounded-md text-slate-400 hover:text-slate-100 hover:bg-[#1a2333] transition-colors"
+          className="p-1 rounded-md text-slate-400 hover:text-slate-100 hover:bg-[#21262d] transition-colors cursor-pointer"
         >
           <X className="w-4 h-4" />
         </button>
@@ -149,7 +149,7 @@ export function TeacherDrawer({ isOpen, onClose, chapterId, context }: TeacherDr
       </div>
 
       {/* Input Box */}
-      <div className="p-3 bg-[#0f1524] border-t border-[#1e293b]">
+      <div className="p-3 bg-[#131720] border-t border-[#21262d]">
         <div className="relative">
           <textarea
             value={inputPrompt}
@@ -162,12 +162,12 @@ export function TeacherDrawer({ isOpen, onClose, chapterId, context }: TeacherDr
             }}
             placeholder="Ask about pointers, cache lines, or kernels..."
             rows={2}
-            className="w-full bg-[#080b11] text-xs text-slate-100 placeholder-slate-500 p-2.5 pr-10 rounded-lg border border-[#1e293b] focus:outline-none focus:border-indigo-500/50 resize-none transition-colors"
+            className="w-full bg-[#0d1117] text-xs text-slate-100 placeholder-slate-500 p-2.5 pr-10 rounded-lg border border-[#30363d] focus:outline-none focus:border-[#1f6feb]/50 resize-none transition-colors"
           />
           <button
             onClick={handleSend}
             disabled={isLoading || !inputPrompt.trim()}
-            className="absolute right-2 bottom-2 p-1.5 rounded-md bg-indigo-600 text-white hover:bg-indigo-500 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+            className="absolute right-2 bottom-2 p-1.5 rounded-md bg-[#1f6feb] text-white hover:bg-[#388bfd] disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer"
           >
             <Send className="w-3.5 h-3.5" />
           </button>
