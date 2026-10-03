@@ -72,29 +72,18 @@ export function ReaderView({ title, content, chapterId = '1.1', type, onNavigate
       // Case 1: Mathematical Formula or Memory Addressing Card (No line numbers)
       if (cleanLang === 'formula' || cleanLang === 'math') {
         const safeText = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-        return `
-          <div class="my-6 rounded-xl border border-sky-500/30 bg-[#0e1420] shadow-lg overflow-hidden select-text">
-            <div class="flex items-center justify-between px-4 py-2 bg-[#141b2a] border-b border-[#212b3d] text-xs select-none">
-              <span class="text-[11px] font-mono text-sky-400 font-semibold tracking-wider uppercase flex items-center gap-1.5">
-                <span class="w-2 h-2 rounded-full bg-sky-400"></span> Mathematical Definition & Address Scaling
-              </span>
-              <span class="text-[10px] text-slate-400 font-mono">Systems Arithmetic</span>
-            </div>
-            <div class="p-4 text-center font-mono text-[13px] md:text-sm text-sky-100 tracking-wide leading-relaxed overflow-x-auto font-medium">
-              ${safeText}
-            </div>
-          </div>
-        `;
+        const formulaLines = safeText
+          .split('\n')
+          .filter((l) => l.trim().length > 0)
+          .map((line) => `<div class="py-1 tracking-wide">${line}</div>`)
+          .join('');
+        return `<div class="my-6 rounded-xl border border-sky-500/30 bg-[#0e1420] shadow-lg overflow-hidden select-text"><div class="flex items-center justify-between px-4 py-2 bg-[#141b2a] border-b border-[#212b3d] text-xs select-none"><span class="text-[11px] font-mono text-sky-400 font-semibold tracking-wider uppercase flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-sky-400"></span> Mathematical Definition & Address Scaling</span><span class="text-[10px] text-slate-400 font-mono">Systems Arithmetic</span></div><div class="p-4 text-center font-mono text-[13px] md:text-sm text-sky-100 font-medium overflow-x-auto">${formulaLines}</div></div>`;
       }
 
       // Case 2: Plain Monospace Text or Memory Timeline (No line numbers)
       if (!cleanLang || cleanLang === 'text') {
         const safeText = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-        return `
-          <div class="my-5 rounded-xl border border-[#262d3d] bg-[#0c1017] p-4 overflow-x-auto select-text shadow-md">
-            <pre class="!bg-transparent !p-0 !m-0 font-mono text-xs leading-relaxed text-slate-300">${safeText}</pre>
-          </div>
-        `;
+        return `<div class="my-5 rounded-xl border border-[#262d3d] bg-[#0c1017] p-4 overflow-x-auto select-text shadow-md"><div class="font-mono text-xs leading-relaxed text-slate-300 whitespace-pre">${safeText}</div></div>`;
       }
 
       // Case 3: Executable Programming Code (IDE-grade with line-number gutter)
@@ -104,38 +93,21 @@ export function ReaderView({ title, content, chapterId = '1.1', type, onNavigate
         : hljs.highlightAuto(text).value;
 
       const lines = highlighted.split('\n');
+      if (lines.length > 1 && lines[lines.length - 1].trim() === '') {
+        lines.pop();
+      }
+
       const codeLinesHtml = lines
         .map((line, idx) => {
-          return `
-            <div class="code-line flex items-baseline hover:bg-white/[0.03] px-3.5 py-[1.5px] transition-colors">
-              <span class="line-gutter select-none text-[11px] font-mono text-[#484f58] pr-3 mr-3 border-r border-[#262d3d] text-right w-8 shrink-0">${idx + 1}</span>
-              <span class="line-code font-mono text-xs leading-5 flex-1">${line || '&nbsp;'}</span>
-            </div>
-          `;
+          const lineNumber = idx + 1;
+          const content = line || '&nbsp;';
+          return `<div class="code-line flex items-baseline hover:bg-white/[0.03] px-3.5 py-[1.5px] transition-colors"><span class="line-gutter select-none text-[11px] font-mono text-[#484f58] pr-3 mr-3 border-r border-[#262d3d] text-right w-8 shrink-0">${lineNumber}</span><span class="line-code font-mono text-xs leading-relaxed flex-1 whitespace-pre">${content}</span></div>`;
         })
         .join('');
 
       const displayLang = cleanLang.toUpperCase();
 
-      return `
-        <div class="code-block-wrapper my-6 rounded-xl overflow-hidden border border-[#2a3241] bg-[#090d14] shadow-xl">
-          <div class="code-block-header flex items-center justify-between px-3.5 py-1.5 bg-[#121620] border-b border-[#21262d] text-xs select-none">
-            <div class="flex items-center gap-2">
-              <span class="w-2 h-2 rounded-full bg-sky-400"></span>
-              <span class="font-mono text-[11px] text-slate-300 font-semibold tracking-wider">${displayLang}</span>
-            </div>
-            <button
-              class="copy-btn px-2.5 py-1 rounded text-[11px] font-medium text-slate-400 hover:text-slate-100 bg-[#1a212e] hover:bg-[#232c3d] transition-all cursor-pointer flex items-center gap-1 border border-[#30363d]"
-              data-code="${encodeURIComponent(text)}"
-            >
-              Copy
-            </button>
-          </div>
-          <div class="py-2.5 overflow-x-auto">
-            <pre class="!bg-transparent !p-0 !m-0"><code class="hljs ${language || ''} font-mono block">${codeLinesHtml}</code></pre>
-          </div>
-        </div>
-      `;
+      return `<div class="code-block-wrapper my-6 rounded-xl overflow-hidden border border-[#2a3241] bg-[#090d14] shadow-xl"><div class="code-block-header flex items-center justify-between px-3.5 py-1.5 bg-[#121620] border-b border-[#21262d] text-xs select-none"><div class="flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-sky-400"></span><span class="font-mono text-[11px] text-slate-300 font-semibold tracking-wider">${displayLang}</span></div><button class="copy-btn px-2.5 py-1 rounded text-[11px] font-medium text-slate-400 hover:text-slate-100 bg-[#1a212e] hover:bg-[#232c3d] transition-all cursor-pointer flex items-center gap-1 border border-[#30363d]" data-code="${encodeURIComponent(text)}">Copy</button></div><div class="py-2.5 overflow-x-auto"><div class="code-lines font-mono text-xs">${codeLinesHtml}</div></div></div>`;
     };
 
     marked.setOptions({
