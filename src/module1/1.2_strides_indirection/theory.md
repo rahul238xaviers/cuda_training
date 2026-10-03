@@ -23,31 +23,17 @@ A **stride** defines the number of elements (or bytes) you must skip in physical
 Address(row, col) = BaseAddress + (row * Stride_Row + col * Stride_Col) * sizeof(T)
 ```
 
-```diagram:pointer-addressing
+```diagram:stride-layout
 {
-  "title": "Textbook Schematic: Strided 2D Matrix Memory Layout",
-  "subtitle": "Logical (row, col) indexed into flat physical memory with Stride_Row = 4 elements (16 bytes).",
-  "pointer": {
-    "name": "matrix_base",
-    "type": "float*",
-    "location": "Stack Frame / Register",
-    "address": "0x7ffee2bc9000",
-    "value": "0x2000",
-    "size": "8 bytes (64-bit)"
-  },
-  "target": {
-    "location": "RAM / VRAM (Global Memory)",
-    "baseAddress": "0x2000",
-    "typeName": "float[2][4] (8 Elements, 32 Bytes)",
-    "cells": [
-      { "name": "(0, 0)", "offset": "+0", "address": "0x2000", "bytes": "4B", "hex": "0x00", "val": "1.0f" },
-      { "name": "(0, 1)", "offset": "+4", "address": "0x2004", "bytes": "4B", "hex": "0x04", "val": "2.0f" },
-      { "name": "(1, 0)", "offset": "+16", "address": "0x2010", "bytes": "4B", "hex": "0x10", "val": "5.0f" },
-      { "name": "(1, 1)", "offset": "+20", "address": "0x2014", "bytes": "4B", "hex": "0x14", "val": "6.0f" }
-    ]
-  }
+  "title": "Row-Major Stride: 2D Logical Grid Mapped to Flat Physical Memory",
+  "subtitle": "float[2][4] in row-major order. Stride_Row = 4 elements (16 bytes). Stride_Col = 1 element (4 bytes).",
+  "rows": 2,
+  "cols": 4,
+  "base": "0x2000",
+  "typeName": "float[2][4] — 8 elements, 32 bytes"
 }
 ```
+
 
 ---
 
@@ -111,6 +97,72 @@ cudaMalloc(&d_matrix, total_elements * sizeof(float));
 // In kernel execution:
 // threadIdx.x accesses contiguous elements: d_matrix[row * Cols + threadIdx.x]
 ```
+
+---
+
+## 4. Memory Pitch, Padded Strides & cudaMallocPitch
+
+When storing 2D matrices in GPU memory, a subtle hardware trap occurs whenever the row width in bytes is not an exact multiple of the memory controller's transaction size (typically 128 bytes on NVIDIA Ampere/Hopper/Blackwell).
+
+### The Address Drift Problem
+Suppose you allocate a matrix with `Cols = 33` floats (each row is `33 * 4 = 132` bytes):
+* **Row 0**: Starts at address `0x0000` (128-byte aligned). Threads 0..31 load elements 0..31 in 1 coalesced 128-byte transaction.
+* **Row 1**: Starts at address `0x0084` (132 decimal). **This is NOT aligned to a 128-byte boundary!**
+* **Result**: When threads in a warp access Row 1, the hardware memory controller detects an unaligned transaction and splits it into **two separate 128-byte memory transactions**.
+* Every subsequent row drifts further out of alignment, degrading global memory throughput across the entire kernel.
+
+### The Pitch Solution: Hardware Padding
+To guarantee that the start of every row is strictly aligned to a 128-byte or 256-byte cache-line boundary, hardware engineers introduce **Row Pitch** (also called *padded stride* or *stride in bytes*):
+
+```text
+Row 0: [ 33 floats data (132 bytes) ] [ 31 floats padding (124 bytes) ] -> Pitch = 256 bytes (Aligned)
+Row 1: [ 33 floats data (132 bytes) ] [ 31 floats padding (124 bytes) ] -> Pitch = 256 bytes (Aligned)
+Row 2: [ 33 floats data (132 bytes) ] [ 31 floats padding (124 bytes) ] -> Pitch = 256 bytes (Aligned)
+```
+
+### CUDA Hardware API: cudaMallocPitch & cudaMemcpy2D
+NVIDIA provides dedicated runtime APIs to automatically compute the optimal hardware pitch:
+
+```cpp
+float* d_matrix;
+size_t pitch; // Returned in bytes by CUDA runtime (e.g. 256 or 512)
+size_t width_bytes = Cols * sizeof(float);
+
+// Allocate with hardware-aligned row pitch:
+cudaMallocPitch(&d_matrix, &pitch, width_bytes, Rows);
+
+// Copy host matrix to 2D pitched device allocation:
+cudaMemcpy2D(
+    d_matrix, pitch,             // Destination and device pitch (bytes)
+    h_matrix, width_bytes,       // Source and host pitch (bytes)
+    width_bytes, Rows,           // Width (bytes) and Height (rows)
+    cudaMemcpyHostToDevice
+);
+```
+
+### Addressing Pitched Memory Inside a CUDA Kernel
+Because `pitch` is measured in **raw bytes** (not elements), you MUST perform byte arithmetic using `char*` before casting back to the element type:
+
+```cpp
+__global__ void pitchedMatrixKernel(float* d_matrix, size_t pitch, int Rows, int Cols) {
+    int col = blockIdx.x * blockDim.x + threadIdx.x;
+    int row = blockIdx.y * blockDim.y + threadIdx.y;
+
+    if (row < Rows && col < Cols) {
+        // Step 1: Cast to char* to step by raw pitch bytes
+        char* row_byte_ptr = ((char*)d_matrix) + (row * pitch);
+
+        // Step 2: Cast to float* and access column
+        float* row_ptr = (float*)row_byte_ptr;
+        row_ptr[col] = row_ptr[col] * 2.0f;
+    }
+}
+```
+
+### Why We Use This Technique
+1. **100% Coalesced Warps**: Every row starts on a 128-byte boundary, ensuring the warp's first transaction never straddles two cache lines.
+2. **Eliminates Stride Penalty**: GPU memory controllers sustain near-peak DRAM bandwidth even on odd-sized matrices.
+3. **Tensor Core Alignment**: Modern Tensor Core operations (e.g. WMMA and MMA instructions) strictly require base pointers and leading dimensions (strides) to be 16-byte or 128-byte aligned.
 
 ---
 

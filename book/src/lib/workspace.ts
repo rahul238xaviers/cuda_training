@@ -372,7 +372,7 @@ export function scanDynamicCudaModules(): CudaModuleMeta[] {
   const modules: CudaModuleMeta[] = [];
 
   for (const mDef of moduleDefs) {
-    const m = mDef.diskNum || (mDef.num + 1);
+    const m = mDef.diskNum || mDef.num;
     const displayNum = mDef.num;
     const displayId = String(displayNum);
     const modFolder = `module${m}`;

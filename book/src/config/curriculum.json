@@ -70,44 +70,44 @@
       "ext": "cu",
       "modules": [
         {
-          "num": 1,
+          "num": 2,
           "diskNum": 2,
-          "title": "Module 1: Host-Device Bridge & Modern C++",
+          "title": "Module 2: Host-Device Bridge & Modern C++",
           "displayTitle": "Host-Device Bridge & Modern C++",
           "tagline": "Lambdas, RAII Streams, Move Semantics, Device Views & Thrust Patterns"
         },
         {
-          "num": 2,
+          "num": 3,
           "diskNum": 3,
-          "title": "Module 2: CUDA Threading Hierarchy & Hardware Execution",
+          "title": "Module 3: CUDA Threading Hierarchy & Hardware Execution",
           "displayTitle": "CUDA Threading Hierarchy & Hardware Execution",
           "tagline": "Threads, Registers, Warps, Shuffle Intrinsics, Blocks & Grids"
         },
         {
-          "num": 3,
+          "num": 4,
           "diskNum": 4,
-          "title": "Module 3: Memory Hierarchy, Coalescing & SRAM Tiling",
+          "title": "Module 4: Memory Hierarchy, Coalescing & SRAM Tiling",
           "displayTitle": "Memory Hierarchy, Coalescing & SRAM Tiling",
           "tagline": "Global DRAM Coalescing, Cache Hierarchy, Shared SRAM Tiling"
         },
         {
-          "num": 4,
+          "num": 5,
           "diskNum": 5,
-          "title": "Module 4: High-Performance Parallel Primitives",
+          "title": "Module 5: High-Performance Parallel Primitives",
           "displayTitle": "High-Performance Parallel Primitives",
           "tagline": "Warp/Block Tree Reductions, Atomics & Online Softmax"
         },
         {
-          "num": 5,
+          "num": 6,
           "diskNum": 6,
-          "title": "Module 5: Low-Precision & Tensor Cores",
+          "title": "Module 6: Low-Precision & Tensor Cores",
           "displayTitle": "Low-Precision & Tensor Cores",
           "tagline": "BF16/FP16 Packed Math & WMMA Tensor Core Acceleration"
         },
         {
-          "num": 6,
+          "num": 7,
           "diskNum": 7,
-          "title": "Module 6: Production LLM Inference & Training Primitives",
+          "title": "Module 7: Production LLM Inference & Training Primitives",
           "displayTitle": "Production LLM Inference & Training Primitives",
           "tagline": "Embedding, RoPE, RMSNorm, AdamW, GEMM Projections & FlashAttention"
         }
