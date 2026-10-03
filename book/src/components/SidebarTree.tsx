@@ -488,32 +488,40 @@ export function SidebarTree({
           <span className="text-[10px] text-slate-400 font-mono">How to Read</span>
         </button>
 
-        {/* Dynamic Volume Segmented Control Tabs */}
+        {/* Volume Selector Tabs — per-volume color accent + bottom-line active indicator */}
         {(() => {
-          const volList = treeData?.volumes || [
-            { id: 'vol1', displayTitle: 'C++', modules: treeData?.volume1?.modules || [] },
-            { id: 'vol2', displayTitle: 'CUDA', modules: treeData?.volume2?.modules || [] },
-            { id: 'vol3', displayTitle: 'Kernels', modules: treeData?.volume3?.modules || [] },
+          const volDefs = [
+            { id: 'vol1', label: 'C++ Systems', accent: 'sky', count: treeData?.volume1?.modules?.length ?? treeData?.stats?.cppModules ?? 5 },
+            { id: 'vol2', label: 'CUDA', accent: 'indigo', count: treeData?.volume2?.modules?.length ?? treeData?.stats?.cudaModules ?? 6 },
+            { id: 'vol3', label: 'Kernels', accent: 'amber', count: treeData?.volume3?.modules?.length ?? treeData?.stats?.kernelModules ?? 7 },
           ];
+
+          const accentStyles: Record<string, { active: string; dot: string }> = {
+            sky:    { active: 'border-b-2 border-sky-400    text-sky-300    bg-sky-500/10',    dot: 'bg-sky-400' },
+            indigo: { active: 'border-b-2 border-indigo-400 text-indigo-300 bg-indigo-500/10', dot: 'bg-indigo-400' },
+            amber:  { active: 'border-b-2 border-amber-400  text-amber-300  bg-amber-500/10',  dot: 'bg-amber-400' },
+          };
+
           return (
-            <div
-              className="mt-2 grid gap-1 bg-[#0d1117] p-0.5 rounded-lg border border-[#21262d]"
-              style={{ gridTemplateColumns: `repeat(${volList.length}, minmax(0, 1fr))` }}
-            >
-              {volList.map((vol: any) => {
-                const count = vol.modules?.length || 0;
+            <div className="mt-3 flex rounded-lg overflow-hidden border border-[#21262d] bg-[#0d1117]">
+              {volDefs.map((vol, idx) => {
                 const isActive = activeVolume === vol.id;
+                const styles = accentStyles[vol.accent];
                 return (
                   <button
                     key={vol.id}
-                    onClick={() => setActiveVolume(vol.id)}
-                    className={`py-1 text-[10px] font-medium rounded transition-all text-center truncate cursor-pointer ${
-                      isActive
-                        ? 'bg-[#1c2230] text-[#f0f6fc] font-semibold border border-[#30363d] shadow-xs'
-                        : 'text-slate-400 hover:text-slate-200'
-                    }`}
+                    onClick={() => setActiveVolume(vol.id as 'vol1' | 'vol2' | 'vol3')}
+                    className={`flex-1 flex flex-col items-center gap-0.5 py-1.5 px-1 text-center cursor-pointer transition-all select-none ${
+                      idx < 2 ? 'border-r border-[#21262d]' : ''
+                    } ${isActive ? styles.active + ' font-semibold' : 'text-slate-500 hover:text-slate-300 hover:bg-white/[0.02]'}`}
                   >
-                    {vol.displayTitle || vol.title} {count > 0 ? `(${count})` : ''}
+                    <div className="flex items-center gap-1">
+                      {isActive && <span className={`w-1.5 h-1.5 rounded-full ${styles.dot} shrink-0`} />}
+                      <span className="text-[10px] font-mono font-semibold leading-none truncate">{vol.label}</span>
+                    </div>
+                    <span className={`text-[9px] font-mono leading-none ${isActive ? 'opacity-80' : 'opacity-50'}`}>
+                      {vol.count} modules
+                    </span>
                   </button>
                 );
               })}
