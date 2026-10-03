@@ -32,8 +32,8 @@ Lane 0 holds the exact sum for all 256 threads!
 ## 2. Multi-Value Reductions for Normalization
 
 In RMSNorm and LayerNorm, kernels must compute multiple statistics across a row simultaneously:
-- For RMSNorm: $\sum x_i^2$
-- For LayerNorm: $\sum x_i$ and $\sum x_i^2$ (to compute mean $\mu$ and variance $\sigma^2$)
+- For RMSNorm: `sum x_i^2`
+- For LayerNorm: `sum x_i` and `sum x_i^2` (to compute mean `mu` and variance `sigmoid^2`)
 
 Instead of running two separate reduction passes, threads accumulate a pair `float2 (sum, sum_sq)` in registers and reduce both simultaneously using vectorized shuffles or dual shuffles:
 ```cpp

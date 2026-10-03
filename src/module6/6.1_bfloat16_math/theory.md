@@ -6,15 +6,15 @@ In modern LLM training (LLaMA, GPT-4, Mistral), **Brain Floating Point (BFloat16
 
 ### Bit Allocations Comparison
 
-| Format | Total Bits | Sign Bits | Exponent Bits | Mantissa (Fraction) Bits | Dynamic Range | Relative Precision ($\epsilon$) |
+| Format | Total Bits | Sign Bits | Exponent Bits | Mantissa (Fraction) Bits | Dynamic Range | Relative Precision (`eps`) |
 |---|---|---|---|---|---|---|
-| **FP32** | 32 | 1 | 8 | 23 | $\approx 10^{\pm 38}$ | $\approx 1.2 \times 10^{-7}$ |
-| **FP16** | 16 | 1 | 5 | 10 | $\approx 10^{\pm 4.8}$ (max 65,504) | $\approx 9.8 \times 10^{-4}$ |
-| **BF16** | 16 | 1 | 8 | 7 | $\approx 10^{\pm 38}$ | $\approx 7.8 \times 10^{-3}$ |
+| **FP32** | 32 | 1 | 8 | 23 | `~= 10^{pm 38}` | `~= 1.2 x 10^{-7}` |
+| **FP16** | 16 | 1 | 5 | 10 | `~= 10^{pm 4.8}` (max 65,504) | `~= 9.8 x 10^{-4}` |
+| **BF16** | 16 | 1 | 8 | 7 | `~= 10^{pm 38}` | `~= 7.8 x 10^{-3}` |
 
 ### The Critical Advantage of BF16
 * **Identical Exponent to FP32**: Because BF16 possesses 8 exponent bits, its dynamic range matches FP32 exactly.
-* **Elimination of Loss Scaling**: Standard FP16 easily overflows at $65504$ or underflows at $6 \times 10^{-5}$, requiring dynamic loss scaling algorithms in optimizers. BF16 eliminates gradient underflow/overflow without needing loss scaling.
+* **Elimination of Loss Scaling**: Standard FP16 easily overflows at `65504` or underflows at `6 x 10^{-5}`, requiring dynamic loss scaling algorithms in optimizers. BF16 eliminates gradient underflow/overflow without needing loss scaling.
 * **Trivial Conversion to/from FP32**: Truncating the lower 16 bits of an FP32 value yields a valid BF16 value (with truncation rounding), whereas rounding to nearest even (`_rn`) rounds the 7-bit mantissa.
 
 ---

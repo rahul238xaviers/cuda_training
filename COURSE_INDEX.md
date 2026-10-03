@@ -18,7 +18,7 @@ ACTIVE LAB      : playground.cpp
 ### 📊 Overall Course Progress
 ```text
 Phase 1: Systems Foundations  [██░░░░░░░░░░░░░░░░░░]  5% (1/20 Chapters)
-Phase 2: CUDA Architecture    [░░░░░░░░░░░░░░░░░░░░]  0% (0/3 Modules)
+Phase 2: CUDA Architecture    [░░░░░░░░░░░░░░░░░░░░]  0% (0/6 Modules, 0/22 Topics)
 Phase 3: 22 LLM CUDA Kernels  [░░░░░░░░░░░░░░░░░░░░]  0% (0/22 Kernels)
 Total Verified Exercises      : 10 / 10 Passed (100% on Chapter 1.1)
 ```
@@ -48,10 +48,35 @@ Total Verified Exercises      : 10 / 10 Passed (100% on Chapter 1.1)
   - [Chapter 1.18: Attention & Quantization Packing](#chapter-118-attention--quantization-packing)
   - [Chapter 1.19: ML Layer Offsets & Layouts](#chapter-119-ml-layer-offsets--layouts)
   - [Chapter 1.20: Pooling, Masks & Cyclic Buffers](#chapter-120-pooling-masks--cyclic-buffers)
-- [Volume 2: CUDA Architecture & Execution Model](#volume-2-cuda-architecture--execution-model)
-  - [Module 2: CUDA Threading Hierarchy (Threads, Warps, Blocks, Grids)](#module-2-cuda-execution-model)
-  - [Module 3: CUDA Memory Hierarchy (Global, Shared SRAM, Registers)](#module-3-cuda-memory-hierarchy)
-  - [Module 4: High-Performance Parallel Primitives (GEMM, Reductions, Softmax)](#module-4-parallel-primitives)
+- [Volume 2: CUDA Architecture & LLM Execution Model](#volume-2-cuda-architecture--llm-execution-model)
+  - [Module 2: Host-Device Bridge & Modern C++](#module-2-host-device-bridge--modern-c)
+    - [Topic 2.1: Lambdas, Closures & Function Objects in CUDA](#topic-21-lambdas-closures--function-objects-in-cuda)
+    - [Topic 2.2: Templates, SFINAE & Precision Type Traits](#topic-22-templates-sfinae--precision-type-traits)
+    - [Topic 2.3: Smart Pointers, RAII & Resource Wrappers](#topic-23-smart-pointers-raii--resource-wrappers)
+    - [Topic 2.4: Move Semantics & Tensor Views](#topic-24-move-semantics--tensor-views)
+    - [Topic 2.5: Host Parallel Execution & CPU-GPU Co-Design](#topic-25-host-parallel-execution--cpu-gpu-co-design)
+  - [Module 3: CUDA Threading Hierarchy & Hardware Execution](#module-3-cuda-threading-hierarchy--hardware-execution)
+    - [Topic 3.1: Threads & Registers](#topic-31-threads--registers)
+    - [Topic 3.2: Warps, SIMT Execution & Shuffle Primitives](#topic-32-warps-simt-execution--shuffle-primitives)
+    - [Topic 3.3: Thread Blocks, Shared Memory & Bank Conflicts](#topic-33-thread-blocks-shared-memory--bank-conflicts)
+    - [Topic 3.4: Grids, SM Occupancy & Grid-Stride Loops](#topic-34-grids-sm-occupancy--grid-stride-loops)
+  - [Module 4: Memory Hierarchy, Coalescing & SRAM Tiling](#module-4-memory-hierarchy-coalescing--sram-tiling)
+    - [Topic 4.1: Memory Coalescing & Read-Only Cache](#topic-41-memory-coalescing--read-only-cache)
+    - [Topic 4.2: Shared Memory Matrix Tiling & Micro-Kernels](#topic-42-shared-memory-matrix-tiling--micro-kernels)
+  - [Module 5: High-Performance Parallel Primitives](#module-5-high-performance-parallel-primitives)
+    - [Topic 5.1: Two-Pass Block & Warp Reductions](#topic-51-two-pass-block--warp-reductions)
+    - [Topic 5.2: Atomic Operations & Contention Reduction](#topic-52-atomic-operations--contention-reduction)
+    - [Topic 5.3: Numerically Stable Reductions (Online Softmax)](#topic-53-numerically-stable-reductions-online-softmax)
+  - [Module 6: Low-Precision & Tensor Cores](#module-6-low-precision--tensor-cores)
+    - [Topic 6.1: BFloat16 Math & Mixed Precision](#topic-61-bfloat16-math--mixed-precision)
+    - [Topic 6.2: Tensor Cores & The WMMA API](#topic-62-tensor-cores--the-wmma-api)
+  - [Module 7: Production LLM Inference & Training Primitives](#module-7-production-llm-inference--training-primitives)
+    - [Topic 7.1: Elementwise Operations & Fused Reshaping](#topic-71-elementwise-operations--fused-reshaping)
+    - [Topic 7.2: Token Embedding Lookup & Gather](#topic-72-token-embedding-lookup--gather)
+    - [Topic 7.3: RMSNorm & Rotary Position Embeddings (RoPE)](#topic-73-rmsnorm--rotary-position-embeddings-rope)
+    - [Topic 7.4: Cross-Entropy Loss & AdamW Optimizer](#topic-74-cross-entropy-loss--adamw-optimizer)
+    - [Topic 7.5: GEMM & Linear Projections Suite](#topic-75-gemm--linear-projections-suite)
+    - [Topic 7.6: FlashAttention Suite (Forward & Backward)](#topic-76-flashattention-suite-forward--backward)
 - [Volume 3: The 22 Production LLM CUDA Kernels](#volume-3-the-22-production-llm-cuda-kernels)
 
 ---
@@ -212,19 +237,85 @@ Total Verified Exercises      : 10 / 10 Passed (100% on Chapter 1.1)
 
 ---
 
-# Volume 2: CUDA Architecture & Execution Model
+# Volume 2: CUDA Architecture & LLM Execution Model
 
-### Module 2: CUDA Execution Model
-* **Core Topics**: GPU Streaming Multiprocessors (SMs), Warp execution (32 lockstep threads), Thread Blocks, 1D/2D/3D Grid dimensions, Warp Divergence mitigation.
-* **Hardware Goal**: Transitioning mental models from 1 CPU thread looping to 100,000 GPU threads executing in parallel.
+### Module 2: Host-Device Bridge & Modern C++
+> **Synopsis**: Bridge host C++20 orchestration with high-performance GPU execution using extended lambdas, compile-time templates, RAII streams, and zero-copy tensor views.
+* **Topics**:
+  - **2.1: Lambdas, Closures & Function Objects**: Device closures, capturing rules, inlined higher-order kernels.
+    - 📖 [Theory](file:///Users/rahulkumar/dev/cuda_training/src/module2/2.1_lambdas_function_objects/theory.md) | ⚡ [Cheat Sheet](file:///Users/rahulkumar/dev/cuda_training/src/module2/2.1_lambdas_function_objects/cheat_sheet.md) | 📝 Workbooks: [Beginner](file:///Users/rahulkumar/dev/cuda_training/src/module2/2.1_lambdas_function_objects/exercise/beginner_workbook.cu), [Intermediate](file:///Users/rahulkumar/dev/cuda_training/src/module2/2.1_lambdas_function_objects/exercise/intermediate_workbook.cu), [Champion](file:///Users/rahulkumar/dev/cuda_training/src/module2/2.1_lambdas_function_objects/exercise/champion_workbook.cu)
+  - **2.2: Templates, SFINAE & Precision Type Traits**: Compile-time precision dispatch across FP32, FP16, BF16.
+    - 📖 [Theory](file:///Users/rahulkumar/dev/cuda_training/src/module2/2.2_templates_type_traits/theory.md) | ⚡ [Cheat Sheet](file:///Users/rahulkumar/dev/cuda_training/src/module2/2.2_templates_type_traits/cheat_sheet.md) | 📝 Workbooks: [Beginner](file:///Users/rahulkumar/dev/cuda_training/src/module2/2.2_templates_type_traits/exercise/beginner_workbook.cu), [Intermediate](file:///Users/rahulkumar/dev/cuda_training/src/module2/2.2_templates_type_traits/exercise/intermediate_workbook.cu), [Champion](file:///Users/rahulkumar/dev/cuda_training/src/module2/2.2_templates_type_traits/exercise/champion_workbook.cu)
+  - **2.3: Smart Pointers, RAII & Resource Wrappers**: Deterministic VRAM lifecycles, CUDA stream priorities, async overlap.
+    - 📖 [Theory](file:///Users/rahulkumar/dev/cuda_training/src/module2/2.3_raii_smart_pointers_streams/theory.md) | ⚡ [Cheat Sheet](file:///Users/rahulkumar/dev/cuda_training/src/module2/2.3_raii_smart_pointers_streams/cheat_sheet.md) | 📝 Workbooks: [Beginner](file:///Users/rahulkumar/dev/cuda_training/src/module2/2.3_raii_smart_pointers_streams/exercise/beginner_workbook.cu), [Intermediate](file:///Users/rahulkumar/dev/cuda_training/src/module2/2.3_raii_smart_pointers_streams/exercise/intermediate_workbook.cu), [Champion](file:///Users/rahulkumar/dev/cuda_training/src/module2/2.3_raii_smart_pointers_streams/exercise/champion_workbook.cu)
+  - **2.4: Move Semantics & Tensor Views**: Zero-copy tensor slicing, non-owning strided spans.
+    - 📖 [Theory](file:///Users/rahulkumar/dev/cuda_training/src/module2/2.4_move_semantics_views/theory.md) | ⚡ [Cheat Sheet](file:///Users/rahulkumar/dev/cuda_training/src/module2/2.4_move_semantics_views/cheat_sheet.md) | 📝 Workbooks: [Beginner](file:///Users/rahulkumar/dev/cuda_training/src/module2/2.4_move_semantics_views/exercise/beginner_workbook.cu), [Intermediate](file:///Users/rahulkumar/dev/cuda_training/src/module2/2.4_move_semantics_views/exercise/intermediate_workbook.cu), [Champion](file:///Users/rahulkumar/dev/cuda_training/src/module2/2.4_move_semantics_views/exercise/champion_workbook.cu)
+  - **2.5: Host Parallel Execution & CPU-GPU Co-Design**: Double-buffering ping-pong pipelines and non-blocking stream execution.
+    - 📖 [Theory](file:///Users/rahulkumar/dev/cuda_training/src/module2/2.5_stl_parallel_execution/theory.md) | ⚡ [Cheat Sheet](file:///Users/rahulkumar/dev/cuda_training/src/module2/2.5_stl_parallel_execution/cheat_sheet.md) | 📝 Workbooks: [Beginner](file:///Users/rahulkumar/dev/cuda_training/src/module2/2.5_stl_parallel_execution/exercise/beginner_workbook.cu), [Intermediate](file:///Users/rahulkumar/dev/cuda_training/src/module2/2.5_stl_parallel_execution/exercise/intermediate_workbook.cu), [Champion](file:///Users/rahulkumar/dev/cuda_training/src/module2/2.5_stl_parallel_execution/exercise/champion_workbook.cu)
 
-### Module 3: CUDA Memory Hierarchy
-* **Core Topics**: Global VRAM, On-Chip Shared Memory (SRAM), Registers, Constant Memory, Bank Conflicts (32 banks), Coalesced Memory Access.
-* **Hardware Goal**: Maximizing arithmetic intensity by staging data from slow VRAM into ultra-fast SRAM.
+---
 
-### Module 4: High-Performance Parallel Primitives
-* **Core Topics**: Parallel Tree Reductions, Prefix Sums (Scan), Softmax Online Normalization (Flash-Softmax), Matrix Multiplication (GEMM) Tiling.
-* **Hardware Goal**: Building the reusable algorithmic primitives behind deep learning operations.
+### Module 3: CUDA Threading Hierarchy & Hardware Execution
+> **Synopsis**: Understand physical GPU hardware architecture: Streaming Multiprocessors (SMs), 32-thread lockstep warps, register files, and shared memory banking.
+* **Topics**:
+  - **3.1: Threads & Registers**: Thread coordinates, register pressure, local memory spills, 128-bit `float4` loads.
+    - 📖 [Theory](file:///Users/rahulkumar/dev/cuda_training/src/module3/3.1_threads_registers/theory.md) | ⚡ [Cheat Sheet](file:///Users/rahulkumar/dev/cuda_training/src/module3/3.1_threads_registers/cheat_sheet.md) | 📝 Workbooks: [Beginner](file:///Users/rahulkumar/dev/cuda_training/src/module3/3.1_threads_registers/exercise/beginner_workbook.cu), [Intermediate](file:///Users/rahulkumar/dev/cuda_training/src/module3/3.1_threads_registers/exercise/intermediate_workbook.cu), [Champion](file:///Users/rahulkumar/dev/cuda_training/src/module3/3.1_threads_registers/exercise/champion_workbook.cu)
+  - **3.2: Warps, SIMT & Shuffle Intrinsics**: Warp divergence elimination, register exchange via `__shfl_down_sync`.
+    - 📖 [Theory](file:///Users/rahulkumar/dev/cuda_training/src/module3/3.2_warps_simt_shuffles/theory.md) | ⚡ [Cheat Sheet](file:///Users/rahulkumar/dev/cuda_training/src/module3/3.2_warps_simt_shuffles/cheat_sheet.md) | 📝 Workbooks: [Beginner](file:///Users/rahulkumar/dev/cuda_training/src/module3/3.2_warps_simt_shuffles/exercise/beginner_workbook.cu), [Intermediate](file:///Users/rahulkumar/dev/cuda_training/src/module3/3.2_warps_simt_shuffles/exercise/intermediate_workbook.cu), [Champion](file:///Users/rahulkumar/dev/cuda_training/src/module3/3.2_warps_simt_shuffles/exercise/champion_workbook.cu)
+  - **3.3: Thread Blocks & Shared Memory Banking**: 32 SRAM banks, stride-induced conflict serialization, +1 padding techniques.
+    - 📖 [Theory](file:///Users/rahulkumar/dev/cuda_training/src/module3/3.3_blocks_shared_banking/theory.md) | ⚡ [Cheat Sheet](file:///Users/rahulkumar/dev/cuda_training/src/module3/3.3_blocks_shared_banking/cheat_sheet.md) | 📝 Workbooks: [Beginner](file:///Users/rahulkumar/dev/cuda_training/src/module3/3.3_blocks_shared_banking/exercise/beginner_workbook.cu), [Intermediate](file:///Users/rahulkumar/dev/cuda_training/src/module3/3.3_blocks_shared_banking/exercise/intermediate_workbook.cu), [Champion](file:///Users/rahulkumar/dev/cuda_training/src/module3/3.3_blocks_shared_banking/exercise/champion_workbook.cu)
+  - **3.4: Grids, SM Occupancy & Grid-Stride Loops**: Achieving 100% SM occupancy, hardware-agnostic grid-stride looping.
+    - 📖 [Theory](file:///Users/rahulkumar/dev/cuda_training/src/module3/3.4_grids_occupancy_strides/theory.md) | ⚡ [Cheat Sheet](file:///Users/rahulkumar/dev/cuda_training/src/module3/3.4_grids_occupancy_strides/cheat_sheet.md) | 📝 Workbooks: [Beginner](file:///Users/rahulkumar/dev/cuda_training/src/module3/3.4_grids_occupancy_strides/exercise/beginner_workbook.cu), [Intermediate](file:///Users/rahulkumar/dev/cuda_training/src/module3/3.4_grids_occupancy_strides/exercise/intermediate_workbook.cu), [Champion](file:///Users/rahulkumar/dev/cuda_training/src/module3/3.4_grids_occupancy_strides/exercise/champion_workbook.cu)
+
+---
+
+### Module 4: Memory Hierarchy, Coalescing & SRAM Tiling
+> **Synopsis**: Maximize arithmetic intensity and GPU memory bus saturation by staging data from high-latency DRAM into on-chip shared SRAM without bank conflicts.
+* **Topics**:
+  - **4.1: Memory Coalescing & Read-Only Cache**: 128-byte DRAM cache-line coalescing, `__ldg` texture cache streaming.
+    - 📖 [Theory](file:///Users/rahulkumar/dev/cuda_training/src/module4/4.1_coalescing_readonly_cache/theory.md) | ⚡ [Cheat Sheet](file:///Users/rahulkumar/dev/cuda_training/src/module4/4.1_coalescing_readonly_cache/cheat_sheet.md) | 📝 Workbooks: [Beginner](file:///Users/rahulkumar/dev/cuda_training/src/module4/4.1_coalescing_readonly_cache/exercise/beginner_workbook.cu), [Intermediate](file:///Users/rahulkumar/dev/cuda_training/src/module4/4.1_coalescing_readonly_cache/exercise/intermediate_workbook.cu), [Champion](file:///Users/rahulkumar/dev/cuda_training/src/module4/4.1_coalescing_readonly_cache/exercise/champion_workbook.cu)
+  - **4.2: Shared Memory Matrix Tiling**: 2D tile staging, collaborative DRAM loads, register micro-kernels.
+    - 📖 [Theory](file:///Users/rahulkumar/dev/cuda_training/src/module4/4.2_shared_memory_tiling/theory.md) | ⚡ [Cheat Sheet](file:///Users/rahulkumar/dev/cuda_training/src/module4/4.2_shared_memory_tiling/cheat_sheet.md) | 📝 Workbooks: [Beginner](file:///Users/rahulkumar/dev/cuda_training/src/module4/4.2_shared_memory_tiling/exercise/beginner_workbook.cu), [Intermediate](file:///Users/rahulkumar/dev/cuda_training/src/module4/4.2_shared_memory_tiling/exercise/intermediate_workbook.cu), [Champion](file:///Users/rahulkumar/dev/cuda_training/src/module4/4.2_shared_memory_tiling/exercise/champion_workbook.cu)
+
+---
+
+### Module 5: High-Performance Parallel Primitives
+> **Synopsis**: Build the fundamental mathematical primitives of modern deep learning engines: tree reductions, atomics, and numerically stable online reductions.
+* **Topics**:
+  - **5.1: Two-Pass Block & Warp Reductions**: Hierarchical intra-warp and inter-warp tree reductions.
+    - 📖 [Theory](file:///Users/rahulkumar/dev/cuda_training/src/module5/5.1_warp_block_reductions/theory.md) | ⚡ [Cheat Sheet](file:///Users/rahulkumar/dev/cuda_training/src/module5/5.1_warp_block_reductions/cheat_sheet.md) | 📝 Workbooks: [Beginner](file:///Users/rahulkumar/dev/cuda_training/src/module5/5.1_warp_block_reductions/exercise/beginner_workbook.cu), [Intermediate](file:///Users/rahulkumar/dev/cuda_training/src/module5/5.1_warp_block_reductions/exercise/intermediate_workbook.cu), [Champion](file:///Users/rahulkumar/dev/cuda_training/src/module5/5.1_warp_block_reductions/exercise/champion_workbook.cu)
+  - **5.2: Atomic Operations & Contention Reduction**: Hardware atomics, memory fences, hierarchical block aggregation.
+    - 📖 [Theory](file:///Users/rahulkumar/dev/cuda_training/src/module5/5.2_atomic_operations/theory.md) | ⚡ [Cheat Sheet](file:///Users/rahulkumar/dev/cuda_training/src/module5/5.2_atomic_operations/cheat_sheet.md) | 📝 Workbooks: [Beginner](file:///Users/rahulkumar/dev/cuda_training/src/module5/5.2_atomic_operations/exercise/beginner_workbook.cu), [Intermediate](file:///Users/rahulkumar/dev/cuda_training/src/module5/5.2_atomic_operations/exercise/intermediate_workbook.cu), [Champion](file:///Users/rahulkumar/dev/cuda_training/src/module5/5.2_atomic_operations/exercise/champion_workbook.cu)
+  - **5.3: Numerically Stable Reductions (Online Softmax)**: Safe 3-pass vs 1-pass online softmax with running correction.
+    - 📖 [Theory](file:///Users/rahulkumar/dev/cuda_training/src/module5/5.3_numerically_stable_reductions/theory.md) | ⚡ [Cheat Sheet](file:///Users/rahulkumar/dev/cuda_training/src/module5/5.3_numerically_stable_reductions/cheat_sheet.md) | 📝 Workbooks: [Beginner](file:///Users/rahulkumar/dev/cuda_training/src/module5/5.3_numerically_stable_reductions/exercise/beginner_workbook.cu), [Intermediate](file:///Users/rahulkumar/dev/cuda_training/src/module5/5.3_numerically_stable_reductions/exercise/intermediate_workbook.cu), [Champion](file:///Users/rahulkumar/dev/cuda_training/src/module5/5.3_numerically_stable_reductions/exercise/champion_workbook.cu)
+
+---
+
+### Module 6: Low-Precision & Tensor Cores
+> **Synopsis**: Accelerate compute-bound operations using 16-bit brain float format and hardware Tensor Cores for 10x throughput scaling.
+* **Topics**:
+  - **6.1: BFloat16 Math & Vectorized Types**: Dynamic range equivalence to FP32, packed arithmetic (`__nv_bfloat162`).
+    - 📖 [Theory](file:///Users/rahulkumar/dev/cuda_training/src/module6/6.1_bfloat16_math/theory.md) | ⚡ [Cheat Sheet](file:///Users/rahulkumar/dev/cuda_training/src/module6/6.1_bfloat16_math/cheat_sheet.md) | 📝 Workbooks: [Beginner](file:///Users/rahulkumar/dev/cuda_training/src/module6/6.1_bfloat16_math/exercise/beginner_workbook.cu), [Intermediate](file:///Users/rahulkumar/dev/cuda_training/src/module6/6.1_bfloat16_math/exercise/intermediate_workbook.cu), [Champion](file:///Users/rahulkumar/dev/cuda_training/src/module6/6.1_bfloat16_math/exercise/champion_workbook.cu)
+  - **6.2: Tensor Cores & The WMMA API**: Warp Matrix Multiply Accumulate (`nvcuda::wmma`), fragment loading, matrix multiply-accumulate.
+    - 📖 [Theory](file:///Users/rahulkumar/dev/cuda_training/src/module6/6.2_wmma_tensor_cores/theory.md) | ⚡ [Cheat Sheet](file:///Users/rahulkumar/dev/cuda_training/src/module6/6.2_wmma_tensor_cores/cheat_sheet.md) | 📝 Workbooks: [Beginner](file:///Users/rahulkumar/dev/cuda_training/src/module6/6.2_wmma_tensor_cores/exercise/beginner_workbook.cu), [Intermediate](file:///Users/rahulkumar/dev/cuda_training/src/module6/6.2_wmma_tensor_cores/exercise/intermediate_workbook.cu), [Champion](file:///Users/rahulkumar/dev/cuda_training/src/module6/6.2_wmma_tensor_cores/exercise/champion_workbook.cu)
+
+---
+
+### Module 7: Production LLM Inference & Training Primitives
+> **Synopsis**: Author the complete operator suite powering state-of-the-art LLM architectures (LLaMA 3, Mistral, Gemma 2, DeepSeek): token embeddings, RoPE, RMSNorm, AdamW, GEMM projections, and FlashAttention.
+* **Topics**:
+  - **7.1: Elementwise Operations & Fused Reshaping**: Fused residual addition, SwiGLU activation, 128-bit streaming.
+    - 📖 [Theory](file:///Users/rahulkumar/dev/cuda_training/src/module7/7.1_elementwise_reshape/theory.md) | ⚡ [Cheat Sheet](file:///Users/rahulkumar/dev/cuda_training/src/module7/7.1_elementwise_reshape/cheat_sheet.md) | 📝 Workbooks: [Beginner](file:///Users/rahulkumar/dev/cuda_training/src/module7/7.1_elementwise_reshape/exercise/beginner_workbook.cu), [Intermediate](file:///Users/rahulkumar/dev/cuda_training/src/module7/7.1_elementwise_reshape/exercise/intermediate_workbook.cu), [Champion](file:///Users/rahulkumar/dev/cuda_training/src/module7/7.1_elementwise_reshape/exercise/champion_workbook.cu)
+  - **7.2: Token Embedding Lookup & Gather**: Translating vocab token IDs into dense hidden vectors with coalesced 128-byte DRAM reads.
+    - 📖 [Theory](file:///Users/rahulkumar/dev/cuda_training/src/module7/7.2_embedding_lookup/theory.md) | ⚡ [Cheat Sheet](file:///Users/rahulkumar/dev/cuda_training/src/module7/7.2_embedding_lookup/cheat_sheet.md) | 📝 Workbooks: [Beginner](file:///Users/rahulkumar/dev/cuda_training/src/module7/7.2_embedding_lookup/exercise/beginner_workbook.cu), [Intermediate](file:///Users/rahulkumar/dev/cuda_training/src/module7/7.2_embedding_lookup/exercise/intermediate_workbook.cu), [Champion](file:///Users/rahulkumar/dev/cuda_training/src/module7/7.2_embedding_lookup/exercise/champion_workbook.cu)
+  - **7.3: RMSNorm & Rotary Position Embeddings (RoPE)**: Root Mean Square normalization via warp shuffles and complex rotary position encoding.
+    - 📖 [Theory](file:///Users/rahulkumar/dev/cuda_training/src/module7/7.3_normalization_rope/theory.md) | ⚡ [Cheat Sheet](file:///Users/rahulkumar/dev/cuda_training/src/module7/7.3_normalization_rope/cheat_sheet.md) | 📝 Workbooks: [Beginner](file:///Users/rahulkumar/dev/cuda_training/src/module7/7.3_normalization_rope/exercise/beginner_workbook.cu), [Intermediate](file:///Users/rahulkumar/dev/cuda_training/src/module7/7.3_normalization_rope/exercise/intermediate_workbook.cu), [Champion](file:///Users/rahulkumar/dev/cuda_training/src/module7/7.3_normalization_rope/exercise/champion_workbook.cu)
+  - **7.4: Cross-Entropy Loss & AdamW Optimizer**: Fused log-sum-exp loss reduction and single-pass GPU AdamW momentum/variance parameter updates.
+    - 📖 [Theory](file:///Users/rahulkumar/dev/cuda_training/src/module7/7.4_loss_and_optimizer/theory.md) | ⚡ [Cheat Sheet](file:///Users/rahulkumar/dev/cuda_training/src/module7/7.4_loss_and_optimizer/cheat_sheet.md) | 📝 Workbooks: [Beginner](file:///Users/rahulkumar/dev/cuda_training/src/module7/7.4_loss_and_optimizer/exercise/beginner_workbook.cu), [Intermediate](file:///Users/rahulkumar/dev/cuda_training/src/module7/7.4_loss_and_optimizer/exercise/intermediate_workbook.cu), [Champion](file:///Users/rahulkumar/dev/cuda_training/src/module7/7.4_loss_and_optimizer/exercise/champion_workbook.cu)
+  - **7.5: GEMM & Linear Projections Suite**: Fused QKV linear projections, SwiGLU FFN projections, and register micro-tiling.
+    - 📖 [Theory](file:///Users/rahulkumar/dev/cuda_training/src/module7/7.5_gemm_projections/theory.md) | ⚡ [Cheat Sheet](file:///Users/rahulkumar/dev/cuda_training/src/module7/7.5_gemm_projections/cheat_sheet.md) | 📝 Workbooks: [Beginner](file:///Users/rahulkumar/dev/cuda_training/src/module7/7.5_gemm_projections/exercise/beginner_workbook.cu), [Intermediate](file:///Users/rahulkumar/dev/cuda_training/src/module7/7.5_gemm_projections/exercise/intermediate_workbook.cu), [Champion](file:///Users/rahulkumar/dev/cuda_training/src/module7/7.5_gemm_projections/exercise/champion_workbook.cu)
+  - **7.6: FlashAttention Suite (Forward & Backward)**: IO-aware tiled online softmax attention without materializing NxN attention matrices in HBM.
+    - 📖 [Theory](file:///Users/rahulkumar/dev/cuda_training/src/module7/7.6_flash_attention/theory.md) | ⚡ [Cheat Sheet](file:///Users/rahulkumar/dev/cuda_training/src/module7/7.6_flash_attention/cheat_sheet.md) | 📝 Workbooks: [Beginner](file:///Users/rahulkumar/dev/cuda_training/src/module7/7.6_flash_attention/exercise/beginner_workbook.cu), [Intermediate](file:///Users/rahulkumar/dev/cuda_training/src/module7/7.6_flash_attention/exercise/intermediate_workbook.cu), [Champion](file:///Users/rahulkumar/dev/cuda_training/src/module7/7.6_flash_attention/exercise/champion_workbook.cu)
 
 ---
 

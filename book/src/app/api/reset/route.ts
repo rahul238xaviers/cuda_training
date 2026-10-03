@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import fs from 'fs';
 import path from 'path';
-import { MODULE1_DIR, getChapterFolder } from '@/lib/workspace';
+import { getTopicLocation } from '@/lib/workspace';
 
 export async function POST(request: NextRequest) {
   try {
@@ -11,15 +11,19 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, error: 'chapterId and tier are required' }, { status: 400 });
     }
 
-    const folder = getChapterFolder(chapterId);
-    if (!folder) {
-      return NextResponse.json({ success: false, error: `Chapter ${chapterId} not found` }, { status: 404 });
+    const loc = getTopicLocation(chapterId);
+    if (!loc) {
+      return NextResponse.json({ success: false, error: `Topic or Chapter ${chapterId} not found` }, { status: 404 });
     }
 
-    const chapterDir = path.join(MODULE1_DIR, folder);
-    const exPath = path.join(chapterDir, 'exercise', `${tier}_workbook.cpp`);
-    const solDir = path.join(chapterDir, 'solution');
-    const solPath = path.join(solDir, `${tier}_workbook.cpp`);
+    const topicDir = loc.fullPath;
+    const exCu = path.join(topicDir, 'exercise', `${tier}_workbook.cu`);
+    const exCpp = path.join(topicDir, 'exercise', `${tier}_workbook.cpp`);
+    const exPath = fs.existsSync(exCu) ? exCu : exCpp;
+
+    const actualExt = fs.existsSync(exCu) ? 'cu' : 'cpp';
+    const solDir = path.join(topicDir, 'solution');
+    const solPath = path.join(solDir, `${tier}_workbook.${actualExt}`);
 
     if (!fs.existsSync(exPath)) {
       return NextResponse.json({ success: false, error: `Exercise template not found at ${exPath}` }, { status: 404 });
@@ -37,7 +41,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      message: `Reset ${tier}_workbook.cpp to original exercise template`,
+      message: `Reset ${tier}_workbook.${actualExt} to original exercise template`,
       code: starterCode,
     });
   } catch (err: any) {

@@ -73,8 +73,8 @@ __global__ void transform_kernel(const float* in, float* out, int N, Op op) {
 ## 4. Machine Learning Applications: Composable Activation Pipelines
 
 In LLM architectures (like LLaMA and Mistral), activation functions are frequently modified:
-- **GELU**: $x \cdot \Phi(x) \approx 0.5x \cdot (1 + \tanh(\sqrt{2/\pi}(x + 0.044715x^3)))$
-- **SiLU / Swish**: $x \cdot \sigma(x) = \frac{x}{1 + e^{-x}}$
-- **SwiGLU**: $\text{SwiGLU}(G, U) = \text{SiLU}(G) \cdot U$
+- **GELU**: `x * Phi(x) ~= 0.5x * (1 + tanh(sqrt(2/pi)(x + 0.044715x^3)))`
+- **SiLU / Swish**: `x * sigmoid(x) = (x) / (1 + e^{-x)}`
+- **SwiGLU**: `SwiGLU(G, U) = SiLU(G) * U`
 
 Using higher-order templated transform kernels with extended lambdas, an engine can instantiate any custom activation or fused post-processing step at compile-time with zero runtime overhead or code duplication.

@@ -18,6 +18,27 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, error: 'Invalid code input' }, { status: 400 });
     }
 
+    const isCuda =
+      code.includes('<cuda_runtime.h>') ||
+      code.includes('__global__') ||
+      code.includes('<<<') ||
+      code.includes('__device__') ||
+      code.includes('__shared__');
+
+    if (isCuda) {
+      const whichNvcc = spawnSync('which', ['nvcc'], { encoding: 'utf-8' });
+      if (whichNvcc.status !== 0) {
+        return NextResponse.json({
+          success: true,
+          diagnostics: [],
+          errorCount: 0,
+          warningCount: 0,
+          clean: true,
+          rawStderr: '',
+        });
+      }
+    }
+
     const compileResult = spawnSync(
       'clang++',
       [

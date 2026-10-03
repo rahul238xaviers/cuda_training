@@ -63,14 +63,26 @@ A fundamental design pattern in deep learning engines (such as PyTorch ATen, Num
 ### Zero-Copy Operations
 Because a view only stores metadata:
 - **Reshaping**: Changes the `shape` array without touching DRAM.
-- **Transposing**: Swaps `shape[0], shape[1]` and `strides[0], strides[1]` in $O(1)$ time without copying memory.
-- **Slicing**: Adjusts the base pointer and updates dimensions in $O(1)$ time.
+- **Transposing**: Swaps `shape[0], shape[1]` and `strides[0], strides[1]` in `O(1)` time without copying memory.
+- **Slicing**: Adjusts the base pointer and updates dimensions in `O(1)` time.
 
 ### The Strided Multi-Dimensional Indexing Formula
-For a tensor with dimensions $D$ and coordinates $(i_0, i_1, \dots, i_{D-1})$:
-$$\text{Linear Offset} = \sum_{d=0}^{D-1} i_d \cdot \text{strides}[d]$$
+For a tensor with dimensions `D` and coordinates `(i_0, i_1, ..., i_{D-1})`:
+
+```text
+Linear Offset = sum(d=0) i_d * strides[d]
+```
+
 
 In row-major order:
-$$\text{strides}[D-1] = 1, \quad \text{strides}[d] = \text{strides}[d+1] \cdot \text{shape}[d+1]$$
+
+```text
+strides[D-1] = 1,   strides[d] = strides[d+1] * shape[d+1]
+```
+
 In column-major order:
-$$\text{strides}[0] = 1, \quad \text{strides}[d] = \text{strides}[d-1] \cdot \text{shape}[d-1]$$
+
+```text
+strides[0] = 1,   strides[d] = strides[d-1] * shape[d-1]
+```
+

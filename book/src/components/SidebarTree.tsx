@@ -15,7 +15,7 @@ import {
   Search,
   Check,
 } from 'lucide-react';
-import { ChapterMeta, MetalKernelMeta } from '@/lib/workspace';
+import { ChapterMeta, MetalKernelMeta, CudaModuleMeta, CudaTopicMeta } from '@/lib/workspace';
 
 export type ActiveNodeType = 'theory' | 'cheat_sheet' | 'workbook' | 'playground' | 'kernel';
 
@@ -39,20 +39,32 @@ export function SidebarTree({ treeData, activeNode, onSelectNode, onRefreshTree 
   const [activeVolume, setActiveVolume] = useState<'vol1' | 'vol2' | 'vol3'>('vol1');
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Reactive Accordion: automatically track the active chapter
+  // Reactive Accordion: automatically track the active chapter in Volume 1
   const [openChapterId, setOpenChapterId] = useState<string>('1.1');
 
-  // Sync open chapter when activeNode changes
+  // Reactive Accordion for Volume 2: module and topic
+  const [openCudaModuleId, setOpenCudaModuleId] = useState<string>('3');
+  const [openCudaTopicId, setOpenCudaTopicId] = useState<string>('3.1');
+
+  // Sync open chapter/module when activeNode changes
   useEffect(() => {
     if (activeNode.chapterId) {
-      setOpenChapterId(activeNode.chapterId);
-      setActiveVolume('vol1');
+      if (activeNode.volumeId === 'vol2' || /^[2-7]\./.test(activeNode.chapterId)) {
+        setActiveVolume('vol2');
+        const modNum = activeNode.chapterId.split('.')[0];
+        setOpenCudaModuleId(modNum);
+        setOpenCudaTopicId(activeNode.chapterId);
+      } else {
+        setActiveVolume('vol1');
+        setOpenChapterId(activeNode.chapterId);
+      }
     } else if (activeNode.type === 'kernel') {
       setActiveVolume('vol3');
     }
-  }, [activeNode.chapterId, activeNode.type]);
+  }, [activeNode.chapterId, activeNode.volumeId, activeNode.type]);
 
   const chapters: ChapterMeta[] = useMemo(() => treeData?.volume1?.chapters || [], [treeData]);
+  const cudaModules: CudaModuleMeta[] = useMemo(() => treeData?.volume2?.modules || [], [treeData]);
   const kernels: MetalKernelMeta[] = useMemo(() => treeData?.volume3?.kernels || [], [treeData]);
 
   // Filtered lists for search
@@ -63,6 +75,36 @@ export function SidebarTree({ treeData, activeNode, onSelectNode, onRefreshTree 
       (ch) => ch.title.toLowerCase().includes(q) || ch.id.includes(q)
     );
   }, [chapters, searchQuery]);
+
+  const filteredCudaModules = useMemo(() => {
+    if (!searchQuery.trim()) return cudaModules;
+    const q = searchQuery.toLowerCase();
+    return cudaModules
+      .map((mod) => {
+        const matchesModule =
+          mod.title.toLowerCase().includes(q) ||
+          (mod.displayTitle && mod.displayTitle.toLowerCase().includes(q)) ||
+          `m${mod.displayNum ?? (parseInt(mod.id) - 1)}`.includes(q) ||
+          mod.tagline?.toLowerCase().includes(q);
+        const matchedTopics = mod.topics.filter(
+          (t) =>
+            t.title.toLowerCase().includes(q) ||
+            t.id.includes(q) ||
+            (t.displayId && t.displayId.includes(q))
+        );
+        if (matchesModule) {
+          return mod;
+        }
+        if (matchedTopics.length > 0) {
+          return {
+            ...mod,
+            topics: matchedTopics,
+          };
+        }
+        return null;
+      })
+      .filter(Boolean) as CudaModuleMeta[];
+  }, [cudaModules, searchQuery]);
 
   // Group Volume 3 kernels into categories
   const kernelCategories = useMemo(() => {
@@ -82,6 +124,14 @@ export function SidebarTree({ treeData, activeNode, onSelectNode, onRefreshTree 
 
   const toggleChapter = (chId: string) => {
     setOpenChapterId((prev) => (prev === chId ? '' : chId));
+  };
+
+  const toggleCudaModule = (modId: string) => {
+    setOpenCudaModuleId((prev) => (prev === modId ? '' : modId));
+  };
+
+  const toggleCudaTopic = (topicId: string) => {
+    setOpenCudaTopicId((prev) => (prev === topicId ? '' : topicId));
   };
 
   const bookmarkChapter = chapters.find((c) => c.id === treeData?.currentBookmark);
@@ -155,7 +205,7 @@ export function SidebarTree({ treeData, activeNode, onSelectNode, onRefreshTree 
                 : 'text-slate-400 hover:text-slate-200'
             }`}
           >
-            CUDA (3)
+            CUDA ({cudaModules.length || 6})
           </button>
           <button
             onClick={() => setActiveVolume('vol3')}
@@ -412,33 +462,285 @@ export function SidebarTree({ treeData, activeNode, onSelectNode, onRefreshTree 
 
         {/* ===================== VOLUME 2: CUDA ARCHITECTURE ===================== */}
         {activeVolume === 'vol2' && (
-          <div className="space-y-2 p-1">
-            <div className="p-3 rounded-lg bg-[#0e1422] border border-[#1a2333]">
-              <div className="flex items-center justify-between mb-1">
-                <span className="text-xs font-semibold text-slate-200">Module 2</span>
-                <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-slate-800 text-slate-400">Queued</span>
-              </div>
-              <div className="text-xs text-sky-400 font-medium">CUDA Execution Model</div>
-              <p className="text-[10.5px] text-slate-400 mt-1">Warps, Blocks, Grids & Hardware Occupancy</p>
-            </div>
+          <div className="space-y-2">
+            {filteredCudaModules.map((mod: CudaModuleMeta) => {
+              const isModOpen = openCudaModuleId === mod.id;
 
-            <div className="p-3 rounded-lg bg-[#0e1422] border border-[#1a2333]">
-              <div className="flex items-center justify-between mb-1">
-                <span className="text-xs font-semibold text-slate-200">Module 3</span>
-                <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-slate-800 text-slate-400">Queued</span>
-              </div>
-              <div className="text-xs text-indigo-400 font-medium">CUDA Memory Hierarchy</div>
-              <p className="text-[10.5px] text-slate-400 mt-1">Global DRAM, Shared SRAM Bank Conflicts, Registers</p>
-            </div>
+              return (
+                <div
+                  key={mod.id}
+                  className="rounded-lg bg-[#0c111c] border border-[#1a2333] overflow-hidden transition-all"
+                >
+                  {/* Module Header Card */}
+                  <div
+                    onClick={() => toggleCudaModule(mod.id)}
+                    className="p-2.5 cursor-pointer hover:bg-[#121927] transition-all flex items-start justify-between gap-2"
+                  >
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-1.5 mb-0.5">
+                        <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-indigo-500/15 text-indigo-300 font-semibold border border-indigo-500/30">
+                          M{mod.displayNum ?? (parseInt(mod.id) - 1)}
+                        </span>
+                        <span className="text-xs font-bold text-slate-100 truncate">
+                          {mod.displayTitle || mod.title.replace(/^Module\s+\d+:\s*/i, '')}
+                        </span>
+                      </div>
+                      <p className="text-[10px] text-slate-400 line-clamp-1 leading-snug">
+                        {mod.tagline}
+                      </p>
+                    </div>
 
-            <div className="p-3 rounded-lg bg-[#0e1422] border border-[#1a2333]">
-              <div className="flex items-center justify-between mb-1">
-                <span className="text-xs font-semibold text-slate-200">Module 4</span>
-                <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-slate-800 text-slate-400">Queued</span>
-              </div>
-              <div className="text-xs text-emerald-400 font-medium">Parallel Primitives</div>
-              <p className="text-[10.5px] text-slate-400 mt-1">Tree Reductions, Prefix Scan, Tiled GEMM</p>
-            </div>
+                    <div className="flex items-center gap-1.5 shrink-0 pt-0.5">
+                      {mod.completed ? (
+                        <span className="text-emerald-400 flex items-center">
+                          <Check className="w-3.5 h-3.5" />
+                        </span>
+                      ) : (
+                        <span className="text-[10px] text-slate-400 font-mono">
+                          {mod.passedTests}/{mod.totalTests}
+                        </span>
+                      )}
+                      {isModOpen ? (
+                        <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
+                      ) : (
+                        <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Topics List Inside Module */}
+                  {isModOpen && (
+                    <div className="px-1.5 pb-2 pt-1 border-t border-[#162032] space-y-1 bg-[#090d16]">
+                      {mod.topics.map((topic: CudaTopicMeta) => {
+                        const isTopicOpen = openCudaTopicId === topic.id;
+                        const isCurrent = activeNode.chapterId === topic.id;
+
+                        return (
+                          <div key={topic.id} className="rounded-md overflow-hidden transition-all">
+                            {/* Topic Header Row */}
+                            <div
+                              onClick={() => {
+                                toggleCudaTopic(topic.id);
+                                if (!isTopicOpen) {
+                                  onSelectNode({
+                                    type: 'theory',
+                                    volumeId: 'vol2',
+                                    chapterId: topic.id,
+                                  });
+                                }
+                              }}
+                              className={`flex items-center justify-between px-2.5 py-1.5 rounded-md text-xs cursor-pointer transition-all ${
+                                isCurrent
+                                  ? 'bg-[#151f30] text-slate-100 font-medium'
+                                  : 'hover:bg-[#101622] text-slate-300'
+                              }`}
+                            >
+                              <div className="flex items-center gap-2 min-w-0 pr-1">
+                                <span className="font-mono text-[10.5px] text-indigo-400 font-bold shrink-0">
+                                  {topic.displayId || topic.id}
+                                </span>
+                                <span className="truncate text-[11.5px]" title={topic.title}>
+                                  {topic.title}
+                                </span>
+                              </div>
+
+                              <div className="flex items-center gap-1.5 shrink-0">
+                                {topic.completed ? (
+                                  <span title="All tests passed" className="text-emerald-400 flex items-center">
+                                    <Check className="w-3.5 h-3.5" />
+                                  </span>
+                                ) : (
+                                  <span className="text-[10px] text-slate-500 font-mono">
+                                    {topic.totalTests}
+                                  </span>
+                                )}
+                                {isTopicOpen ? (
+                                  <ChevronDown className="w-3 h-3 text-slate-500" />
+                                ) : (
+                                  <ChevronRight className="w-3 h-3 text-slate-500" />
+                                )}
+                              </div>
+                            </div>
+
+                            {/* Reactive Sub-Items Accordion */}
+                            {isTopicOpen && (
+                              <div className="ml-3 pl-2 py-1 my-0.5 space-y-0.5 border-l border-[#1a2333]">
+                                {/* Theory */}
+                                <button
+                                  onClick={() =>
+                                    onSelectNode({
+                                      type: 'theory',
+                                      volumeId: 'vol2',
+                                      chapterId: topic.id,
+                                    })
+                                  }
+                                  className={`w-full flex items-center gap-2 px-2 py-1 rounded text-[11px] text-left transition-all ${
+                                    activeNode.type === 'theory' && activeNode.chapterId === topic.id
+                                      ? 'bg-indigo-500/15 text-indigo-300 font-medium'
+                                      : 'text-slate-400 hover:text-slate-200 hover:bg-[#111724]'
+                                  }`}
+                                >
+                                  <BookOpen className="w-3 h-3 text-indigo-400 shrink-0" />
+                                  <span className="truncate">Theory & Models</span>
+                                </button>
+
+                                {/* Cheat Sheet */}
+                                {topic.hasCheatSheet && (
+                                  <button
+                                    onClick={() =>
+                                      onSelectNode({
+                                        type: 'cheat_sheet',
+                                        volumeId: 'vol2',
+                                        chapterId: topic.id,
+                                      })
+                                    }
+                                    className={`w-full flex items-center gap-2 px-2 py-1 rounded text-[11px] text-left transition-all ${
+                                      activeNode.type === 'cheat_sheet' &&
+                                      activeNode.chapterId === topic.id
+                                        ? 'bg-amber-500/15 text-amber-300 font-medium'
+                                        : 'text-slate-400 hover:text-slate-200 hover:bg-[#111724]'
+                                    }`}
+                                  >
+                                    <Zap className="w-3 h-3 text-amber-400 shrink-0" />
+                                    <span className="truncate">Revision Cheat Sheet</span>
+                                  </button>
+                                )}
+
+                                {/* 3 Workbooks */}
+                                <div className="pt-0.5 space-y-0.5">
+                                  {/* Beginner */}
+                                  <button
+                                    onClick={() =>
+                                      onSelectNode({
+                                        type: 'workbook',
+                                        volumeId: 'vol2',
+                                        chapterId: topic.id,
+                                        tier: 'beginner',
+                                      })
+                                    }
+                                    className={`w-full flex items-center justify-between px-2 py-1 rounded text-[11px] text-left transition-all ${
+                                      activeNode.type === 'workbook' &&
+                                      activeNode.chapterId === topic.id &&
+                                      activeNode.tier === 'beginner'
+                                        ? 'bg-emerald-500/15 text-emerald-300 font-medium'
+                                        : 'text-slate-400 hover:text-slate-200 hover:bg-[#111724]'
+                                    }`}
+                                  >
+                                    <div className="flex items-center gap-1.5 truncate">
+                                      <span
+                                        className={`w-1.5 h-1.5 rounded-full ${
+                                          topic.tiers.beginner.status === 'passed'
+                                            ? 'bg-emerald-400'
+                                            : 'bg-slate-600'
+                                        }`}
+                                      />
+                                      <span className="truncate">Beginner</span>
+                                    </div>
+                                    <span
+                                      className={`text-[9.5px] font-mono ${
+                                        topic.tiers.beginner.status === 'passed'
+                                          ? 'text-emerald-400 font-semibold'
+                                          : 'text-slate-500'
+                                      }`}
+                                    >
+                                      {topic.tiers.beginner.status === 'passed'
+                                        ? 'Passed'
+                                        : `${topic.tiers.beginner.tests} tests`}
+                                    </span>
+                                  </button>
+
+                                  {/* Intermediate */}
+                                  <button
+                                    onClick={() =>
+                                      onSelectNode({
+                                        type: 'workbook',
+                                        volumeId: 'vol2',
+                                        chapterId: topic.id,
+                                        tier: 'intermediate',
+                                      })
+                                    }
+                                    className={`w-full flex items-center justify-between px-2 py-1 rounded text-[11px] text-left transition-all ${
+                                      activeNode.type === 'workbook' &&
+                                      activeNode.chapterId === topic.id &&
+                                      activeNode.tier === 'intermediate'
+                                        ? 'bg-amber-500/15 text-amber-300 font-medium'
+                                        : 'text-slate-400 hover:text-slate-200 hover:bg-[#111724]'
+                                    }`}
+                                  >
+                                    <div className="flex items-center gap-1.5 truncate">
+                                      <span
+                                        className={`w-1.5 h-1.5 rounded-full ${
+                                          topic.tiers.intermediate.status === 'passed'
+                                            ? 'bg-amber-400'
+                                            : 'bg-slate-600'
+                                        }`}
+                                      />
+                                      <span className="truncate">Intermediate</span>
+                                    </div>
+                                    <span
+                                      className={`text-[9.5px] font-mono ${
+                                        topic.tiers.intermediate.status === 'passed'
+                                          ? 'text-amber-400 font-semibold'
+                                          : 'text-slate-500'
+                                      }`}
+                                    >
+                                      {topic.tiers.intermediate.status === 'passed'
+                                        ? 'Passed'
+                                        : `${topic.tiers.intermediate.tests} tests`}
+                                    </span>
+                                  </button>
+
+                                  {/* Champion */}
+                                  <button
+                                    onClick={() =>
+                                      onSelectNode({
+                                        type: 'workbook',
+                                        volumeId: 'vol2',
+                                        chapterId: topic.id,
+                                        tier: 'champion',
+                                      })
+                                    }
+                                    className={`w-full flex items-center justify-between px-2 py-1 rounded text-[11px] text-left transition-all ${
+                                      activeNode.type === 'workbook' &&
+                                      activeNode.chapterId === topic.id &&
+                                      activeNode.tier === 'champion'
+                                        ? 'bg-rose-500/15 text-rose-300 font-medium'
+                                        : 'text-slate-400 hover:text-slate-200 hover:bg-[#111724]'
+                                    }`}
+                                  >
+                                    <div className="flex items-center gap-1.5 truncate">
+                                      <Flame
+                                        className={`w-2.5 h-2.5 ${
+                                          topic.tiers.champion.status === 'passed'
+                                            ? 'text-rose-400'
+                                            : 'text-slate-600'
+                                        }`}
+                                      />
+                                      <span className="truncate">Champion</span>
+                                    </div>
+                                    <span
+                                      className={`text-[9.5px] font-mono ${
+                                        topic.tiers.champion.status === 'passed'
+                                          ? 'text-rose-400 font-semibold'
+                                          : 'text-slate-500'
+                                      }`}
+                                    >
+                                      {topic.tiers.champion.status === 'passed'
+                                        ? 'Passed'
+                                        : `${topic.tiers.champion.tests} tests`}
+                                    </span>
+                                  </button>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
         )}
 

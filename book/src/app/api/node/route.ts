@@ -1,7 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import fs from 'fs';
 import path from 'path';
-import { MODULE1_DIR, PLAYGROUND_PATH, getChapterFolder, METAL_KERNELS, scanDynamicChapters } from '@/lib/workspace';
+import {
+  MODULE1_DIR,
+  WORKSPACE_ROOT,
+  PLAYGROUND_PATH,
+  getTopicLocation,
+  countTestsInWorkbook,
+  METAL_KERNELS,
+  scanDynamicChapters,
+} from '@/lib/workspace';
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
@@ -91,73 +99,115 @@ export async function GET(request: NextRequest) {
     });
   }
 
-  // Chapter specific nodes
-  const folder = getChapterFolder(chapterId);
-  if (!folder) {
-    return NextResponse.json({ error: `Chapter ${chapterId} not found` }, { status: 404 });
+  // Topic / Chapter specific nodes (C++ Module 1 & CUDA Modules 2-7)
+  const loc = getTopicLocation(chapterId);
+  if (!loc) {
+    return NextResponse.json({ error: `Topic or Chapter ${chapterId} not found` }, { status: 404 });
   }
 
-  const chapterDir = path.join(MODULE1_DIR, folder);
-  const chapters = scanDynamicChapters();
-  const chMeta = chapters.find((c) => c.id === chapterId);
+  const topicDir = loc.fullPath;
+  const topicTitle = loc.title;
+  const isCuda = loc.isCuda;
+  const ext = loc.ext;
+  const displayTopicId = loc.displayTopicId;
 
   if (type === 'theory') {
-    const theoryPath = path.join(chapterDir, 'theory.md');
+    const theoryPath = path.join(topicDir, 'theory.md');
     const content = fs.existsSync(theoryPath)
       ? fs.readFileSync(theoryPath, 'utf-8')
-      : `# Chapter ${chapterId}: ${chMeta?.title}\n\n*Theory module coming soon.*`;
+      : `# ${isCuda ? 'Topic' : 'Chapter'} ${displayTopicId}: ${topicTitle}\n\n*Theory module coming soon.*`;
     return NextResponse.json({
       type: 'theory',
       chapterId,
-      chapterTitle: chMeta?.title,
-      title: `Chapter ${chapterId}: Theory & Mental Models`,
+      displayId: displayTopicId,
+      chapterTitle: topicTitle,
+      title: `${isCuda ? 'Topic' : 'Chapter'} ${displayTopicId}: Theory & Mental Models`,
       content,
       readTimeMin: 7,
+      isCuda,
+      relPath: path.relative(WORKSPACE_ROOT, theoryPath),
     });
   }
 
   if (type === 'cheat_sheet') {
-    const cheatPath = path.join(chapterDir, 'cheat_sheet.md');
+    const cheatPath = path.join(topicDir, 'cheat_sheet.md');
     const content = fs.existsSync(cheatPath)
       ? fs.readFileSync(cheatPath, 'utf-8')
-      : `# Chapter ${chapterId}: Revision Cheat Sheet\n\n*Cheat sheet coming soon.*`;
+      : `# ${isCuda ? 'Topic' : 'Chapter'} ${displayTopicId}: Revision Cheat Sheet\n\n*Cheat sheet coming soon.*`;
     return NextResponse.json({
       type: 'cheat_sheet',
       chapterId,
-      chapterTitle: chMeta?.title,
-      title: `Chapter ${chapterId}: Revision Cheat Sheet`,
+      displayId: displayTopicId,
+      chapterTitle: topicTitle,
+      title: `${isCuda ? 'Topic' : 'Chapter'} ${displayTopicId}: Revision Cheat Sheet`,
       content,
+      isCuda,
+      relPath: path.relative(WORKSPACE_ROOT, cheatPath),
     });
   }
 
   if (type === 'workbook') {
-    const solDir = path.join(chapterDir, 'solution');
-    const solPath = path.join(solDir, `${tier}_workbook.cpp`);
-    const exPath = path.join(chapterDir, 'exercise', `${tier}_workbook.cpp`);
+    const solDir = path.join(topicDir, 'solution');
+    const solCu = path.join(solDir, `${tier}_workbook.cu`);
+    const solCpp = path.join(solDir, `${tier}_workbook.cpp`);
+    const exCu = path.join(topicDir, 'exercise', `${tier}_workbook.cu`);
+    const exCpp = path.join(topicDir, 'exercise', `${tier}_workbook.cpp`);
+
+    const exPath = fs.existsSync(exCu) ? exCu : exCpp;
+    const solPath = fs.existsSync(solCu) ? solCu : solCpp;
+
+    const actualExt = fs.existsSync(exCu) || fs.existsSync(solCu) ? 'cu' : 'cpp';
+    const targetSolPath = path.join(solDir, `${tier}_workbook.${actualExt}`);
 
     const exerciseCode = fs.existsSync(exPath) ? fs.readFileSync(exPath, 'utf-8') : '';
 
-    // If solution file does NOT exist yet, auto-initialize by copying from exercise!
-    if (!fs.existsSync(solPath) && exerciseCode) {
+    // If solution file does NOT exist yet or is empty, auto-initialize by copying from exercise!
+    if ((!fs.existsSync(solPath) || fs.statSync(solPath).size === 0) && exerciseCode) {
       if (!fs.existsSync(solDir)) {
         fs.mkdirSync(solDir, { recursive: true });
       }
-      fs.writeFileSync(solPath, exerciseCode, 'utf-8');
+      fs.writeFileSync(targetSolPath, exerciseCode, 'utf-8');
     }
 
-    const solutionCode = fs.existsSync(solPath) ? fs.readFileSync(solPath, 'utf-8') : exerciseCode;
+    const solutionCode = fs.existsSync(solPath) && fs.statSync(solPath).size > 0
+      ? fs.readFileSync(solPath, 'utf-8')
+      : exerciseCode;
+
+    // Count tests
+    const testsCount = fs.existsSync(solPath)
+      ? countTestsInWorkbook(solPath)
+      : fs.existsSync(exPath)
+      ? countTestsInWorkbook(exPath)
+      : 0;
+
+    let isSolved = false;
+    if (fs.existsSync(solPath) && fs.statSync(solPath).size > 0) {
+      if (!fs.existsSync(exPath)) {
+        isSolved = fs.statSync(solPath).size > 200;
+      } else {
+        const s = fs.readFileSync(solPath, 'utf-8').trim();
+        const e = fs.readFileSync(exPath, 'utf-8').trim();
+        isSolved = s !== e && s.length > 200;
+      }
+    }
+
+    const chosenPath = fs.existsSync(solPath) ? solPath : targetSolPath;
 
     return NextResponse.json({
       type: 'workbook',
       chapterId,
-      chapterTitle: chMeta?.title,
+      displayId: displayTopicId,
+      chapterTitle: topicTitle,
       tier,
-      title: `Chapter ${chapterId}: ${tier.charAt(0).toUpperCase() + tier.slice(1)} Workbook`,
+      ext: actualExt,
+      isCuda,
+      title: `${isCuda ? 'Topic' : 'Chapter'} ${displayTopicId}: ${tier.charAt(0).toUpperCase() + tier.slice(1)} Workbook`,
       solutionCode,
       exerciseCode,
       defaultTarget: 'solution',
-      testsCount: chMeta?.tiers[tier]?.tests || 0,
-      status: chMeta?.tiers[tier]?.status || 'pending',
+      testsCount,
+      status: isSolved ? 'passed' : 'pending',
+      relPath: path.relative(WORKSPACE_ROOT, chosenPath),
     });
   }
 

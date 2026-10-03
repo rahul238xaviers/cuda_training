@@ -16,6 +16,9 @@ import {
   AlertTriangle,
   CheckCheck,
   Wrench,
+  ChevronDown,
+  ChevronUp,
+  SlidersHorizontal,
 } from 'lucide-react';
 
 interface DiagnosticItem {
@@ -80,6 +83,7 @@ export function LabEditorView({
   const [isFormatting, setIsFormatting] = useState<boolean>(false);
   const [formatSuccess, setFormatSuccess] = useState<boolean>(false);
   const [activeBottomTab, setActiveBottomTab] = useState<'terminal' | 'problems'>('terminal');
+  const [isDockOpen, setIsDockOpen] = useState<boolean>(true);
 
   // Counts
   const errorCount = useMemo(
@@ -98,9 +102,10 @@ export function LabEditorView({
     }
   }, [output, runStatus, activeBottomTab]);
 
-  // If new test run starts, switch to terminal tab automatically
+  // If new test run starts, switch to terminal tab and expand panel automatically
   useEffect(() => {
     if (runStatus === 'running' || runStatus === 'success' || runStatus === 'error') {
+      setIsDockOpen(true);
       setActiveBottomTab('terminal');
     }
   }, [runStatus]);
@@ -328,20 +333,23 @@ export function LabEditorView({
                 )}
               </button>
             ) : (
-              <span
-                onClick={() => setActiveBottomTab('problems')}
-                title="No syntax errors detected"
-                className="flex items-center gap-1 text-[11px] text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20 font-medium cursor-pointer"
+              <button
+                onClick={() => {
+                  setIsDockOpen(true);
+                  setActiveBottomTab('problems');
+                }}
+                title="No syntax errors detected - click to open problems inspector"
+                className="flex items-center gap-1 text-[11px] text-emerald-400 bg-emerald-500/10 hover:bg-emerald-500/20 px-2 py-0.5 rounded border border-emerald-500/20 font-medium cursor-pointer transition-colors"
               >
                 <CheckCheck className="w-3.5 h-3.5" /> Clean (0 errors)
-              </span>
+              </button>
             )}
 
             {/* Quick Lint Check Button */}
             <button
               onClick={() => runLint(editorRef.current ? editorRef.current.getValue() : code)}
               disabled={isLinting}
-              title="Run C++20 syntax & semantic linter (clang++)"
+              title="Run C++20 / CUDA syntax & semantic linter (clang++)"
               className="px-2 py-1 rounded bg-[#141b2b] hover:bg-[#1e283d] text-slate-300 hover:text-white text-[11px] font-medium border border-[#1e293b] flex items-center gap-1 transition-all cursor-pointer"
             >
               <Wrench className="w-3 h-3 text-sky-400" />
@@ -352,7 +360,7 @@ export function LabEditorView({
             <button
               onClick={handleFormat}
               disabled={isFormatting}
-              title="Format C++ code with clang-format (Shift+Alt+F / ⇧⌥F)"
+              title="Format C++ / CUDA code with clang-format (Shift+Alt+F / ⇧⌥F)"
               className="px-2.5 py-1 rounded bg-[#141b2b] hover:bg-[#1e283d] text-slate-200 hover:text-white text-[11px] font-medium border border-[#1e293b] flex items-center gap-1.5 transition-all shadow-sm cursor-pointer"
             >
               {isFormatting ? (
@@ -366,6 +374,21 @@ export function LabEditorView({
               <kbd className="text-[9px] font-mono text-slate-400 bg-[#070a10] px-1 rounded border border-[#1e293b]">
                 ⇧⌥F
               </kbd>
+            </button>
+
+            {/* Toggle Panel Button (Always visible) */}
+            <button
+              onClick={() => setIsDockOpen((prev) => !prev)}
+              title={isDockOpen ? 'Collapse Terminal & Problems panel' : 'Expand Terminal & Problems panel'}
+              className={`px-2.5 py-1 rounded text-[11px] font-medium border flex items-center gap-1.5 transition-all cursor-pointer ${
+                isDockOpen
+                  ? 'bg-sky-500/10 text-sky-300 border-sky-500/30'
+                  : 'bg-[#141b2b] hover:bg-[#1e283d] text-slate-300 hover:text-white border-[#1e293b]'
+              }`}
+            >
+              <SlidersHorizontal className="w-3 h-3 text-sky-400" />
+              <span>{isDockOpen ? 'Hide Panel' : 'Show Panel'}</span>
+              {isDockOpen ? <ChevronDown className="w-3 h-3" /> : <ChevronUp className="w-3 h-3" />}
             </button>
 
             {/* Live Disk Save Status Indicator */}
@@ -436,163 +459,224 @@ export function LabEditorView({
         </div>
       </div>
 
-      {/* Lower Dock Pane: Terminal vs Problems Tabs */}
-      <div className="h-64 min-h-48 bg-[#05070c] flex flex-col">
-        {/* Tab Header */}
-        <div className="h-8 px-4 bg-[#0b0f17] border-b border-[#1e293b] flex items-center justify-between select-none">
-          <div className="flex items-center gap-1">
-            {/* Terminal Tab */}
-            <button
-              onClick={() => setActiveBottomTab('terminal')}
-              className={`px-3 py-1 rounded text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer ${
-                activeBottomTab === 'terminal'
-                  ? 'bg-[#162032] text-sky-300 border border-[#1e293b]'
-                  : 'text-slate-400 hover:text-slate-200'
-              }`}
-            >
-              <Terminal className="w-3.5 h-3.5 text-sky-400" />
-              <span>Terminal & Test Runner</span>
-            </button>
-
-            {/* Problems & Lint Diagnostics Tab */}
-            <button
-              onClick={() => setActiveBottomTab('problems')}
-              className={`px-3 py-1 rounded text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer ${
-                activeBottomTab === 'problems'
-                  ? 'bg-[#162032] text-slate-100 border border-[#1e293b]'
-                  : 'text-slate-400 hover:text-slate-200'
-              }`}
-            >
-              {errorCount > 0 ? (
-                <AlertCircle className="w-3.5 h-3.5 text-rose-400" />
-              ) : warningCount > 0 ? (
-                <AlertTriangle className="w-3.5 h-3.5 text-amber-400" />
-              ) : (
-                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
-              )}
-              <span>Problems</span>
-              <span
-                className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono font-bold ${
-                  errorCount > 0
-                    ? 'bg-rose-500/20 text-rose-300'
-                    : warningCount > 0
-                    ? 'bg-amber-500/20 text-amber-300'
-                    : 'bg-emerald-500/20 text-emerald-300'
+      {/* Lower Dock Pane: Collapsible Terminal vs Problems Tabs */}
+      {isDockOpen ? (
+        <div className="h-64 min-h-48 bg-[#05070c] flex flex-col border-t border-[#1e293b]">
+          {/* Tab Header */}
+          <div className="h-8 px-4 bg-[#0b0f17] border-b border-[#1e293b] flex items-center justify-between select-none">
+            <div className="flex items-center gap-1">
+              {/* Terminal Tab */}
+              <button
+                onClick={() => setActiveBottomTab('terminal')}
+                className={`px-3 py-1 rounded text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer ${
+                  activeBottomTab === 'terminal'
+                    ? 'bg-[#162032] text-sky-300 border border-[#1e293b]'
+                    : 'text-slate-400 hover:text-slate-200'
                 }`}
               >
-                {diagnostics.length}
-              </span>
+                <Terminal className="w-3.5 h-3.5 text-sky-400" />
+                <span>Terminal & Test Runner</span>
+              </button>
+
+              {/* Problems & Lint Diagnostics Tab */}
+              <button
+                onClick={() => setActiveBottomTab('problems')}
+                className={`px-3 py-1 rounded text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer ${
+                  activeBottomTab === 'problems'
+                    ? 'bg-[#162032] text-slate-100 border border-[#1e293b]'
+                    : 'text-slate-400 hover:text-slate-200'
+                }`}
+              >
+                {errorCount > 0 ? (
+                  <AlertCircle className="w-3.5 h-3.5 text-rose-400" />
+                ) : warningCount > 0 ? (
+                  <AlertTriangle className="w-3.5 h-3.5 text-amber-400" />
+                ) : (
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+                )}
+                <span>Problems</span>
+                <span
+                  className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono font-bold ${
+                    errorCount > 0
+                      ? 'bg-rose-500/20 text-rose-300'
+                      : warningCount > 0
+                      ? 'bg-amber-500/20 text-amber-300'
+                      : 'bg-emerald-500/20 text-emerald-300'
+                  }`}
+                >
+                  {diagnostics.length}
+                </span>
+              </button>
+            </div>
+
+            {/* Right Header Status + Collapse Toggle Button */}
+            <div className="flex items-center gap-3">
+              {activeBottomTab === 'terminal' && (
+                <>
+                  {durationMs !== undefined && durationMs > 0 && (
+                    <span className="flex items-center gap-1 text-[11px] text-slate-400 font-mono">
+                      <Clock className="w-3 h-3 text-slate-500" />
+                      {durationMs}ms
+                    </span>
+                  )}
+
+                  {runStatus === 'running' && (
+                    <span className="flex items-center gap-1 text-[11px] text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20 font-medium animate-pulse">
+                      <Loader2 className="w-3 h-3 animate-spin" />
+                      Compiling & Executing...
+                    </span>
+                  )}
+                  {runStatus === 'success' && (
+                    <span className="flex items-center gap-1 text-[11px] text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20 font-medium">
+                      <CheckCircle2 className="w-3 h-3" />
+                      Passed (Exit 0)
+                    </span>
+                  )}
+                  {runStatus === 'error' && (
+                    <span className="flex items-center gap-1 text-[11px] text-rose-400 bg-rose-500/10 px-2 py-0.5 rounded border border-rose-500/20 font-medium">
+                      <XCircle className="w-3 h-3" />
+                      Error {exitCode !== null ? `(${exitCode})` : ''}
+                    </span>
+                  )}
+                  {runStatus === 'idle' && (
+                    <span className="text-[11px] text-slate-500 font-mono">Ready</span>
+                  )}
+                </>
+              )}
+
+              {activeBottomTab === 'problems' && (
+                <span className="text-[11px] text-slate-400 font-mono">
+                  {errorCount} error{errorCount !== 1 ? 's' : ''}, {warningCount} warning
+                  {warningCount !== 1 ? 's' : ''}
+                </span>
+              )}
+
+              {/* Panel Collapse Toggle Button */}
+              <button
+                onClick={() => setIsDockOpen(false)}
+                title="Collapse Panel (Maximize Editor)"
+                className="p-1 rounded hover:bg-[#1a2333] text-slate-400 hover:text-slate-200 transition-colors cursor-pointer"
+              >
+                <ChevronDown className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+
+          {/* Tab Body */}
+          {activeBottomTab === 'terminal' ? (
+            <div
+              ref={consoleRef}
+              className="flex-1 p-3.5 font-mono text-xs overflow-y-auto whitespace-pre-wrap select-text leading-5"
+            >
+              {output ? (
+                <div
+                  dangerouslySetInnerHTML={{ __html: formattedOutputHtml }}
+                  className="leading-relaxed"
+                />
+              ) : (
+                <span className="text-slate-600 italic">
+                  Click ▶ Run Test Suite or ▶ Run Playground above to compile with clang++ -std=c++20
+                  -O3 and view live output.
+                </span>
+              )}
+            </div>
+          ) : (
+            <div className="flex-1 p-3 font-mono text-xs overflow-y-auto">
+              {diagnostics.length === 0 ? (
+                <div className="h-full flex flex-col items-center justify-center text-slate-500 gap-2">
+                  <CheckCircle2 className="w-7 h-7 text-emerald-500/60" />
+                  <span className="text-slate-300 font-medium">No problems detected in this file</span>
+                  <span className="text-[11px] text-slate-500">
+                    clang++ -fsyntax-only validated C++20 compliance without errors or warnings.
+                  </span>
+                </div>
+              ) : (
+                <div className="space-y-1">
+                  {diagnostics.map((diag, idx) => (
+                    <div
+                      key={idx}
+                      onClick={() => jumpToProblem(diag)}
+                      className={`flex items-start gap-2.5 p-2 rounded border cursor-pointer transition-all ${
+                        diag.severity === 'error'
+                          ? 'bg-rose-950/20 hover:bg-rose-950/40 border-rose-900/40 text-rose-200'
+                          : 'bg-amber-950/20 hover:bg-amber-950/40 border-amber-900/40 text-amber-200'
+                      }`}
+                    >
+                      {diag.severity === 'error' ? (
+                        <AlertCircle className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
+                      ) : (
+                        <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+                      )}
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2">
+                          <span className="font-semibold text-slate-100">
+                            {diag.severity.toUpperCase()}
+                          </span>
+                          <span className="text-sky-400 bg-sky-950/50 px-1.5 py-0.2 rounded border border-sky-800/40 text-[10px]">
+                            Line {diag.line}:{diag.col}
+                          </span>
+                        </div>
+                        <p className="text-slate-300 mt-0.5">{diag.message}</p>
+                      </div>
+                      <span className="text-[10px] text-slate-500 self-center">Jump ➔</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      ) : (
+        /* Sleek Collapsed Status Bar with One-Click Restore */
+        <div className="h-7 px-4 bg-[#0b0f17] border-t border-[#1e293b] flex items-center justify-between text-xs select-none">
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setIsDockOpen(true)}
+              className="flex items-center gap-1.5 text-sky-400 hover:text-sky-300 font-medium transition-colors cursor-pointer"
+              title="Open Terminal & Problems Panel"
+            >
+              <ChevronUp className="w-3.5 h-3.5" />
+              <span>Show Panel</span>
+            </button>
+
+            <span className="text-slate-600">|</span>
+
+            {/* Quick Diagnostics in Collapsed Bar */}
+            <button
+              onClick={() => {
+                setIsDockOpen(true);
+                setActiveBottomTab('problems');
+              }}
+              className="flex items-center gap-1.5 text-[11px] text-slate-400 hover:text-slate-200 cursor-pointer"
+              title="Click to view syntax diagnostics"
+            >
+              {errorCount > 0 ? (
+                <span className="text-rose-400 flex items-center gap-1 font-medium">
+                  <AlertCircle className="w-3 h-3 text-rose-400" /> {errorCount} error{errorCount !== 1 ? 's' : ''}
+                </span>
+              ) : (
+                <span className="text-emerald-400 flex items-center gap-1 font-medium">
+                  <CheckCircle2 className="w-3 h-3 text-emerald-400" /> Syntax Clean
+                </span>
+              )}
             </button>
           </div>
 
-          {/* Right Header Status */}
-          <div className="flex items-center gap-3">
-            {activeBottomTab === 'terminal' && (
-              <>
-                {durationMs !== undefined && durationMs > 0 && (
-                  <span className="flex items-center gap-1 text-[11px] text-slate-400 font-mono">
-                    <Clock className="w-3 h-3 text-slate-500" />
-                    {durationMs}ms
-                  </span>
-                )}
-
-                {runStatus === 'running' && (
-                  <span className="flex items-center gap-1 text-[11px] text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20 font-medium animate-pulse">
-                    <Loader2 className="w-3 h-3 animate-spin" />
-                    Compiling & Executing...
-                  </span>
-                )}
-                {runStatus === 'success' && (
-                  <span className="flex items-center gap-1 text-[11px] text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20 font-medium">
-                    <CheckCircle2 className="w-3 h-3" />
-                    Passed (Exit 0)
-                  </span>
-                )}
-                {runStatus === 'error' && (
-                  <span className="flex items-center gap-1 text-[11px] text-rose-400 bg-rose-500/10 px-2 py-0.5 rounded border border-rose-500/20 font-medium">
-                    <XCircle className="w-3 h-3" />
-                    Error {exitCode !== null ? `(${exitCode})` : ''}
-                  </span>
-                )}
-                {runStatus === 'idle' && (
-                  <span className="text-[11px] text-slate-500 font-mono">Ready</span>
-                )}
-              </>
-            )}
-
-            {activeBottomTab === 'problems' && (
-              <span className="text-[11px] text-slate-400 font-mono">
-                {errorCount} error{errorCount !== 1 ? 's' : ''}, {warningCount} warning
-                {warningCount !== 1 ? 's' : ''}
-              </span>
-            )}
+          <div className="flex items-center gap-3 text-[11px] text-slate-400 font-mono">
+            <button
+              onClick={handleFormat}
+              disabled={isFormatting}
+              className="flex items-center gap-1 text-slate-300 hover:text-amber-300 transition-colors cursor-pointer"
+              title="Format code (Shift+Alt+F)"
+            >
+              <Sparkles className="w-3 h-3 text-amber-400" />
+              <span>{isFormatting ? 'Formatting...' : 'Format'}</span>
+            </button>
+            <span className="text-slate-600">•</span>
+            <span>C++20 / CUDA</span>
           </div>
         </div>
-
-        {/* Tab Body */}
-        {activeBottomTab === 'terminal' ? (
-          <div
-            ref={consoleRef}
-            className="flex-1 p-3.5 font-mono text-xs overflow-y-auto whitespace-pre-wrap select-text leading-5"
-          >
-            {output ? (
-              <div
-                dangerouslySetInnerHTML={{ __html: formattedOutputHtml }}
-                className="leading-relaxed"
-              />
-            ) : (
-              <span className="text-slate-600 italic">
-                Click ▶ Run Test Suite or ▶ Run Playground above to compile with clang++ -std=c++20
-                -O3 and view live output.
-              </span>
-            )}
-          </div>
-        ) : (
-          <div className="flex-1 p-3 font-mono text-xs overflow-y-auto">
-            {diagnostics.length === 0 ? (
-              <div className="h-full flex flex-col items-center justify-center text-slate-500 gap-2">
-                <CheckCircle2 className="w-7 h-7 text-emerald-500/60" />
-                <span className="text-slate-300 font-medium">No problems detected in this file</span>
-                <span className="text-[11px] text-slate-500">
-                  clang++ -fsyntax-only validated C++20 compliance without errors or warnings.
-                </span>
-              </div>
-            ) : (
-              <div className="space-y-1">
-                {diagnostics.map((diag, idx) => (
-                  <div
-                    key={idx}
-                    onClick={() => jumpToProblem(diag)}
-                    className={`flex items-start gap-2.5 p-2 rounded border cursor-pointer transition-all ${
-                      diag.severity === 'error'
-                        ? 'bg-rose-950/20 hover:bg-rose-950/40 border-rose-900/40 text-rose-200'
-                        : 'bg-amber-950/20 hover:bg-amber-950/40 border-amber-900/40 text-amber-200'
-                    }`}
-                  >
-                    {diag.severity === 'error' ? (
-                      <AlertCircle className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
-                    ) : (
-                      <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
-                    )}
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2">
-                        <span className="font-semibold text-slate-100">
-                          {diag.severity.toUpperCase()}
-                        </span>
-                        <span className="text-sky-400 bg-sky-950/50 px-1.5 py-0.2 rounded border border-sky-800/40 text-[10px]">
-                          Line {diag.line}:{diag.col}
-                        </span>
-                      </div>
-                      <p className="text-slate-300 mt-0.5">{diag.message}</p>
-                    </div>
-                    <span className="text-[10px] text-slate-500 self-center">Jump ➔</span>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
-      </div>
+      )}
     </div>
   );
 }
