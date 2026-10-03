@@ -3,6 +3,160 @@
 import React, { useState } from 'react';
 import { Layers, Database, Cpu, Info, CheckCircle2, AlertTriangle } from 'lucide-react';
 
+// ============================================================================
+// Stride Layout Diagram — Chapter 1.2: 2D logical grid → flat 1D memory strip
+// ============================================================================
+export function StrideLayoutDiagram({ data }: { data: any }) {
+  const title = data?.title || 'Row-Major Stride: 2D Logical Grid → Flat Physical Memory';
+  const subtitle = data?.subtitle || 'float[Rows][Cols] stored in row-major order. Stride_Row = Cols elements. Stride_Col = 1.';
+  const rows = data?.rows || 2;
+  const cols = data?.cols || 4;
+  const base = data?.base || '0x2000';
+  const typeStr = data?.typeName || `float[${rows}][${cols}]`;
+
+  // Generate cell labels: (r,c) and flat address
+  const baseInt = 0x2000;
+  const cells = [];
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      const offset = (r * cols + c) * 4;
+      const addr = `0x${(baseInt + offset).toString(16).toUpperCase()}`;
+      cells.push({ r, c, addr, offset, flat: r * cols + c });
+    }
+  }
+
+  const cellW = 70;
+  const cellH = 38;
+  const gutter = 4;
+  const gridStartX = 24;
+  const gridStartY = 48;
+  const flatStartY = 170;
+  const rowColors = ['#0c2a4a', '#1a1a3a', '#0a2a1a', '#2a1a04'];
+  const rowStrokes = ['#38bdf8', '#818cf8', '#34d399', '#f59e0b'];
+
+  const svgW = gridStartX + cols * (cellW + gutter) + 40;
+  const svgH = 260;
+
+  return (
+    <div className="my-8 rounded-2xl border border-[#30363d] bg-[#0c1017] shadow-2xl overflow-hidden select-none">
+      <div className="flex items-center justify-between px-5 py-3.5 bg-[#141923] border-b border-[#21262d]">
+        <div className="flex items-center gap-2.5">
+          <span className="p-1.5 rounded-lg bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
+            <Layers className="w-4 h-4" />
+          </span>
+          <div>
+            <h4 className="text-xs font-bold text-slate-100 tracking-wide uppercase font-mono">{title}</h4>
+            <p className="text-[11px] text-slate-400 font-sans mt-0.5">{subtitle}</p>
+          </div>
+        </div>
+        <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 font-semibold">ROW-MAJOR LAYOUT</span>
+      </div>
+
+      <div className="p-4 bg-[#090d14] overflow-x-auto">
+        <svg viewBox={`0 0 ${svgW} ${svgH}`} className="w-full min-w-[480px]" aria-label="Stride layout diagram">
+
+          {/* === LOGICAL 2D GRID === */}
+          <text x={gridStartX} y="18" fill="#94a3b8" fontSize="10" fontWeight="bold" fontFamily="ui-monospace, monospace" letterSpacing="1">
+            LOGICAL VIEW: {typeStr} (Row-Major)
+          </text>
+
+          {cells.map(({ r, c, flat }) => {
+            const x = gridStartX + c * (cellW + gutter);
+            const y = gridStartY + r * (cellH + gutter);
+            const color = rowColors[r % rowColors.length];
+            const stroke = rowStrokes[r % rowStrokes.length];
+            return (
+              <g key={`grid-${flat}`}>
+                <rect x={x} y={y} width={cellW} height={cellH} rx="5" fill={color} stroke={stroke} strokeWidth="1.5" />
+                <text x={x + cellW / 2} y={y + 14} textAnchor="middle" fill={stroke} fontSize="9" fontWeight="bold" fontFamily="ui-monospace, monospace">
+                  [{r}][{c}]
+                </text>
+                <text x={x + cellW / 2} y={y + 26} textAnchor="middle" fill="#cbd5e1" fontSize="9" fontFamily="ui-monospace, monospace">
+                  row*{cols}+{c}={flat}
+                </text>
+              </g>
+            );
+          })}
+
+          {/* Row stride label */}
+          {[...Array(rows)].map((_, r) => (
+            <text key={`stride-r${r}`}
+              x={gridStartX + cols * (cellW + gutter) + 6}
+              y={gridStartY + r * (cellH + gutter) + 22}
+              fill={rowStrokes[r % rowStrokes.length]} fontSize="9" fontFamily="ui-monospace, monospace">
+              Row {r}
+            </text>
+          ))}
+
+          {/* Stride_Row annotation */}
+          <line
+            x1={gridStartX + 0 * (cellW + gutter) + cellW / 2}
+            y1={gridStartY + 0 * (cellH + gutter) + cellH + 4}
+            x2={gridStartX + 0 * (cellW + gutter) + cellW / 2}
+            y2={gridStartY + 1 * (cellH + gutter) - 4}
+            stroke="#64748b" strokeWidth="1" strokeDasharray="3 2"
+          />
+          <text x={gridStartX + cellW + 10} y={gridStartY + cellH + (cellH + gutter) / 2 - 6} fill="#64748b" fontSize="9" fontFamily="ui-monospace, monospace">
+            Stride_Row = {cols} elements ({cols * 4}B)
+          </text>
+
+          {/* Down arrow from grid to flat */}
+          <line x1={svgW / 2} y1={gridStartY + rows * (cellH + gutter) + 4} x2={svgW / 2} y2={flatStartY - 10} stroke="#475569" strokeWidth="1.5" strokeDasharray="4 3" markerEnd="url(#arrowGrey)" />
+          <text x={svgW / 2} y={gridStartY + rows * (cellH + gutter) + 16} textAnchor="middle" fill="#64748b" fontSize="9" fontFamily="ui-monospace, monospace">
+            flatten → physical memory
+          </text>
+
+          {/* === FLAT PHYSICAL MEMORY STRIP === */}
+          <text x={gridStartX} y={flatStartY + 12} fill="#94a3b8" fontSize="10" fontWeight="bold" fontFamily="ui-monospace, monospace" letterSpacing="1">
+            PHYSICAL MEMORY: Base = {base}
+          </text>
+
+          {cells.map(({ r, c, addr, offset, flat }) => {
+            const x = gridStartX + flat * (cellW + gutter);
+            const color = rowColors[r % rowColors.length];
+            const stroke = rowStrokes[r % rowStrokes.length];
+            return (
+              <g key={`flat-${flat}`}>
+                <rect x={x} y={flatStartY + 18} width={cellW} height={cellH} rx="5" fill={color} stroke={stroke} strokeWidth="1.5" />
+                <text x={x + cellW / 2} y={flatStartY + 30} textAnchor="middle" fill={stroke} fontSize="8" fontWeight="bold" fontFamily="ui-monospace, monospace">
+                  [{r}][{c}]
+                </text>
+                <text x={x + cellW / 2} y={flatStartY + 41} textAnchor="middle" fill="#94a3b8" fontSize="8" fontFamily="ui-monospace, monospace">
+                  +{offset}B
+                </text>
+                <text x={x + cellW / 2} y={flatStartY + 72} textAnchor="middle" fill="#475569" fontSize="7.5" fontFamily="ui-monospace, monospace">
+                  {addr}
+                </text>
+              </g>
+            );
+          })}
+
+          <defs>
+            <marker id="arrowGrey" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto">
+              <path d="M0,0 L0,6 L7,3 z" fill="#475569" />
+            </marker>
+          </defs>
+        </svg>
+
+        <div className="mt-3 grid grid-cols-3 gap-3 text-xs">
+          <div className="p-2.5 rounded-lg bg-sky-950/30 border border-sky-500/20 text-sky-300 font-mono text-center">
+            <div className="font-bold mb-0.5">Row Stride</div>
+            <div className="text-[10px] opacity-80">{cols} elements = {cols * 4}B</div>
+          </div>
+          <div className="p-2.5 rounded-lg bg-indigo-950/30 border border-indigo-500/20 text-indigo-300 font-mono text-center">
+            <div className="font-bold mb-0.5">Col Stride</div>
+            <div className="text-[10px] opacity-80">1 element = 4B</div>
+          </div>
+          <div className="p-2.5 rounded-lg bg-emerald-950/30 border border-emerald-500/20 text-emerald-300 font-mono text-center">
+            <div className="font-bold mb-0.5">Address Formula</div>
+            <div className="text-[10px] opacity-80">Base + (r*{cols}+c)*4</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export interface PointerAddressingSpec {
   title?: string;
   subtitle?: string;
@@ -965,10 +1119,16 @@ export function GenericDiagramRenderer({ type, payload }: { type: string; payloa
     return <StridedAccessDiagram data={parsed} />;
   }
 
-  // Stack-frame pointer addressing — Chapter 1.1 and 1.2 pointer diagrams
+  // Stride / 2D-to-flat layout (Chapter 1.2) — shows 2D grid folding to flat strip
+  if (cleanType.includes('stride-layout') || cleanType.includes('stride-matrix') || cleanType.includes('stride-layout')) {
+    return <StrideLayoutDiagram data={parsed} />;
+  }
+
+  // Stack-frame pointer addressing — Chapter 1.1 only
   if (cleanType === 'pointer-addressing' || cleanType.includes('ladder') || cleanType.includes('byte-ladder')) {
     return <PointerAddressingDiagram data={parsed} />;
   }
+
 
   if (cleanType.includes('cache') || cleanType.includes('align') || cleanType.includes('straddle')) {
     return <CacheLineDiagram title={parsed.title} subtitle={parsed.subtitle} />;

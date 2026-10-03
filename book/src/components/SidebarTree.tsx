@@ -488,40 +488,67 @@ export function SidebarTree({
           <span className="text-[10px] text-slate-400 font-mono">How to Read</span>
         </button>
 
-        {/* Volume Selector Tabs — per-volume color accent + bottom-line active indicator */}
+        {/* Category Tabs — C++ Systems, CUDA, GPU Kernels with distinct borders and prominent active highlight */}
         {(() => {
           const volDefs = [
-            { id: 'vol1', label: 'C++ Systems', accent: 'sky', count: treeData?.volume1?.modules?.length ?? treeData?.stats?.cppModules ?? 5 },
-            { id: 'vol2', label: 'CUDA', accent: 'indigo', count: treeData?.volume2?.modules?.length ?? treeData?.stats?.cudaModules ?? 6 },
-            { id: 'vol3', label: 'Kernels', accent: 'amber', count: treeData?.volume3?.modules?.length ?? treeData?.stats?.kernelModules ?? 7 },
+            { id: 'vol1', label: 'C++ Systems', count: '20 Ch', accent: 'sky' },
+            { id: 'vol2', label: 'CUDA', count: '21 Ch', accent: 'indigo' },
+            { id: 'vol3', label: 'GPU Kernels', count: '28 Kernels', accent: 'amber' },
           ];
 
-          const accentStyles: Record<string, { active: string; dot: string }> = {
-            sky:    { active: 'border-b-2 border-sky-400    text-sky-300    bg-sky-500/10',    dot: 'bg-sky-400' },
-            indigo: { active: 'border-b-2 border-indigo-400 text-indigo-300 bg-indigo-500/10', dot: 'bg-indigo-400' },
-            amber:  { active: 'border-b-2 border-amber-400  text-amber-300  bg-amber-500/10',  dot: 'bg-amber-400' },
+          const accentStyles: Record<string, { active: string; dot: string; indicator: string }> = {
+            sky: {
+              active: 'bg-[#10233b] border-sky-400 text-sky-200 shadow-[0_0_14px_rgba(56,189,248,0.3)]',
+              dot: 'bg-sky-400 shadow-[0_0_8px_rgba(56,189,248,0.9)]',
+              indicator: 'bg-sky-400',
+            },
+            indigo: {
+              active: 'bg-[#1a183b] border-indigo-400 text-indigo-200 shadow-[0_0_14px_rgba(99,102,241,0.3)]',
+              dot: 'bg-indigo-400 shadow-[0_0_8px_rgba(99,102,241,0.9)]',
+              indicator: 'bg-indigo-400',
+            },
+            amber: {
+              active: 'bg-[#2b1f0c] border-amber-400 text-amber-200 shadow-[0_0_14px_rgba(245,158,11,0.3)]',
+              dot: 'bg-amber-400 shadow-[0_0_8px_rgba(245,158,11,0.9)]',
+              indicator: 'bg-amber-400',
+            },
           };
 
           return (
-            <div className="mt-3 flex rounded-lg overflow-hidden border border-[#21262d] bg-[#0d1117]">
-              {volDefs.map((vol, idx) => {
+            <div className="mt-3 p-1 rounded-xl bg-[#090d16] border border-[#232b3d] grid grid-cols-3 gap-1.5 shadow-inner">
+              {volDefs.map((vol) => {
                 const isActive = activeVolume === vol.id;
                 const styles = accentStyles[vol.accent];
                 return (
                   <button
                     key={vol.id}
-                    onClick={() => setActiveVolume(vol.id as 'vol1' | 'vol2' | 'vol3')}
-                    className={`flex-1 flex flex-col items-center gap-0.5 py-1.5 px-1 text-center cursor-pointer transition-all select-none ${
-                      idx < 2 ? 'border-r border-[#21262d]' : ''
-                    } ${isActive ? styles.active + ' font-semibold' : 'text-slate-500 hover:text-slate-300 hover:bg-white/[0.02]'}`}
+                    onClick={() => {
+                      const nextVol = vol.id as 'vol1' | 'vol2' | 'vol3';
+                      setActiveVolume(nextVol);
+                      if (nextVol === 'vol1') {
+                        onSelectNode({ type: 'theory', volumeId: 'vol1', chapterId: openChapterId || '1.1' });
+                      } else if (nextVol === 'vol2') {
+                        onSelectNode({ type: 'theory', volumeId: 'vol2', chapterId: openCudaTopicId || '2.1' });
+                      } else if (nextVol === 'vol3') {
+                        onSelectNode({ type: 'theory', volumeId: 'vol3', chapterId: openKernelTopicId || 'k1.1' });
+                      }
+                    }}
+                    className={`relative flex flex-col items-center justify-center py-2 px-1 rounded-lg border text-center cursor-pointer transition-all duration-150 select-none ${
+                      isActive
+                        ? `${styles.active} font-bold`
+                        : 'border-[#192233] bg-[#0e1422]/70 text-slate-400 hover:text-slate-200 hover:bg-[#141d30] hover:border-[#2a3854]'
+                    }`}
                   >
-                    <div className="flex items-center gap-1">
-                      {isActive && <span className={`w-1.5 h-1.5 rounded-full ${styles.dot} shrink-0`} />}
-                      <span className="text-[10px] font-mono font-semibold leading-none truncate">{vol.label}</span>
+                    <div className="flex items-center gap-1.5 mb-0.5">
+                      <span className={`w-2 h-2 rounded-full shrink-0 transition-transform ${isActive ? `${styles.dot} scale-110` : 'bg-slate-600'}`} />
+                      <span className="text-[11px] font-mono font-bold leading-none tracking-tight">{vol.label}</span>
                     </div>
-                    <span className={`text-[9px] font-mono leading-none ${isActive ? 'opacity-80' : 'opacity-50'}`}>
-                      {vol.count} modules
+                    <span className={`text-[8.5px] font-mono leading-none ${isActive ? 'text-slate-300 font-semibold' : 'text-slate-500'}`}>
+                      {vol.count}
                     </span>
+                    {isActive && (
+                      <div className={`absolute bottom-0 inset-x-2 h-0.5 rounded-full ${styles.indicator}`} />
+                    )}
                   </button>
                 );
               })}
@@ -565,7 +592,7 @@ export function SidebarTree({
                   >
                     <div className="flex items-center gap-2 min-w-0 pr-1">
                       <span className="font-mono text-[9px] px-1.5 py-0.5 rounded bg-sky-500/10 text-sky-400 font-bold border border-sky-500/20 shrink-0">
-                        M{mod.displayNum}
+                        Part {mod.displayNum}
                       </span>
                       <span className="truncate text-xs font-semibold text-slate-200" title={mod.displayTitle}>
                         {mod.displayTitle}
