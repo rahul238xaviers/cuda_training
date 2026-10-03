@@ -65,7 +65,7 @@ Physical memory is partitioned into distinct regions, the most critical being th
 When you perform addition or subtraction on a typed pointer (T*), the compiler does not shift the underlying address by raw bytes. Instead, it scales the offset by sizeof(T).
 
 ### The Fundamental Scaling Formula:
-```text
+```formula
 Address(ptr + N) = Address(ptr) + N * sizeof(T)
 Address(ptr - N) = Address(ptr) - N * sizeof(T)
 ```
@@ -96,7 +96,7 @@ Think of memory like a warehouse:
 
 ### The Bitwise Alignment Formula:
 To round any address up to the nearest power-of-2 alignment boundary without slow modulo division:
-```text
+```formula
 aligned_addr = (addr + (ALIGNMENT - 1)) & ~(ALIGNMENT - 1)
 ```
 
@@ -105,7 +105,7 @@ Why this works:
 2. The mask ~(ALIGNMENT - 1) has 0s in the bottom bits, acting as an eraser that wipes out the remainder and snaps cleanly onto the boundary.
 
 ### Padding Calculation:
-```text
+```formula
 padding_bytes = aligned_addr - addr
 ```
 Padding represents the empty slack bytes deliberately skipped so the next tensor begins on a hardware boundary.

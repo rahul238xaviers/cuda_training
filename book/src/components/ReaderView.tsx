@@ -67,7 +67,38 @@ export function ReaderView({ title, content, chapterId = '1.1', type, onNavigate
     const renderer = new marked.Renderer();
 
     renderer.code = function ({ text, lang }: { text: string; lang?: string }) {
-      const language = lang && hljs.getLanguage(lang) ? lang : undefined;
+      const cleanLang = (lang || '').toLowerCase().trim();
+
+      // Case 1: Mathematical Formula or Memory Addressing Card (No line numbers)
+      if (cleanLang === 'formula' || cleanLang === 'math') {
+        const safeText = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        return `
+          <div class="my-6 rounded-xl border border-sky-500/30 bg-[#0e1420] shadow-lg overflow-hidden select-text">
+            <div class="flex items-center justify-between px-4 py-2 bg-[#141b2a] border-b border-[#212b3d] text-xs select-none">
+              <span class="text-[11px] font-mono text-sky-400 font-semibold tracking-wider uppercase flex items-center gap-1.5">
+                <span class="w-2 h-2 rounded-full bg-sky-400"></span> Mathematical Definition & Address Scaling
+              </span>
+              <span class="text-[10px] text-slate-400 font-mono">Systems Arithmetic</span>
+            </div>
+            <div class="p-4 text-center font-mono text-[13px] md:text-sm text-sky-100 tracking-wide leading-relaxed overflow-x-auto font-medium">
+              ${safeText}
+            </div>
+          </div>
+        `;
+      }
+
+      // Case 2: Plain Monospace Text or Memory Timeline (No line numbers)
+      if (!cleanLang || cleanLang === 'text') {
+        const safeText = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        return `
+          <div class="my-5 rounded-xl border border-[#262d3d] bg-[#0c1017] p-4 overflow-x-auto select-text shadow-md">
+            <pre class="!bg-transparent !p-0 !m-0 font-mono text-xs leading-relaxed text-slate-300">${safeText}</pre>
+          </div>
+        `;
+      }
+
+      // Case 3: Executable Programming Code (IDE-grade with line-number gutter)
+      const language = hljs.getLanguage(cleanLang) ? cleanLang : undefined;
       const highlighted = language
         ? hljs.highlight(text, { language }).value
         : hljs.highlightAuto(text).value;
@@ -84,7 +115,7 @@ export function ReaderView({ title, content, chapterId = '1.1', type, onNavigate
         })
         .join('');
 
-      const displayLang = (lang || 'code').toUpperCase();
+      const displayLang = cleanLang.toUpperCase();
 
       return `
         <div class="code-block-wrapper my-6 rounded-xl overflow-hidden border border-[#2a3241] bg-[#090d14] shadow-xl">

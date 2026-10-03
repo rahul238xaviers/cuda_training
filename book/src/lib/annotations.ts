@@ -1,6 +1,6 @@
 /**
  * Client-side Storage and State Management for Bookmarks, Notes, and Multi-Color Text Highlights.
- * Decoupled from rendering and chapter logic.
+ * Synchronizes with a local SQLite database (/api/annotations) while maintaining instant local cache.
  */
 
 export type MarkerColor = 'yellow' | 'emerald' | 'purple' | 'cyan';
@@ -30,13 +30,31 @@ function emitChange() {
   }
 }
 
+// Initial Sync from SQLite backend on client load
+if (typeof window !== 'undefined') {
+  fetch('/api/annotations')
+    .then((res) => res.json())
+    .then((data) => {
+      if (data.success) {
+        if (Array.isArray(data.bookmarks)) {
+          localStorage.setItem(BOOKMARKS_KEY, JSON.stringify(data.bookmarks));
+        }
+        if (Array.isArray(data.highlights)) {
+          localStorage.setItem(HIGHLIGHTS_KEY, JSON.stringify(data.highlights));
+        }
+        emitChange();
+      }
+    })
+    .catch((err) => console.warn('SQLite annotations initial sync warning:', err));
+}
+
 export function getBookmarks(): ChapterBookmark[] {
   if (typeof window === 'undefined') return [];
   try {
     const raw = localStorage.getItem(BOOKMARKS_KEY);
     return raw ? JSON.parse(raw) : [];
   } catch (e) {
-    console.error('Failed to read bookmarks from localStorage', e);
+    console.error('Failed to read bookmarks from cache', e);
     return [];
   }
 }
@@ -68,8 +86,18 @@ export function toggleChapterBookmark(chapterId: string, chapterTitle: string): 
     localStorage.setItem(BOOKMARKS_KEY, JSON.stringify(updated));
     emitChange();
   } catch (e) {
-    console.error('Failed to save bookmark', e);
+    console.error('Failed to save bookmark cache', e);
   }
+
+  // Persist to local SQLite database
+  fetch('/api/annotations', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      type: 'bookmark',
+      data: { chapterId, chapterTitle },
+    }),
+  }).catch((err) => console.error('Failed to persist bookmark to SQLite', err));
 
   return !exists;
 }
@@ -84,7 +112,7 @@ export function getHighlights(chapterId?: string): ChapterHighlight[] {
     }
     return list;
   } catch (e) {
-    console.error('Failed to read highlights from localStorage', e);
+    console.error('Failed to read highlights from cache', e);
     return [];
   }
 }
@@ -102,8 +130,18 @@ export function saveHighlight(item: Omit<ChapterHighlight, 'id' | 'createdAt'>):
     localStorage.setItem(HIGHLIGHTS_KEY, JSON.stringify(updated));
     emitChange();
   } catch (e) {
-    console.error('Failed to save highlight', e);
+    console.error('Failed to save highlight cache', e);
   }
+
+  // Persist to local SQLite database
+  fetch('/api/annotations', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      type: 'highlight',
+      data: newHighlight,
+    }),
+  }).catch((err) => console.error('Failed to persist highlight to SQLite', err));
 
   return newHighlight;
 }
@@ -115,17 +153,40 @@ export function removeHighlight(id: string): void {
     localStorage.setItem(HIGHLIGHTS_KEY, JSON.stringify(updated));
     emitChange();
   } catch (e) {
-    console.error('Failed to remove highlight', e);
+    console.error('Failed to remove highlight cache', e);
   }
+
+  // Persist deletion to local SQLite database
+  fetch('/api/annotations', {
+    method: 'DELETE',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      type: 'highlight',
+      id,
+    }),
+  }).catch((err) => console.error('Failed to delete highlight from SQLite', err));
 }
 
 export function updateHighlightNote(id: string, note: string): void {
   const list = getHighlights();
+  const target = list.find((h) => h.id === id);
   const updated = list.map((h) => (h.id === id ? { ...h, note } : h));
+
   try {
     localStorage.setItem(HIGHLIGHTS_KEY, JSON.stringify(updated));
     emitChange();
   } catch (e) {
-    console.error('Failed to update highlight note', e);
+    console.error('Failed to update highlight note cache', e);
+  }
+
+  if (target) {
+    fetch('/api/annotations', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        type: 'highlight',
+        data: { ...target, note },
+      }),
+    }).catch((err) => console.error('Failed to update note in SQLite', err));
   }
 }

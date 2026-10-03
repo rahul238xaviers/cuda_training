@@ -169,26 +169,8 @@ export function PointerAddressingDiagram({ data }: { data: PointerAddressingSpec
               Stores Value: <tspan fill="#38bdf8" fontWeight="bold">{ptrValue}</tspan>
             </text>
 
-            {/* Circle origin port for arrow on the right edge of slot */}
-            <circle cx="334" cy="88" r="4.5" fill="#f59e0b" stroke="#ffffff" strokeWidth="1.5" />
-          </g>
-
-          {/* ================= BEZIER CURVED ARROW ================= */}
-          {/* Origin at slot right edge (334, 88), curves through (480, 88) and approaches cell 0 vertically at (140, 252) */}
-          <path
-            d="M 334 88 C 480 88 140 150 140 252"
-            fill="none"
-            stroke="url(#arrowGrad)"
-            strokeWidth="2.5"
-            strokeDasharray="4 2"
-            markerEnd="url(#pointer-arrow)"
-          />
-
-          <g transform="translate(290, 138)">
-            <rect x="0" y="0" width="145" height="24" rx="12" fill="#0b1329" stroke="#38bdf8" strokeWidth="1" />
-            <text x="72.5" y="16" textAnchor="middle" fill="#38bdf8" fontSize="10" fontWeight="600" fontFamily="ui-monospace, monospace">
-              Dereferences (*{ptrName})
-            </text>
+            {/* Circle origin port directly under Stores Value */}
+            <circle cx="180" cy="108" r="4.5" fill="#f59e0b" stroke="#ffffff" strokeWidth="1.5" />
           </g>
 
           {/* ================= SECTION 2: RAM / VRAM HEAP TARGET ================= */}
@@ -206,10 +188,10 @@ export function PointerAddressingDiagram({ data }: { data: PointerAddressingSpec
             />
 
             {/* Region Label (positioned to the right of ptr[0] entry path) */}
-            <text x="200" y="24" fill="#6ee7b7" fontSize="11" fontWeight="700" fontFamily="ui-monospace, monospace">
+            <text x="230" y="24" fill="#6ee7b7" fontSize="11" fontWeight="700" fontFamily="ui-monospace, monospace">
               TARGET BUFFER: {targetLocation.toUpperCase()}
             </text>
-            <text x="200" y="38" fill="#34d399" fontSize="10" fontFamily="sans-serif">
+            <text x="230" y="38" fill="#34d399" fontSize="10" fontFamily="sans-serif">
               Base Virtual Address: <tspan fill="#38bdf8" fontWeight="bold">{baseAddress}</tspan> • Type: {targetTypeName}
             </text>
 
@@ -262,6 +244,34 @@ export function PointerAddressingDiagram({ data }: { data: PointerAddressingSpec
                 </g>
               );
             })}
+          </g>
+
+          {/* ================= TOP-LAYER POINTER ARROW & DEREFERENCE PILL ================= */}
+          {/* Origin at (180, 108), flows through (160, 165) and plunges vertically into ptr[0] at (140, 245) */}
+          <path
+            d="M 180 108 C 180 165 140 185 140 245"
+            fill="none"
+            stroke="url(#arrowGrad)"
+            strokeWidth="2.5"
+            strokeDasharray="4 2"
+          />
+
+          {/* Concrete SVG Arrowhead on ptr[0] */}
+          <polygon
+            points="140,255 133,241 147,241"
+            fill="#38bdf8"
+            stroke="#090d14"
+            strokeWidth="1.5"
+          />
+          {/* Landing Target Ring on ptr[0] */}
+          <circle cx="140" cy="255" r="3.5" fill="#38bdf8" stroke="#ffffff" strokeWidth="1" />
+
+          {/* Dereferences (*ptr) Pill centered on curve at (160, 165) */}
+          <g transform="translate(85, 153)">
+            <rect x="0" y="0" width="150" height="24" rx="12" fill="#0b1329" stroke="#38bdf8" strokeWidth="1.5" />
+            <text x="75" y="16" textAnchor="middle" fill="#38bdf8" fontSize="10" fontWeight="700" fontFamily="ui-monospace, monospace">
+              Dereferences (*{ptrName})
+            </text>
           </g>
         </svg>
 
@@ -467,7 +477,8 @@ export function TiledGemmDiagram({
           </g>
 
           {/* Arrow pointing to C */}
-          <path d="M 460 100 L 510 100" stroke="#f59e0b" strokeWidth="2.5" />
+          <path d="M 455 100 L 510 100" stroke="#f59e0b" strokeWidth="2.5" />
+          <polygon points="522,100 510,94 510,106" fill="#f59e0b" />
 
           {/* Matrix C Output Tile */}
           <g transform="translate(530, 20)">
