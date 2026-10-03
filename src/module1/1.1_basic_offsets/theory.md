@@ -123,10 +123,11 @@ To solve this, GPU allocators (cudaMallocPitch) pad every row:
 * Pitch: The physical stride in bytes from the start of one row to the start of the next (e.g. 256 bytes).
 * Padding per Row: Pitch - Width (e.g. 256 - 128 = 128 bytes of untouched padding).
 
-```text
-Flat Memory Layout:
-Row 0: [ 128 bytes of useful data ] [ 128 bytes of padding ] -> 256 bytes
-Row 1: [ 128 bytes of useful data ] [ 128 bytes of padding ] -> 256 bytes
+```diagram:pitched-memory
+{
+  "title": "Hardware Schematic: 2D Pitched Memory in DRAM (cudaMallocPitch)",
+  "subtitle": "Each row is padded with 128 bytes of slack so row start addresses snap to 256-byte cache alignment."
+}
 ```
 
 ### Accessing Element (r, c) in Pitched Memory:
@@ -184,13 +185,11 @@ Maintain two pointers:
 * compute_buf: pointing to the buffer the GPU is actively computing on.
 * transfer_buf: pointing to the buffer the CPU/PCIe bus is actively filling with the next batch.
 
-```text
-Batch Timeline:
-[ PCIe fills transfer_buf ] <--- Running in Parallel ---> [ GPU computes on compute_buf ]
-                                        |
-                          [ Sync Barrier: Both Finish ]
-                                        |
-                    [ Pointer Swap: std::swap(compute_buf, transfer_buf) ]
+```diagram:double-buffering
+{
+  "title": "Hardware Timeline: Asynchronous Double-Buffering (Pointer Ping-Pong)",
+  "subtitle": "PCIe transfers and GPU kernel execution run 100% overlapped with single-cycle pointer swapping."
+}
 ```
 Physical data in RAM never moves. Only two 8-byte pointer variables swap their addresses in a single CPU cycle.
 
@@ -209,21 +208,30 @@ Decompose the matrix into 16x16 tiles:
 
 ### Clear Frame-of-Reference Coordinate Mapping:
 Avoid confusing abbreviations. Explicitly separate global grid coordinates from local tile coordinates:
-```text
-num_tiles_per_row = DIM / TILE_SIZE;
-total_tiles = num_tiles_per_row * num_tiles_per_row;
+```formula
+num_tiles_per_row = DIM / TILE_SIZE
+global_tile_start_row = (tile_id / num_tiles_per_row) * TILE_SIZE
+global_tile_start_col = (tile_id % num_tiles_per_row) * TILE_SIZE
+```
 
-For each tile_number from 0 to total_tiles - 1:
-    global_tile_start_row = (tile_number / num_tiles_per_row) * TILE_SIZE;
-    global_tile_start_col = (tile_number % num_tiles_per_row) * TILE_SIZE;
+```cpp
+const int num_tiles_per_row = DIM / TILE_SIZE;
+const int total_tiles = num_tiles_per_row * num_tiles_per_row;
 
-    For each local_row from 0 to TILE_SIZE - 1:
-        For each local_col from 0 to TILE_SIZE - 1:
-            current_row = global_tile_start_row + local_row;
-            current_col = global_tile_start_col + local_col;
+for (int tile_id = 0; tile_id < total_tiles; ++tile_id) {
+    const int global_tile_start_row = (tile_id / num_tiles_per_row) * TILE_SIZE;
+    const int global_tile_start_col = (tile_id % num_tiles_per_row) * TILE_SIZE;
 
-            // Transpose assignment:
+    for (int local_row = 0; local_row < TILE_SIZE; ++local_row) {
+        for (int local_col = 0; local_col < TILE_SIZE; ++local_col) {
+            const int current_row = global_tile_start_row + local_row;
+            const int current_col = global_tile_start_col + local_col;
+
+            // Transpose assignment (Global memory address calculation):
             dst[current_col * DIM + current_row] = src[current_row * DIM + current_col];
+        }
+    }
+}
 ```
 
 ---
