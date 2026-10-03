@@ -83,7 +83,7 @@ export function ReaderView({ title, content, chapterId = '1.1', type, onNavigate
       // Case 2: Plain Monospace Text or Memory Timeline (No line numbers)
       if (!cleanLang || cleanLang === 'text') {
         const safeText = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-        return `<div class="my-5 rounded-xl border border-[#262d3d] bg-[#0c1017] p-4 overflow-x-auto select-text shadow-md"><div class="font-mono text-xs leading-relaxed text-slate-300 whitespace-pre">${safeText}</div></div>`;
+        return `<div class="my-6 rounded-xl border border-[#2d3748] bg-[#0b0f19] shadow-lg overflow-hidden select-text"><div class="flex items-center justify-between px-4 py-2 bg-[#121824] border-b border-[#1f2937] text-xs select-none"><div class="flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-indigo-400"></span><span class="text-[11px] font-mono text-indigo-300 font-semibold tracking-wider uppercase">System Architecture & Schematic</span></div><span class="text-[10px] text-slate-400 font-mono">Hardware Reference</span></div><div class="p-4 overflow-x-auto"><div class="font-mono text-xs leading-relaxed text-slate-200 whitespace-pre">${safeText}</div></div></div>`;
       }
 
       // Case 3: Executable Programming Code (IDE-grade with line-number gutter)

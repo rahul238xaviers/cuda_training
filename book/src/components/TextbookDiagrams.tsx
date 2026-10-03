@@ -538,6 +538,219 @@ export function TiledGemmDiagram({
   );
 }
 
+export function PitchedMemoryDiagram({
+  title = "Hardware Schematic: 2D Pitched Memory in DRAM (cudaMallocPitch)",
+  subtitle = "Hardware row padding aligns each row start to a 256-byte coalescing boundary."
+}: { title?: string; subtitle?: string }) {
+  return (
+    <div className="my-8 rounded-2xl border border-[#30363d] bg-[#0c1017] shadow-2xl overflow-hidden select-none">
+      <div className="flex items-center justify-between px-5 py-3.5 bg-[#141923] border-b border-[#21262d]">
+        <div className="flex items-center gap-2.5">
+          <span className="p-1.5 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+            <Database className="w-4 h-4" />
+          </span>
+          <div>
+            <h4 className="text-xs font-bold text-slate-100 tracking-wide uppercase font-mono">
+              {title}
+            </h4>
+            <p className="text-[11px] text-slate-400 font-sans mt-0.5">
+              {subtitle}
+            </p>
+          </div>
+        </div>
+        <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-semibold">
+          PITCH = 256 BYTES
+        </span>
+      </div>
+
+      <div className="p-6 md:p-8 bg-[#090d14] relative">
+        <svg viewBox="0 0 760 260" className="w-full h-auto max-w-[760px] mx-auto filter drop-shadow-md">
+          <defs>
+            <pattern id="diagonalHatch" width="8" height="8" patternTransform="rotate(45 0 0)" patternUnits="userSpaceOnUse">
+              <line x1="0" y1="0" x2="0" y2="8" stroke="#f59e0b" strokeWidth="1.5" strokeOpacity="0.4" />
+            </pattern>
+          </defs>
+
+          {/* Row 0 */}
+          <g transform="translate(40, 25)">
+            <text x="0" y="27" fill="#94a3b8" fontSize="11" fontWeight="bold" fontFamily="ui-monospace, monospace">
+              Row 0 [Base + 0]
+            </text>
+            
+            {/* Useful Data: 128 Bytes */}
+            <rect x="135" y="5" width="280" height="42" rx="6" fill="#064e3b" stroke="#10b981" strokeWidth="1.5" />
+            <text x="275" y="30" textAnchor="middle" fill="#a7f3d0" fontSize="11" fontWeight="bold" fontFamily="ui-monospace, monospace">
+              Useful Data (32 Floats = 128 Bytes)
+            </text>
+
+            {/* Padding: 128 Bytes */}
+            <rect x="425" y="5" width="235" height="42" rx="6" fill="url(#diagonalHatch)" stroke="#d97706" strokeWidth="1.5" strokeDasharray="3 3" />
+            <text x="542" y="30" textAnchor="middle" fill="#fcd34d" fontSize="11" fontWeight="bold" fontFamily="ui-monospace, monospace">
+              Padding Slack (128 Bytes)
+            </text>
+
+            {/* Total Row 0 indicator */}
+            <text x="670" y="30" fill="#64748b" fontSize="11" fontFamily="ui-monospace, monospace">
+              -&gt; 256 B
+            </text>
+          </g>
+
+          {/* Pitch Stride Arrow connecting Row 0 to Row 1 */}
+          <path d="M 125 50 C 75 85 75 115 125 145" fill="none" stroke="#38bdf8" strokeWidth="2" strokeDasharray="4 2" />
+          <polygon points="132,145 122,139 122,151" fill="#38bdf8" />
+          <g transform="translate(18, 86)">
+            <rect x="0" y="0" width="90" height="22" rx="11" fill="#0b1329" stroke="#38bdf8" strokeWidth="1" />
+            <text x="45" y="15" textAnchor="middle" fill="#38bdf8" fontSize="9" fontWeight="bold" fontFamily="ui-monospace, monospace">
+              + Pitch (256B)
+            </text>
+          </g>
+
+          {/* Row 1 */}
+          <g transform="translate(40, 125)">
+            <text x="0" y="27" fill="#94a3b8" fontSize="11" fontWeight="bold" fontFamily="ui-monospace, monospace">
+              Row 1 [Base + 256]
+            </text>
+            
+            {/* Useful Data: 128 Bytes */}
+            <rect x="135" y="5" width="280" height="42" rx="6" fill="#064e3b" stroke="#10b981" strokeWidth="1.5" />
+            <text x="275" y="30" textAnchor="middle" fill="#a7f3d0" fontSize="11" fontWeight="bold" fontFamily="ui-monospace, monospace">
+              Useful Data (32 Floats = 128 Bytes)
+            </text>
+
+            {/* Padding: 128 Bytes */}
+            <rect x="425" y="5" width="235" height="42" rx="6" fill="url(#diagonalHatch)" stroke="#d97706" strokeWidth="1.5" strokeDasharray="3 3" />
+            <text x="542" y="30" textAnchor="middle" fill="#fcd34d" fontSize="11" fontWeight="bold" fontFamily="ui-monospace, monospace">
+              Padding Slack (128 Bytes)
+            </text>
+
+            {/* Total Row 1 indicator */}
+            <text x="670" y="30" fill="#64748b" fontSize="11" fontFamily="ui-monospace, monospace">
+              -&gt; 256 B
+            </text>
+          </g>
+
+          {/* Dimension Guidelines below Row 1 */}
+          <g transform="translate(175, 185)">
+            {/* Width Dimension */}
+            <line x1="0" y1="10" x2="280" y2="10" stroke="#10b981" strokeWidth="1.5" />
+            <polygon points="0,10 6,7 6,13" fill="#10b981" />
+            <polygon points="280,10 274,7 274,13" fill="#10b981" />
+            <text x="140" y="28" textAnchor="middle" fill="#6ee7b7" fontSize="10" fontFamily="ui-monospace, monospace" fontWeight="bold">
+              Width = 128 Bytes (Payload)
+            </text>
+
+            {/* Pitch Dimension */}
+            <line x1="0" y1="45" x2="525" y2="45" stroke="#38bdf8" strokeWidth="1.5" />
+            <polygon points="0,45 6,42 6,48" fill="#38bdf8" />
+            <polygon points="525,45 519,42 519,48" fill="#38bdf8" />
+            <text x="262" y="60" textAnchor="middle" fill="#7dd3fc" fontSize="10" fontFamily="ui-monospace, monospace" fontWeight="bold">
+              Total Pitch = 256 Bytes (Hardware Cache-Line Stride)
+            </text>
+          </g>
+        </svg>
+
+        <div className="mt-4 p-3 rounded-xl bg-[#121824] border border-[#212836] text-xs text-slate-300 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Info className="w-4 h-4 text-emerald-400 shrink-0" />
+            <span>
+              By advancing each row by <strong className="text-emerald-300 font-mono">PITCH (256 bytes)</strong> rather than raw width, every row starts at a 256-byte aligned hardware boundary, guaranteeing coalesced single-cycle memory transactions.
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export function DoubleBufferingDiagram({
+  title = "Timeline Schematic: Asynchronous Double-Buffering (Pointer Ping-Pong)",
+  subtitle = "Hiding PCIe latency by overlapping Host-to-Device transfer with GPU kernel computation."
+}: { title?: string; subtitle?: string }) {
+  return (
+    <div className="my-8 rounded-2xl border border-[#30363d] bg-[#0c1017] shadow-2xl overflow-hidden select-none">
+      <div className="flex items-center justify-between px-5 py-3.5 bg-[#141923] border-b border-[#21262d]">
+        <div className="flex items-center gap-2.5">
+          <span className="p-1.5 rounded-lg bg-sky-500/10 text-sky-400 border border-sky-500/20">
+            <Cpu className="w-4 h-4" />
+          </span>
+          <div>
+            <h4 className="text-xs font-bold text-slate-100 tracking-wide uppercase font-mono">
+              {title}
+            </h4>
+            <p className="text-[11px] text-slate-400 font-sans mt-0.5">
+              {subtitle}
+            </p>
+          </div>
+        </div>
+        <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-sky-500/10 text-sky-400 border border-sky-500/20 font-semibold">
+          ZERO-COPY POINTER SWAP
+        </span>
+      </div>
+
+      <div className="p-6 md:p-8 bg-[#090d14] relative">
+        <svg viewBox="0 0 760 270" className="w-full h-auto max-w-[760px] mx-auto filter drop-shadow-md">
+          {/* Stream 1 Track: PCIe DMA */}
+          <g transform="translate(40, 20)">
+            <text x="0" y="24" fill="#38bdf8" fontSize="11" fontWeight="bold" fontFamily="ui-monospace, monospace">
+              STREAM 1 (PCIe DMA Engine)
+            </text>
+            <rect x="235" y="5" width="445" height="36" rx="8" fill="#0c2340" stroke="#0284c7" strokeWidth="1.5" />
+            <text x="457" y="27" textAnchor="middle" fill="#7dd3fc" fontSize="11" fontWeight="bold" fontFamily="ui-monospace, monospace">
+              PCIe Fills transfer_buf (Next Batch N+1)
+            </text>
+          </g>
+
+          {/* Parallel Concurrency Bracket */}
+          <g transform="translate(40, 70)">
+            <path d="M 235 0 L 215 0 L 215 45 L 235 45" fill="none" stroke="#f59e0b" strokeWidth="2" />
+            <path d="M 680 0 L 700 0 L 700 45 L 680 45" fill="none" stroke="#f59e0b" strokeWidth="2" />
+            <text x="457" y="26" textAnchor="middle" fill="#fcd34d" fontSize="10" fontWeight="bold" fontFamily="ui-monospace, monospace" letterSpacing="1.5">
+              &lt;--- RUNNING SIMULTANEOUSLY IN HARDWARE ---&gt;
+            </text>
+          </g>
+
+          {/* Stream 0 Track: GPU SM Cores */}
+          <g transform="translate(40, 115)">
+            <text x="0" y="24" fill="#a855f7" fontSize="11" fontWeight="bold" fontFamily="ui-monospace, monospace">
+              STREAM 0 (GPU Tensor Cores)
+            </text>
+            <rect x="235" y="5" width="445" height="36" rx="8" fill="#2e1065" stroke="#9333ea" strokeWidth="1.5" />
+            <text x="457" y="27" textAnchor="middle" fill="#d8b4fe" fontSize="11" fontWeight="bold" fontFamily="ui-monospace, monospace">
+              GPU Computes on compute_buf (Active Batch N)
+            </text>
+          </g>
+
+          {/* Sync Barrier */}
+          <g transform="translate(40, 165)">
+            <line x1="235" y1="12" x2="680" y2="12" stroke="#64748b" strokeWidth="2" strokeDasharray="6 4" />
+            <rect x="345" y="0" width="225" height="24" rx="12" fill="#1e293b" stroke="#94a3b8" strokeWidth="1.5" />
+            <text x="457" y="16" textAnchor="middle" fill="#f1f5f9" fontSize="10" fontWeight="bold" fontFamily="ui-monospace, monospace">
+              Sync Barrier: Both Streams Complete
+            </text>
+          </g>
+
+          {/* Instantaneous Pointer Swap Operation */}
+          <g transform="translate(40, 205)">
+            <rect x="235" y="5" width="445" height="38" rx="8" fill="#064e3b" stroke="#10b981" strokeWidth="1.5" />
+            <text x="457" y="28" textAnchor="middle" fill="#a7f3d0" fontSize="11" fontWeight="bold" fontFamily="ui-monospace, monospace">
+              std::swap(compute_buf, transfer_buf)  [ 0 Physical Bytes Moved! ]
+            </text>
+          </g>
+        </svg>
+
+        <div className="mt-4 p-3 rounded-xl bg-[#121824] border border-[#212836] text-xs text-slate-300 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+            <span>
+              Transfer and computation run fully overlapped in parallel. When the barrier hits, swapping two 8-byte pointer variables takes a single CPU clock cycle (0 nanoseconds of data copying).
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function GenericDiagramRenderer({ type, payload }: { type: string; payload: string }) {
   let parsed: any = {};
   try {
@@ -550,6 +763,14 @@ export function GenericDiagramRenderer({ type, payload }: { type: string; payloa
   }
 
   const cleanType = type.toLowerCase().replace(/_/g, '-');
+
+  if (cleanType.includes('pitched') || cleanType.includes('pitch') || cleanType.includes('2d-pitch')) {
+    return <PitchedMemoryDiagram title={parsed.title} subtitle={parsed.subtitle} />;
+  }
+
+  if (cleanType.includes('double-buffering') || cleanType.includes('double-buf') || cleanType.includes('ping-pong') || cleanType.includes('timeline')) {
+    return <DoubleBufferingDiagram title={parsed.title} subtitle={parsed.subtitle} />;
+  }
 
   if (cleanType.includes('pointer') || cleanType.includes('offset') || cleanType.includes('ladder') || cleanType.includes('memory')) {
     return <PointerAddressingDiagram data={parsed} />;
