@@ -75,3 +75,7 @@ opencode.json
 # Tool outputs & sandboxes
 graphify-out/
 sandbox/
+
+# Local state & backups
+user_progress.json
+*.backup.*

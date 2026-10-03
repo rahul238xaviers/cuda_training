@@ -1,0 +1,9 @@
+book/.next
+book/node_modules
+book/out
+.git
+.DS_Store
+sandbox/runs/*
+output/*
+*.o
+*.bin

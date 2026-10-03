@@ -1,0 +1,27 @@
+version: '3.8'
+
+services:
+  cuda-lab:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: cuda_systems_lab
+    ports:
+      - "3000:3000"
+    volumes:
+      # Mount host repository to persist student work, progress, and solutions
+      - .:/workspace
+      - /workspace/book/node_modules
+      - /workspace/book/.next
+    environment:
+      - PORT=3000
+      - HOSTNAME=0.0.0.0
+      - NODE_ENV=development
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    restart: unless-stopped

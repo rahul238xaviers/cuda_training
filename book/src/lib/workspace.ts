@@ -1,10 +1,64 @@
 import path from 'path';
 import fs from 'fs';
+import { loadUserProgress } from './progress';
+import { loadCurriculumManifest } from './curriculum';
 
 export const WORKSPACE_ROOT = path.resolve(process.cwd(), '..');
 export const SRC_DIR = path.join(WORKSPACE_ROOT, 'src');
 export const MODULE1_DIR = path.join(SRC_DIR, 'module1');
-export const PLAYGROUND_PATH = path.join(WORKSPACE_ROOT, 'playground.cpp');
+export const KERNELS_DIR = path.join(SRC_DIR, 'kernels');
+export const SANDBOX_DIR = path.join(WORKSPACE_ROOT, 'sandbox', 'runs');
+
+export const PLAYGROUND_CPP_PATH = path.join(WORKSPACE_ROOT, 'playground.cpp');
+export const PLAYGROUND_CUDA_PATH = path.join(WORKSPACE_ROOT, 'playground.cu');
+export const PLAYGROUND_KERNEL_PATH = path.join(WORKSPACE_ROOT, 'playground_kernel.cu');
+export const PLAYGROUND_PATH = PLAYGROUND_CPP_PATH;
+
+export type PlaygroundType = 'cpp' | 'cuda' | 'kernel';
+
+export interface PlaygroundInfo {
+  type: PlaygroundType;
+  filename: string;
+  filePath: string;
+  title: string;
+  subtitle: string;
+  language: 'cpp' | 'cuda';
+  ext: 'cpp' | 'cu';
+}
+
+export function getPlaygroundInfo(type: PlaygroundType = 'cpp'): PlaygroundInfo {
+  if (type === 'cuda') {
+    return {
+      type: 'cuda',
+      filename: 'playground.cu',
+      filePath: PLAYGROUND_CUDA_PATH,
+      title: 'CUDA GPU Scratchpad',
+      subtitle: 'Hardware warp primitives & GPU device kernels',
+      language: 'cuda',
+      ext: 'cu',
+    };
+  }
+  if (type === 'kernel') {
+    return {
+      type: 'kernel',
+      filename: 'playground_kernel.cu',
+      filePath: PLAYGROUND_KERNEL_PATH,
+      title: 'Kernel Benchmark Lab',
+      subtitle: 'GPU kernel verification & roofline profiling sandbox',
+      language: 'cuda',
+      ext: 'cu',
+    };
+  }
+  return {
+    type: 'cpp',
+    filename: 'playground.cpp',
+    filePath: PLAYGROUND_CPP_PATH,
+    title: 'C++ Systems Playground',
+    subtitle: 'Zero-cost abstractions & low-level memory playground',
+    language: 'cpp',
+    ext: 'cpp',
+  };
+}
 
 export interface TierMeta {
   status: 'passed' | 'pending';
@@ -36,8 +90,8 @@ export interface MetalKernelMeta {
 }
 
 /**
- * Dynamically counts tests or problems defined in a C++ workbook.
- * Inspects both reportStatus(...) assertions and // PROBLEM X headers.
+ * Dynamically counts tests or problems defined in a C++ or CUDA workbook.
+ * Inspects both reportStatus(...) assertions, // PROBLEM X headers, and evaluation criteria.
  */
 export function countTestsInWorkbook(filePath: string): number {
   if (!fs.existsSync(filePath)) return 0;
@@ -54,6 +108,12 @@ export function countTestsInWorkbook(filePath: string): number {
     const reportMatches = content.match(/reportStatus\s*\(/g);
     if (reportMatches && reportMatches.length > 0) {
       return reportMatches.length;
+    }
+
+    // Kernel evaluation criteria or assertions
+    const verifyMatches = content.match(/assert\(|std::abs|max_diff|CUDA_CHECK/g);
+    if (verifyMatches && verifyMatches.length > 0) {
+      return Math.min(verifyMatches.length, 5);
     }
 
     // Default to at least 1 if file is non-empty
@@ -74,7 +134,6 @@ function extractChapterTitle(folderPath: string, folderName: string): string {
       for (const line of firstLines) {
         const trimmed = line.trim();
         if (trimmed.startsWith('# ')) {
-          // Clean title like "# Chapter 1.2: Strides & Pointer Indirection" or "# Module 7.6 — FlashAttention"
           let title = trimmed
             .replace(/^#\s*((Module\s+)?(Chapter|Stage)\s*[\d\.]+:?\s*|Module\s*[\d\.]+\s*[-—:]\s*|[\d\.]+\s*(Stage\s*\d+:?\s*)?[-—:]?\s*|[-—]\s*)?/i, '')
             .replace(/`([^`]+)`/g, '$1')
@@ -94,7 +153,7 @@ function extractChapterTitle(folderPath: string, folderName: string): string {
 }
 
 /**
- * Dynamically scans src/module1 on the filesystem and builds the curriculum tree.
+ * Dynamically scans src/module1 on the filesystem and builds the flat C++ chapter list.
  */
 export function scanDynamicChapters(): ChapterMeta[] {
   if (!fs.existsSync(MODULE1_DIR)) {
@@ -138,31 +197,24 @@ export function scanDynamicChapters(): ChapterMeta[] {
     let passedTests = 0;
     let passedTiersCount = 0;
 
+    const userProgress = loadUserProgress();
+    const chProgress = userProgress.topics[id];
+
     for (const tier of tiersList) {
       const solPath = path.join(folderPath, 'solution', `${tier}_workbook.cpp`);
       const exPath = path.join(folderPath, 'exercise', `${tier}_workbook.cpp`);
 
       const solExists = fs.existsSync(solPath);
       const exExists = fs.existsSync(exPath);
-      let isSolved = false;
+      const isSolved = chProgress?.tiers?.[tier]?.status === 'passed';
 
-      if (solExists) {
-        if (!exExists) {
-          isSolved = fs.statSync(solPath).size > 200;
-        } else {
-          const solContent = fs.readFileSync(solPath, 'utf-8').trim();
-          const exContent = fs.readFileSync(exPath, 'utf-8').trim();
-          isSolved = solContent !== exContent && solContent.length > 200;
-        }
-      }
-
-      const count = solExists ? countTestsInWorkbook(solPath) : countTestsInWorkbook(exPath);
+      const count = solExists ? countTestsInWorkbook(solPath) : exExists ? countTestsInWorkbook(exPath) : 3;
       const status: 'passed' | 'pending' = isSolved ? 'passed' : 'pending';
       tiers[tier] = { status, tests: count };
 
       totalTests += count;
       if (status === 'passed') {
-        passedTests += count;
+        passedTests += chProgress?.tiers?.[tier]?.testsPassed || count;
         passedTiersCount++;
       }
     }
@@ -183,6 +235,93 @@ export function scanDynamicChapters(): ChapterMeta[] {
 
   return chapters;
 }
+
+// =============================================================================
+// Volume 1: C++ Systems 5-Module Structure
+// =============================================================================
+
+export interface CppModuleMeta {
+  id: string;
+  displayId: string;
+  displayNum: number;
+  title: string;
+  displayTitle: string;
+  tagline: string;
+  topics: ChapterMeta[];
+  totalTests: number;
+  passedTests: number;
+  completed: boolean;
+}
+
+export function getCppModuleInfo(): Record<number, { title: string; displayTitle: string; tagline: string; startCh: number; endCh: number }> {
+  const manifest = loadCurriculumManifest();
+  const vol1 = manifest.volumes.find((v) => v.id === 'vol1');
+  const record: Record<number, { title: string; displayTitle: string; tagline: string; startCh: number; endCh: number }> = {};
+  if (vol1) {
+    for (const m of vol1.modules) {
+      record[m.num] = {
+        title: m.title,
+        displayTitle: m.displayTitle,
+        tagline: m.tagline,
+        startCh: m.startCh || 1,
+        endCh: m.endCh || 20,
+      };
+    }
+  }
+  return record;
+}
+
+export const CPP_MODULE_INFO = getCppModuleInfo();
+
+export function scanDynamicCppModules(): CppModuleMeta[] {
+  const allChapters = scanDynamicChapters();
+  const manifest = loadCurriculumManifest();
+  const vol1 = manifest.volumes.find((v) => v.id === 'vol1');
+  const moduleDefs = vol1?.modules || [];
+  const modules: CppModuleMeta[] = [];
+
+  for (const mDef of moduleDefs) {
+    const m = mDef.num;
+    const startCh = mDef.startCh || 1;
+    const endCh = mDef.endCh || 20;
+
+    const modTopics = allChapters.filter((ch) => {
+      const match = ch.id.match(/^1\.(\d+)/);
+      if (!match) return false;
+      const num = parseInt(match[1], 10);
+      return num >= startCh && num <= endCh;
+    });
+
+    let modTotalTests = 0;
+    let modPassedTests = 0;
+    let completedCount = 0;
+
+    for (const t of modTopics) {
+      modTotalTests += t.totalTests;
+      modPassedTests += t.passedTests;
+      if (t.completed) completedCount++;
+    }
+
+    modules.push({
+      id: String(m),
+      displayId: String(m),
+      displayNum: m,
+      title: mDef.title,
+      displayTitle: mDef.displayTitle,
+      tagline: mDef.tagline,
+      topics: modTopics,
+      totalTests: modTotalTests,
+      passedTests: modPassedTests,
+      completed: completedCount === modTopics.length && modTopics.length > 0,
+    });
+  }
+
+  return modules;
+}
+
+// =============================================================================
+// Volume 2: CUDA Progressive Curriculum Structure
+// =============================================================================
 
 export interface CudaTopicMeta extends ChapterMeta {
   moduleId: string;
@@ -207,131 +346,34 @@ export interface CudaModuleMeta {
   completed: boolean;
 }
 
-const CUDA_MODULE_INFO: Record<number, { title: string; displayTitle: string; tagline: string }> = {
-  2: {
-    title: 'Module 1: Host-Device Bridge & Modern C++',
-    displayTitle: 'Host-Device Bridge & Modern C++',
-    tagline: 'Lambdas, RAII Streams, Move Semantics, Device Views & Thrust Patterns',
-  },
-  3: {
-    title: 'Module 2: CUDA Threading Hierarchy & Hardware Execution',
-    displayTitle: 'CUDA Threading Hierarchy & Hardware Execution',
-    tagline: 'Threads, Registers, Warps, Shuffle Intrinsics, Blocks & Grids',
-  },
-  4: {
-    title: 'Module 3: Memory Hierarchy, Coalescing & SRAM Tiling',
-    displayTitle: 'Memory Hierarchy, Coalescing & SRAM Tiling',
-    tagline: 'Global DRAM Coalescing, Cache Hierarchy, Shared SRAM Tiling',
-  },
-  5: {
-    title: 'Module 4: High-Performance Parallel Primitives',
-    displayTitle: 'High-Performance Parallel Primitives',
-    tagline: 'Warp/Block Tree Reductions, Atomics & Online Softmax',
-  },
-  6: {
-    title: 'Module 5: Low-Precision & Tensor Cores',
-    displayTitle: 'Low-Precision & Tensor Cores',
-    tagline: 'BF16/FP16 Packed Math & WMMA Tensor Core Acceleration',
-  },
-  7: {
-    title: 'Module 6: Production LLM Inference & Training Primitives',
-    displayTitle: 'Production LLM Inference & Training Primitives',
-    tagline: 'Embedding, RoPE, RMSNorm, AdamW, GEMM Projections & FlashAttention',
-  },
-};
-
-/**
- * Universal topic resolver: resolves topic from Module 1 (C++) or Modules 2-7 (CUDA).
- */
-export interface TopicLocation {
-  moduleNum: number;
-  moduleFolder: string;
-  moduleDir: string;
-  folder: string;
-  fullPath: string;
-  isCuda: boolean;
-  ext: 'cu' | 'cpp';
-  title: string;
-  displayModNum: number;
-  displayTopicId: string;
-}
-
-export function getTopicLocation(id: string, volumeId?: string): TopicLocation | null {
-  let modNum: number | null = null;
-  let topicIndex: string | null = null;
-
-  if (id.startsWith('cuda-')) {
-    const raw = id.replace('cuda-', '');
-    const m = raw.match(/^(\d+)\.(\d+)/);
-    if (m) {
-      modNum = parseInt(m[1], 10) + 1; // map 1.x -> 2.x
-      topicIndex = m[2];
-    }
-  } else {
-    const match = id.match(/^(\d+)\.(\d+)/);
-    if (match) {
-      const parsedMod = parseInt(match[1], 10);
-      topicIndex = match[2];
-      if (volumeId === 'vol2' && parsedMod >= 1 && parsedMod <= 6) {
-        modNum = parsedMod + 1;
-      } else {
-        modNum = parsedMod;
-      }
+export function getCudaModuleInfo(): Record<number, { title: string; displayTitle: string; tagline: string }> {
+  const manifest = loadCurriculumManifest();
+  const vol2 = manifest.volumes.find((v) => v.id === 'vol2');
+  const record: Record<number, { title: string; displayTitle: string; tagline: string }> = {};
+  if (vol2) {
+    for (const m of vol2.modules) {
+      const diskNum = m.diskNum || (m.num + 1);
+      record[diskNum] = {
+        title: m.title,
+        displayTitle: m.displayTitle,
+        tagline: m.tagline,
+      };
     }
   }
-
-  if (modNum === null || topicIndex === null) return null;
-
-  const targetId = `${modNum}.${topicIndex}`;
-  const modFolder = `module${modNum}`;
-  const modDir = path.join(SRC_DIR, modFolder);
-  if (!fs.existsSync(modDir)) return null;
-
-  const entries = fs.readdirSync(modDir, { withFileTypes: true });
-  const folderEntry = entries.find(
-    (e) => e.isDirectory() && (e.name.startsWith(`${targetId}_`) || e.name === targetId)
-  );
-  if (!folderEntry) return null;
-
-  const folder = folderEntry.name;
-  const fullPath = path.join(modDir, folder);
-  const isCuda = modNum >= 2;
-
-  let ext: 'cu' | 'cpp' = isCuda ? 'cu' : 'cpp';
-  const exDir = path.join(fullPath, 'exercise');
-  if (fs.existsSync(exDir)) {
-    const files = fs.readdirSync(exDir);
-    if (files.some((f) => f.endsWith('.cu'))) ext = 'cu';
-    else if (files.some((f) => f.endsWith('.cpp'))) ext = 'cpp';
-  }
-
-  const title = extractChapterTitle(fullPath, folder);
-  const displayModNum = isCuda ? modNum - 1 : modNum;
-  const displayTopicId = isCuda ? `${displayModNum}.${topicIndex}` : targetId;
-
-  return {
-    moduleNum: modNum,
-    moduleFolder: modFolder,
-    moduleDir: modDir,
-    folder,
-    fullPath,
-    isCuda,
-    ext,
-    title,
-    displayModNum,
-    displayTopicId,
-  };
+  return record;
 }
 
-/**
- * Dynamically scans src/module2 through src/module7 on the filesystem
- * and builds the complete progressive CUDA curriculum.
- */
+export const CUDA_MODULE_INFO = getCudaModuleInfo();
+
 export function scanDynamicCudaModules(): CudaModuleMeta[] {
+  const manifest = loadCurriculumManifest();
+  const vol2 = manifest.volumes.find((v) => v.id === 'vol2');
+  const moduleDefs = vol2?.modules || [];
   const modules: CudaModuleMeta[] = [];
 
-  for (let m = 2; m <= 7; m++) {
-    const displayNum = m - 1; // Module 2 on disk -> Module 1 in CUDA category
+  for (const mDef of moduleDefs) {
+    const m = mDef.diskNum || (mDef.num + 1);
+    const displayNum = mDef.num;
     const displayId = String(displayNum);
     const modFolder = `module${m}`;
     const modDir = path.join(SRC_DIR, modFolder);
@@ -349,10 +391,10 @@ export function scanDynamicCudaModules(): CudaModuleMeta[] {
       return numA - numB;
     });
 
-    const info = CUDA_MODULE_INFO[m] || {
-      title: `Module ${displayNum}: CUDA Core Techniques`,
-      displayTitle: 'CUDA Core Techniques',
-      tagline: 'High-performance GPU systems programming',
+    const info = {
+      title: mDef.title,
+      displayTitle: mDef.displayTitle,
+      tagline: mDef.tagline,
     };
 
     let modTotalTests = 0;
@@ -369,7 +411,6 @@ export function scanDynamicCudaModules(): CudaModuleMeta[] {
       const title = extractChapterTitle(folderPath, folder);
       const hasCheatSheet = fs.existsSync(path.join(folderPath, 'cheat_sheet.md'));
 
-      // Check default extension: .cu or .cpp
       let ext: 'cu' | 'cpp' = 'cu';
       const exDir = path.join(folderPath, 'exercise');
       if (fs.existsSync(exDir)) {
@@ -396,7 +437,6 @@ export function scanDynamicCudaModules(): CudaModuleMeta[] {
       let passedTiersCount = 0;
 
       for (const tier of tiersList) {
-        // Check both .cu and .cpp
         const solCu = path.join(folderPath, 'solution', `${tier}_workbook.cu`);
         const solCpp = path.join(folderPath, 'solution', `${tier}_workbook.cpp`);
         const exCu = path.join(folderPath, 'exercise', `${tier}_workbook.cu`);
@@ -407,30 +447,23 @@ export function scanDynamicCudaModules(): CudaModuleMeta[] {
 
         const solExists = fs.existsSync(solPath);
         const exExists = fs.existsSync(exPath);
-        let isSolved = false;
 
-        if (solExists) {
-          if (!exExists) {
-            isSolved = fs.statSync(solPath).size > 200;
-          } else {
-            const solContent = fs.readFileSync(solPath, 'utf-8').trim();
-            const exContent = fs.readFileSync(exPath, 'utf-8').trim();
-            isSolved = solContent !== exContent && solContent.length > 200;
-          }
-        }
+        const userProgress = loadUserProgress();
+        const cudaProg = userProgress.topics[id] || userProgress.topics[topicDisplayId] || userProgress.topics[`cuda-${topicDisplayId}`];
+        const isSolved = cudaProg?.tiers?.[tier]?.status === 'passed';
 
         const count = solExists
           ? countTestsInWorkbook(solPath)
           : exExists
           ? countTestsInWorkbook(exPath)
-          : 0;
+          : 3;
 
         const status: 'passed' | 'pending' = isSolved ? 'passed' : 'pending';
         tiers[tier] = { status, tests: count };
 
         totalTests += count;
         if (status === 'passed') {
-          passedTests += count;
+          passedTests += cudaProg?.tiers?.[tier]?.testsPassed || count;
           passedTiersCount++;
         }
       }
@@ -477,6 +510,351 @@ export function scanDynamicCudaModules(): CudaModuleMeta[] {
   return modules;
 }
 
+// =============================================================================
+// Volume 3: Production Kernel Curriculum Structure (7 Modules)
+// =============================================================================
+
+export interface KernelTopicMeta extends ChapterMeta {
+  moduleId: string;
+  moduleNum: number;
+  moduleFolder: string;
+  ext: 'cu';
+  displayId: string;
+  displayNum: number;
+  category: string;
+}
+
+export interface KernelModuleMeta {
+  id: string;
+  displayId: string;
+  displayNum: number;
+  folder: string;
+  title: string;
+  displayTitle: string;
+  tagline: string;
+  topics: KernelTopicMeta[];
+  totalTests: number;
+  passedTests: number;
+  completed: boolean;
+}
+
+export function getKernelModuleInfo(): Record<number, { title: string; displayTitle: string; tagline: string; category: string }> {
+  const manifest = loadCurriculumManifest();
+  const vol3 = manifest.volumes.find((v) => v.id === 'vol3');
+  const record: Record<number, { title: string; displayTitle: string; tagline: string; category: string }> = {};
+  if (vol3) {
+    for (const m of vol3.modules) {
+      const diskNum = m.diskNum || m.num;
+      record[diskNum] = {
+        title: m.title,
+        displayTitle: m.displayTitle,
+        tagline: m.tagline,
+        category: m.category || 'GPU Kernels',
+      };
+    }
+  }
+  return record;
+}
+
+export const KERNEL_MODULE_INFO = getKernelModuleInfo();
+
+export function scanDynamicKernelModules(): KernelModuleMeta[] {
+  const modules: KernelModuleMeta[] = [];
+  if (!fs.existsSync(KERNELS_DIR)) return modules;
+
+  const manifest = loadCurriculumManifest();
+  const vol3 = manifest.volumes.find((v) => v.id === 'vol3');
+  const moduleDefs = vol3?.modules || [];
+
+  for (const mDef of moduleDefs) {
+    const m = mDef.diskNum || mDef.num;
+    const modFolder = `module${m}`;
+    const modDir = path.join(KERNELS_DIR, modFolder);
+    if (!fs.existsSync(modDir)) continue;
+
+    const entries = fs.readdirSync(modDir, { withFileTypes: true });
+    const topicFolders = entries.filter(
+      (e) => e.isDirectory() && new RegExp(`^${m}\\.\\d+(_.*)?$`).test(e.name)
+    );
+
+    // Sort naturally: 1.1, 1.2, 1.3...
+    topicFolders.sort((a, b) => {
+      const numA = parseFloat(a.name.match(new RegExp(`^${m}\\.(\\d+)`))?.[1] || '0');
+      const numB = parseFloat(b.name.match(new RegExp(`^${m}\\.(\\d+)`))?.[1] || '0');
+      return numA - numB;
+    });
+
+    const info = {
+      title: mDef.title,
+      displayTitle: mDef.displayTitle,
+      tagline: mDef.tagline,
+      category: mDef.category || 'General Kernels',
+    };
+
+    let modTotalTests = 0;
+    let modPassedTests = 0;
+    let completedTopicsCount = 0;
+
+    const topics: KernelTopicMeta[] = topicFolders.map((entry) => {
+      const folder = entry.name;
+      const folderPath = path.join(modDir, folder);
+      const idMatch = folder.match(new RegExp(`^${m}\\.(\\d+)`));
+      const subIdx = idMatch ? idMatch[1] : '1';
+      const id = `k${m}.${subIdx}`;
+      const topicDisplayId = `${m}.${subIdx}`;
+      const title = extractChapterTitle(folderPath, folder);
+      const hasCheatSheet = fs.existsSync(path.join(folderPath, 'cheat_sheet.md'));
+
+      const tiersList: Array<'beginner' | 'intermediate' | 'champion'> = [
+        'beginner',
+        'intermediate',
+        'champion',
+      ];
+
+      const tiers: Record<'beginner' | 'intermediate' | 'champion', TierMeta> = {
+        beginner: { status: 'pending', tests: 0 },
+        intermediate: { status: 'pending', tests: 0 },
+        champion: { status: 'pending', tests: 0 },
+      };
+
+      let totalTests = 0;
+      let passedTests = 0;
+      let passedTiersCount = 0;
+
+      for (const tier of tiersList) {
+        const solCu = path.join(folderPath, 'solution', `${tier}_workbook.cu`);
+        const exCu = path.join(folderPath, 'exercise', `${tier}_workbook.cu`);
+
+        const solExists = fs.existsSync(solCu);
+        const exExists = fs.existsSync(exCu);
+
+        const userProgress = loadUserProgress();
+        const kernelProg = userProgress.topics[id] || userProgress.topics[`k${m}.${subIdx}`];
+        const isSolved = kernelProg?.tiers?.[tier]?.status === 'passed';
+
+        const count = solExists
+          ? countTestsInWorkbook(solCu)
+          : exExists
+          ? countTestsInWorkbook(exCu)
+          : 3;
+
+        const status: 'passed' | 'pending' = isSolved ? 'passed' : 'pending';
+        tiers[tier] = { status, tests: count };
+
+        totalTests += count;
+        if (status === 'passed') {
+          passedTests += kernelProg?.tiers?.[tier]?.testsPassed || count;
+          passedTiersCount++;
+        }
+      }
+
+      const completed = passedTiersCount === 3;
+      if (completed) completedTopicsCount++;
+
+      modTotalTests += totalTests;
+      modPassedTests += passedTests;
+
+      return {
+        id,
+        folder,
+        moduleId: `module${m}`,
+        moduleNum: m,
+        moduleFolder: modFolder,
+        title,
+        completed,
+        hasCheatSheet,
+        totalTests,
+        passedTests,
+        ext: 'cu',
+        tiers,
+        displayId: topicDisplayId,
+        displayNum: m,
+        category: info.category,
+      };
+    });
+
+    modules.push({
+      id: String(m),
+      displayId: String(m),
+      displayNum: m,
+      folder: modFolder,
+      title: info.title,
+      displayTitle: info.displayTitle,
+      tagline: info.tagline,
+      topics,
+      totalTests: modTotalTests,
+      passedTests: modPassedTests,
+      completed: completedTopicsCount === topics.length && topics.length > 0,
+    });
+  }
+
+  return modules;
+}
+
+// =============================================================================
+// Universal Topic Location Resolver
+// =============================================================================
+
+export interface TopicLocation {
+  moduleNum: number;
+  moduleFolder: string;
+  moduleDir: string;
+  folder: string;
+  fullPath: string;
+  isCuda: boolean;
+  isKernel: boolean;
+  ext: 'cu' | 'cpp';
+  title: string;
+  displayModNum: number;
+  displayTopicId: string;
+}
+
+export function getTopicLocation(id: string, volumeId?: string): TopicLocation | null {
+  // Case A: Kernel Topic (Volume 3)
+  const isKernelExplicit =
+    id.startsWith('k') ||
+    id.startsWith('K') ||
+    id.startsWith('kernel-') ||
+    volumeId === 'vol3';
+
+  if (isKernelExplicit) {
+    const cleanId = id.replace(/^(kernel-|k|K)/, '');
+    const mMatch = cleanId.match(/^(\d+)\.(\d+)/);
+    if (!mMatch) return null;
+
+    const modNum = parseInt(mMatch[1], 10);
+    const topicIndex = mMatch[2];
+    const targetId = `${modNum}.${topicIndex}`;
+    const modFolder = `module${modNum}`;
+    const modDir = path.join(KERNELS_DIR, modFolder);
+    if (!fs.existsSync(modDir)) return null;
+
+    const entries = fs.readdirSync(modDir, { withFileTypes: true });
+    const folderEntry = entries.find(
+      (e) => e.isDirectory() && (e.name.startsWith(`${targetId}_`) || e.name === targetId)
+    );
+    if (!folderEntry) return null;
+
+    const folder = folderEntry.name;
+    const fullPath = path.join(modDir, folder);
+    const title = extractChapterTitle(fullPath, folder);
+
+    return {
+      moduleNum: modNum,
+      moduleFolder: modFolder,
+      moduleDir: modDir,
+      folder,
+      fullPath,
+      isCuda: true,
+      isKernel: true,
+      ext: 'cu',
+      title,
+      displayModNum: modNum,
+      displayTopicId: `K${targetId}`,
+    };
+  }
+
+  // Case B: CUDA Topic (Volume 2)
+  if (id.startsWith('cuda-') || volumeId === 'vol2' || /^[2-7]\./.test(id)) {
+    let modNum: number | null = null;
+    let topicIndex: string | null = null;
+
+    if (id.startsWith('cuda-')) {
+      const raw = id.replace('cuda-', '');
+      const m = raw.match(/^(\d+)\.(\d+)/);
+      if (m) {
+        modNum = parseInt(m[1], 10) + 1; // 1.x -> module 2
+        topicIndex = m[2];
+      }
+    } else {
+      const match = id.match(/^(\d+)\.(\d+)/);
+      if (match) {
+        const parsedMod = parseInt(match[1], 10);
+        topicIndex = match[2];
+        if (volumeId === 'vol2' && parsedMod >= 1 && parsedMod <= 6) {
+          modNum = parsedMod + 1;
+        } else {
+          modNum = parsedMod;
+        }
+      }
+    }
+
+    if (modNum !== null && topicIndex !== null) {
+      const targetId = `${modNum}.${topicIndex}`;
+      const modFolder = `module${modNum}`;
+      const modDir = path.join(SRC_DIR, modFolder);
+      if (fs.existsSync(modDir)) {
+        const entries = fs.readdirSync(modDir, { withFileTypes: true });
+        const folderEntry = entries.find(
+          (e) => e.isDirectory() && (e.name.startsWith(`${targetId}_`) || e.name === targetId)
+        );
+        if (folderEntry) {
+          const folder = folderEntry.name;
+          const fullPath = path.join(modDir, folder);
+          let ext: 'cu' | 'cpp' = 'cu';
+          const exDir = path.join(fullPath, 'exercise');
+          if (fs.existsSync(exDir)) {
+            const files = fs.readdirSync(exDir);
+            if (files.some((f) => f.endsWith('.cpp')) && !files.some((f) => f.endsWith('.cu'))) {
+              ext = 'cpp';
+            }
+          }
+          const title = extractChapterTitle(fullPath, folder);
+          const displayModNum = modNum - 1;
+          const displayTopicId = `${displayModNum}.${topicIndex}`;
+
+          return {
+            moduleNum: modNum,
+            moduleFolder: modFolder,
+            moduleDir: modDir,
+            folder,
+            fullPath,
+            isCuda: true,
+            isKernel: false,
+            ext,
+            title,
+            displayModNum,
+            displayTopicId,
+          };
+        }
+      }
+    }
+  }
+
+  // Case C: Volume 1 C++ Systems (module1/1.x_...)
+  const match = id.match(/^1\.(\d+)/);
+  if (!match) return null;
+
+  const topicIndex = match[1];
+  const targetId = `1.${topicIndex}`;
+  const modFolder = 'module1';
+  const modDir = path.join(SRC_DIR, modFolder);
+  if (!fs.existsSync(modDir)) return null;
+
+  const entries = fs.readdirSync(modDir, { withFileTypes: true });
+  const folderEntry = entries.find(
+    (e) => e.isDirectory() && (e.name.startsWith(`${targetId}_`) || e.name === targetId)
+  );
+  if (!folderEntry) return null;
+
+  const folder = folderEntry.name;
+  const fullPath = path.join(modDir, folder);
+  const title = extractChapterTitle(fullPath, folder);
+
+  return {
+    moduleNum: 1,
+    moduleFolder: modFolder,
+    moduleDir: modDir,
+    folder,
+    fullPath,
+    isCuda: false,
+    isKernel: false,
+    ext: 'cpp',
+    title,
+    displayModNum: 1,
+    displayTopicId: targetId,
+  };
+}
 
 export function getChapterFolder(chapterId: string): string | null {
   const loc = getTopicLocation(chapterId);
@@ -507,27 +885,12 @@ export function getClangFormatBin(): string {
   return 'clang-format';
 }
 
-export const METAL_KERNELS: MetalKernelMeta[] = [
-  { id: 1, name: 'Embedding Forward', category: 'Embedding', metalFile: 'embedding_forward.metal', cudaFile: 'embedding_forward.cu', status: 'planned' },
-  { id: 2, name: 'RMSNorm Forward', category: 'Normalization', metalFile: 'rms_norm_forward.metal', cudaFile: 'rms_norm_forward.cu', status: 'planned' },
-  { id: 3, name: 'RMSNorm Backward', category: 'Normalization', metalFile: 'rms_norm_backward.metal', cudaFile: 'rms_norm_backward.cu', status: 'planned' },
-  { id: 4, name: 'RoPE Forward', category: 'Positional', metalFile: 'rope_forward.metal', cudaFile: 'rope_forward.cu', status: 'planned' },
-  { id: 5, name: 'RoPE Backward', category: 'Positional', metalFile: 'rope_backward.metal', cudaFile: 'rope_backward.cu', status: 'planned' },
-  { id: 6, name: 'FlashAttention Forward', category: 'Attention', metalFile: 'flash_attn_fwd.metal', cudaFile: 'flash_attn_fwd.cu', status: 'planned' },
-  { id: 7, name: 'Fused Attention Backward', category: 'Attention', metalFile: 'fused_attn_bwd.metal', cudaFile: 'fused_attn_bwd.cu', status: 'planned' },
-  { id: 8, name: 'GEMM BF16', category: 'Matrix Multiplication', metalFile: 'gemm_bf16.metal', cudaFile: 'gemm_bf16.cu', status: 'planned' },
-  { id: 9, name: 'GEMM Projection', category: 'Matrix Multiplication', metalFile: 'gemm_proj.metal', cudaFile: 'gemm_proj.cu', status: 'planned' },
-  { id: 10, name: 'GEMM Projection Trans B', category: 'Matrix Multiplication', metalFile: 'gemm_proj_trans_b.metal', cudaFile: 'gemm_proj_trans_b.cu', status: 'planned' },
-  { id: 11, name: 'GEMM GQA', category: 'Matrix Multiplication', metalFile: 'gemm_gqa.metal', cudaFile: 'gemm_gqa.cu', status: 'planned' },
-  { id: 12, name: 'GEMM FFN', category: 'Matrix Multiplication', metalFile: 'gemm_ffn.metal', cudaFile: 'gemm_ffn.cu', status: 'planned' },
-  { id: 13, name: 'GEMM Backward', category: 'Matrix Multiplication', metalFile: 'gemm_backward.metal', cudaFile: 'gemm_backward.cu', status: 'planned' },
-  { id: 14, name: 'SwiGLU Forward', category: 'Activation', metalFile: 'swiglu_forward.metal', cudaFile: 'swiglu_forward.cu', status: 'planned' },
-  { id: 15, name: 'SwiGLU Backward', category: 'Activation', metalFile: 'swiglu_backward.metal', cudaFile: 'swiglu_backward.cu', status: 'planned' },
-  { id: 16, name: 'Fused SwiGLU GEMM', category: 'Fused Operator', metalFile: 'fused_swiglu_gemm.metal', cudaFile: 'fused_swiglu_gemm.cu', status: 'planned' },
-  { id: 17, name: 'Residual Add', category: 'Residual', metalFile: 'residual_add.metal', cudaFile: 'residual_add.cu', status: 'planned' },
-  { id: 18, name: 'Fused Add Norm', category: 'Fused Operator', metalFile: 'fused_add_norm.metal', cudaFile: 'fused_add_norm.cu', status: 'planned' },
-  { id: 19, name: 'Fused Backward Add Norm', category: 'Fused Operator', metalFile: 'fused_backward_add_norm.metal', cudaFile: 'fused_backward_add_norm.cu', status: 'planned' },
-  { id: 20, name: 'Cross Entropy', category: 'Loss', metalFile: 'cross_entropy.metal', cudaFile: 'cross_entropy.cu', status: 'planned' },
-  { id: 21, name: 'Compute Loss', category: 'Loss', metalFile: 'compute_loss.metal', cudaFile: 'compute_loss.cu', status: 'planned' },
-  { id: 22, name: 'AdamW Optimizer Step', category: 'Optimizer', metalFile: 'adamw_step.metal', cudaFile: 'adamw_step.cu', status: 'planned' },
-];
+export const METAL_KERNELS: MetalKernelMeta[] = (loadCurriculumManifest().metalKernels || []).map((k) => ({
+  id: k.id,
+  name: k.name,
+  category: k.category,
+  metalFile: k.metalFile,
+  cudaFile: k.cudaFile,
+  status: k.status,
+}));
+

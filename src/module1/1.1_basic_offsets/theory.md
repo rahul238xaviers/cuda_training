@@ -14,21 +14,32 @@ In modern operating systems and GPUs, applications interact with a Virtual Addre
 * Pointer Width: On 64-bit architectures (both standard CPUs and CUDA GPUs), a memory address is represented by a 64-bit unsigned integer (8 bytes, represented in C++ as uintptr_t).
 * All pointer variables occupy exactly 8 bytes of storage on 64-bit systems, regardless of whether they point to a 1-byte char, a 4-byte float, or a 16-byte Float4 struct.
 
-```text
-Pointer Variable in Stack/Register:
-+-------------------------------------------------------+
-| Variable Name: ptr                                    |
-| Container Size: 8 bytes (64 bits)                     |
-| Value stored:  0x1000 (Memory address)                |
-+-------------------------------------------------------+
-                           |
-                           v
-Target Location in RAM / VRAM:
-+------------------------------------+
-| Address: 0x1000                    |
-| Content: [Byte 0][Byte 1]...       |
-+------------------------------------+
+```diagram:pointer-addressing
+{
+  "title": "Textbook Schematic: 64-Bit Pointer Resolution & Byte Ladder",
+  "subtitle": "Modeled after CS:APP Figure 2.1 & 3.2. 64-bit pointer resolving to contiguous 16-byte buffer in RAM/VRAM.",
+  "pointer": {
+    "name": "ptr",
+    "type": "uint32_t*",
+    "location": "Stack Frame / CPU Register",
+    "address": "0x7ffee2bc81a0",
+    "value": "0x1000",
+    "size": "8 bytes (64-bit)"
+  },
+  "target": {
+    "location": "RAM / VRAM (Global Memory Buffer)",
+    "baseAddress": "0x1000",
+    "typeName": "uint32_t[4] (16 Bytes)",
+    "cells": [
+      { "name": "ptr[0]", "offset": "+0", "address": "0x1000", "bytes": "4 bytes", "hex": "0x0000002A", "val": "42" },
+      { "name": "ptr[1]", "offset": "+4", "address": "0x1004", "bytes": "4 bytes", "hex": "0x00000054", "val": "84" },
+      { "name": "ptr[2]", "offset": "+8", "address": "0x1008", "bytes": "4 bytes", "hex": "0x0000007E", "val": "126" },
+      { "name": "ptr[3]", "offset": "+12", "address": "0x100C", "bytes": "4 bytes", "hex": "0x000000A8", "val": "168" }
+    ]
+  }
+}
 ```
+
 
 ---
 

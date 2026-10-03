@@ -1,19 +1,69 @@
 'use client';
 
-import React, { useMemo, useEffect } from 'react';
+import React, { useMemo, useEffect, useState, useRef } from 'react';
 import { marked } from 'marked';
 import hljs from 'highlight.js';
-import { BookOpen } from 'lucide-react';
+import { BookOpen, Bookmark, Highlighter, Sparkles, Check, Share2, Layers } from 'lucide-react';
+import { GenericDiagramRenderer } from './TextbookDiagrams';
+import { HighlightPalette } from './HighlightPalette';
+import { AnnotationsDrawer } from './AnnotationsDrawer';
+import {
+  getBookmarks,
+  getHighlights,
+  isChapterBookmarked,
+  toggleChapterBookmark,
+  ChapterHighlight,
+  MarkerColor,
+} from '../lib/annotations';
 
 interface ReaderViewProps {
   title: string;
   content: string;
   chapterId?: string;
   type: 'theory' | 'cheat_sheet';
+  onNavigateChapter?: (chapterId: string) => void;
 }
 
-export function ReaderView({ title, content, chapterId, type }: ReaderViewProps) {
-  const parsedHtml = useMemo(() => {
+interface ContentChunk {
+  type: 'markdown' | 'diagram';
+  content?: string;
+  diagramType?: string;
+  payload?: string;
+}
+
+const MARKER_COLOR_CLASSES: Record<MarkerColor, string> = {
+  yellow: 'bg-amber-400/25 border-b-2 border-amber-400 text-amber-100',
+  emerald: 'bg-emerald-400/25 border-b-2 border-emerald-400 text-emerald-100',
+  purple: 'bg-purple-400/25 border-b-2 border-purple-400 text-purple-100',
+  cyan: 'bg-sky-400/25 border-b-2 border-sky-400 text-sky-100',
+};
+
+export function ReaderView({ title, content, chapterId = '1.1', type, onNavigateChapter }: ReaderViewProps) {
+  const [isBookmarked, setIsBookmarked] = useState(false);
+  const [highlights, setHighlights] = useState<ChapterHighlight[]>([]);
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  // Sync bookmarks and highlights
+  const refreshAnnotations = () => {
+    setIsBookmarked(isChapterBookmarked(chapterId));
+    setHighlights(getHighlights(chapterId));
+  };
+
+  useEffect(() => {
+    refreshAnnotations();
+    const handleUpdate = () => refreshAnnotations();
+    window.addEventListener('cuda-annotations-updated', handleUpdate);
+    return () => window.removeEventListener('cuda-annotations-updated', handleUpdate);
+  }, [chapterId]);
+
+  const handleToggleBookmark = () => {
+    const newState = toggleChapterBookmark(chapterId, title);
+    setIsBookmarked(newState);
+  };
+
+  // Configure marked renderer for IDE-grade code blocks
+  const markedRenderer = useMemo(() => {
     const renderer = new marked.Renderer();
 
     renderer.code = function ({ text, lang }: { text: string; lang?: string }) {
@@ -21,23 +71,38 @@ export function ReaderView({ title, content, chapterId, type }: ReaderViewProps)
       const highlighted = language
         ? hljs.highlight(text, { language }).value
         : hljs.highlightAuto(text).value;
+
+      const lines = highlighted.split('\n');
+      const codeLinesHtml = lines
+        .map((line, idx) => {
+          return `
+            <div class="code-line flex items-baseline hover:bg-white/[0.03] px-3.5 py-[1.5px] transition-colors">
+              <span class="line-gutter select-none text-[11px] font-mono text-[#484f58] pr-3 mr-3 border-r border-[#262d3d] text-right w-8 shrink-0">${idx + 1}</span>
+              <span class="line-code font-mono text-xs leading-5 flex-1">${line || '&nbsp;'}</span>
+            </div>
+          `;
+        })
+        .join('');
+
       const displayLang = (lang || 'code').toUpperCase();
 
       return `
-        <div class="code-block-wrapper my-5 rounded-lg overflow-hidden border border-[#1e293b] bg-[#090d16] shadow-lg">
-          <div class="code-block-header flex items-center justify-between px-3.5 py-1.5 bg-[#0e1422] border-b border-[#1e293b] text-xs select-none">
+        <div class="code-block-wrapper my-6 rounded-xl overflow-hidden border border-[#2a3241] bg-[#090d14] shadow-xl">
+          <div class="code-block-header flex items-center justify-between px-3.5 py-1.5 bg-[#121620] border-b border-[#21262d] text-xs select-none">
             <div class="flex items-center gap-2">
-              <span class="w-2.5 h-2.5 rounded-full bg-sky-500/80"></span>
-              <span class="font-mono text-[11px] text-sky-400 font-semibold tracking-wider">${displayLang}</span>
+              <span class="w-2 h-2 rounded-full bg-sky-400"></span>
+              <span class="font-mono text-[11px] text-slate-300 font-semibold tracking-wider">${displayLang}</span>
             </div>
             <button
-              class="copy-btn px-2.5 py-1 rounded text-[11px] font-medium text-slate-300 bg-[#162032] hover:bg-[#1f2d47] hover:text-white transition-all cursor-pointer flex items-center gap-1"
+              class="copy-btn px-2.5 py-1 rounded text-[11px] font-medium text-slate-400 hover:text-slate-100 bg-[#1a212e] hover:bg-[#232c3d] transition-all cursor-pointer flex items-center gap-1 border border-[#30363d]"
               data-code="${encodeURIComponent(text)}"
             >
               Copy
             </button>
           </div>
-          <pre class="!bg-transparent !p-4 !m-0 overflow-x-auto"><code class="hljs ${language || ''} font-mono text-xs leading-5">${highlighted}</code></pre>
+          <div class="py-2.5 overflow-x-auto">
+            <pre class="!bg-transparent !p-0 !m-0"><code class="hljs ${language || ''} font-mono block">${codeLinesHtml}</code></pre>
+          </div>
         </div>
       `;
     };
@@ -48,7 +113,41 @@ export function ReaderView({ title, content, chapterId, type }: ReaderViewProps)
       renderer,
     });
 
-    return marked.parse(content || '*No content available.*') as string;
+    return renderer;
+  }, []);
+
+  // Split content into Markdown chunks and Special Diagram tag blocks
+  const chunks = useMemo(() => {
+    if (!content) return [];
+
+    const DIAGRAM_REGEX = /```diagram:([a-zA-Z0-9_-]+)\s*\n([\s\S]*?)```/g;
+    const result: ContentChunk[] = [];
+    let lastIndex = 0;
+    let match: RegExpExecArray | null;
+
+    while ((match = DIAGRAM_REGEX.exec(content)) !== null) {
+      if (match.index > lastIndex) {
+        result.push({
+          type: 'markdown',
+          content: content.slice(lastIndex, match.index),
+        });
+      }
+      result.push({
+        type: 'diagram',
+        diagramType: match[1],
+        payload: match[2],
+      });
+      lastIndex = match.index + match[0].length;
+    }
+
+    if (lastIndex < content.length) {
+      result.push({
+        type: 'markdown',
+        content: content.slice(lastIndex),
+      });
+    }
+
+    return result;
   }, [content]);
 
   // Handle Copy Button clicks inside rendered HTML
@@ -78,33 +177,100 @@ export function ReaderView({ title, content, chapterId, type }: ReaderViewProps)
   }, []);
 
   return (
-    <div className="flex-1 overflow-y-auto bg-[#080b11] p-8 md:p-12 lg:px-20 max-w-5xl mx-auto w-full select-text">
-      {/* Top Banner */}
-      <div className="mb-8 pb-6 border-b border-[#1e293b]">
-        <div className="flex items-center gap-2 text-xs text-sky-400 font-mono mb-2">
-          {type === 'theory' ? (
-            <span className="flex items-center gap-1.5 px-2.5 py-0.5 rounded bg-sky-500/10 border border-sky-500/20 font-semibold">
-              <BookOpen className="w-3 h-3" /> CHAPTER {chapterId} THEORY
-            </span>
-          ) : (
-            <span className="flex items-center gap-1.5 px-2.5 py-0.5 rounded bg-amber-500/10 text-amber-300 border border-amber-500/20 font-semibold">
-              REVISION CHEAT SHEET • CHAPTER {chapterId}
-            </span>
-          )}
-        </div>
-        <h1 className="text-3xl font-extrabold text-slate-100 tracking-tight leading-tight">
-          {title}
-        </h1>
-        <p className="mt-2 text-sm text-slate-400">
-          Strictly Zero LaTeX • Pure Hardware Mental Models • Plain Text & ASCII Diagrams
-        </p>
-      </div>
-
-      {/* Rendered Prose Content */}
-      <div
-        className="prose-dark leading-relaxed select-text"
-        dangerouslySetInnerHTML={{ __html: parsedHtml }}
+    <div
+      ref={containerRef}
+      className="flex-1 overflow-y-auto bg-[#0d1117] p-8 md:p-12 lg:px-16 w-full select-text relative"
+    >
+      {/* Floating Text Highlighter Palette */}
+      <HighlightPalette
+        containerRef={containerRef}
+        chapterId={chapterId}
+        chapterTitle={title}
+        onHighlightCreated={refreshAnnotations}
       />
+
+      {/* Annotations & Notes Drawer */}
+      <AnnotationsDrawer
+        isOpen={isDrawerOpen}
+        onClose={() => setIsDrawerOpen(false)}
+        onNavigateChapter={(id) => onNavigateChapter?.(id)}
+        currentChapterId={chapterId}
+      />
+
+      <div className="max-w-4xl mx-auto">
+        {/* Top Header & Study Tools */}
+        <div className="mb-8 pb-6 border-b border-[#262d3d] flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div>
+            <div className="flex items-center gap-2 text-xs font-mono mb-2.5">
+              {type === 'theory' ? (
+                <span className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-sky-500/10 text-sky-300 border border-sky-500/20 font-medium">
+                  <BookOpen className="w-3.5 h-3.5" /> CHAPTER {chapterId} THEORY
+                </span>
+              ) : (
+                <span className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-amber-500/10 text-amber-300 border border-amber-500/20 font-medium">
+                  REVISION CHEAT SHEET • CHAPTER {chapterId}
+                </span>
+              )}
+            </div>
+            <h1 className="text-2xl md:text-3xl font-bold text-[#f0f6fc] tracking-tight leading-tight">
+              {title}
+            </h1>
+            <p className="mt-2 text-xs text-[#8b949e] font-sans">
+              Hardware Mental Models • Physical Architecture & Memory Mechanics
+            </p>
+          </div>
+
+          {/* Action Toolbar: Bookmark & Notes */}
+          <div className="flex items-center gap-2 shrink-0">
+            <button
+              onClick={handleToggleBookmark}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-medium transition-all ${
+                isBookmarked
+                  ? 'bg-amber-500/10 text-amber-300 border-amber-500/30 hover:bg-amber-500/20'
+                  : 'bg-[#161b22] text-slate-300 border-[#30363d] hover:bg-[#21262d] hover:text-white'
+              }`}
+            >
+              <Bookmark className={`w-3.5 h-3.5 ${isBookmarked ? 'fill-amber-400 text-amber-400' : ''}`} />
+              <span>{isBookmarked ? 'Bookmarked' : 'Bookmark'}</span>
+            </button>
+
+            <button
+              onClick={() => setIsDrawerOpen(true)}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#161b22] hover:bg-[#21262d] border border-[#30363d] text-xs font-medium text-slate-300 hover:text-white transition-all"
+            >
+              <Highlighter className="w-3.5 h-3.5 text-amber-400" />
+              <span>Notes</span>
+              {highlights.length > 0 && (
+                <span className="px-1.5 py-0.2 rounded-full bg-amber-500/20 text-amber-300 text-[10px] font-mono border border-amber-500/30">
+                  {highlights.length}
+                </span>
+              )}
+            </button>
+          </div>
+        </div>
+
+        {/* Content Chunks: Alternating between Markdown prose and Embedded SVG Diagrams */}
+        <div className="space-y-6">
+          {chunks.map((chunk, idx) => {
+            if (chunk.type === 'diagram' && chunk.diagramType && chunk.payload) {
+              return (
+                <div key={idx} className="my-6">
+                  <GenericDiagramRenderer type={chunk.diagramType} payload={chunk.payload} />
+                </div>
+              );
+            }
+
+            const html = marked.parse(chunk.content || '', { renderer: markedRenderer }) as string;
+            return (
+              <div
+                key={idx}
+                className="prose-dark leading-relaxed select-text"
+                dangerouslySetInnerHTML={{ __html: html }}
+              />
+            );
+          })}
+        </div>
+      </div>
     </div>
   );
 }

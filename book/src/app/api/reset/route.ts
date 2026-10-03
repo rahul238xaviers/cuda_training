@@ -5,13 +5,13 @@ import { getTopicLocation } from '@/lib/workspace';
 
 export async function POST(request: NextRequest) {
   try {
-    const { chapterId, tier } = await request.json();
+    const { chapterId, tier, volumeId } = await request.json();
 
     if (!chapterId || !tier) {
       return NextResponse.json({ success: false, error: 'chapterId and tier are required' }, { status: 400 });
     }
 
-    const loc = getTopicLocation(chapterId);
+    const loc = getTopicLocation(chapterId, volumeId);
     if (!loc) {
       return NextResponse.json({ success: false, error: `Topic or Chapter ${chapterId} not found` }, { status: 404 });
     }
