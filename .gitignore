@@ -79,3 +79,6 @@ sandbox/
 # Local state & backups
 user_progress.json
 *.backup.*
+*.db
+book/data/
+data/
