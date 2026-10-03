@@ -114,29 +114,70 @@ cudaMalloc(&d_matrix, total_elements * sizeof(float));
 
 ---
 
-## 4. Hardware Memory Pitch & Alignment
+## 5. Cache Lines, Bandwidth Waste & GPU Coalescing
 
-When matrix widths are not integer multiples of hardware cache lines or memory bus transaction sizes (e.g. 64 bytes or 128 bytes), accessing consecutive rows can cause unaligned straddles.
+In CPU and GPU memory hardware, memory controllers never transfer 1 byte or 1 float in isolation. Physical memory buses are wide, parallel data highways designed for burst transfers.
 
-To prevent unaligned memory penalties, high-performance runtimes use **Padded 2D Allocation** (known in CUDA as `cudaMallocPitch`):
+### The Cache Line / Transaction Granularity
+* **x86 CPUs**: Transfer in chunks of **64 bytes** (16 single-precision floats).
+* **Apple Silicon M-Series CPUs**: Transfer in chunks of **128 bytes** (32 single-precision floats).
+* **NVIDIA GPUs**: Memory controllers issue requests in **32-byte or 128-byte sector transactions** (for 32 threads in a warp).
 
-* **Logical Width (`Cols`)**: The number of valid elements in a row.
-* **Pitch (Byte Stride)**: The allocated row width rounded up to the nearest multiple of the hardware alignment boundary (e.g. 64 or 128 bytes).
-* The gap between `Cols * sizeof(T)` and `pitch` consists of unused padding bytes.
+Whenever your program requests a single 4-byte float at address `A`, the hardware cache controller fetches the entire cache line enclosing that address.
 
-```text
-Row 0: [Element 0] [Element 1] ... [Element Cols-1] [PADDING BYTES]
-Row 1: [Element 0] [Element 1] ... [Element Cols-1] [PADDING BYTES]
-|<----------------------- pitch bytes ------------------------->|
+```diagram:cache-align
+{
+  "title": "Cache Line Granularity: 128-Byte Bus Transfer (Apple Silicon / NVIDIA GPU)",
+  "subtitle": "A single float read fetches 32 floats (128 bytes). Strided access wastes up to 96.875% of this transferred data."
+}
 ```
 
-By guaranteeing that each row starts at a memory address divisible by 64 or 128, every row access begins aligned on a hardware cache line boundary, eliminating multi-transaction bus penalties.
+### The Physics of Stride: Bandwidth Utilization
+
+The stride at which your algorithm traverses memory directly dictates what percentage of fetched bus bandwidth is actually used:
+
+#### Case 1: Contiguous Traversal (Unit Stride = 1)
+```cpp
+for (int i = 0; i < N; ++i) { sum += buffer[i]; }
+```
+1. `buffer[0]` triggers a cache miss. The bus fetches 128 bytes (32 floats).
+2. The next 31 loop iterations (`buffer[1]` through `buffer[31]`) read directly from L1 cache at zero bus cost.
+3. **Bandwidth Utilization**: `(32 * 4 bytes used) / 128 bytes fetched = 100%`.
+4. **Hardware Stream Prefetcher**: Detects the contiguous sequential stream and proactively streams upcoming cache lines from DRAM before the CPU core even requests them.
+
+#### Case 2: Strided Traversal (Stride = 32 floats = 128 bytes)
+```cpp
+for (int i = 0; i < N; i += 32) { sum += buffer[i]; }
+```
+1. `buffer[0]` triggers a cache miss. The bus fetches 128 bytes (32 floats).
+2. The next iteration immediately reads `buffer[32]`. It **discards the remaining 31 floats** in the previous cache line!
+3. `buffer[32]` resides on a completely separate 128-byte line, triggering another cache miss.
+4. **Bandwidth Utilization**: `(1 * 4 bytes used) / 128 bytes fetched = 3.125%`.
+5. **Bus Waste**: **96.875%** of the transferred memory data is completely wasted and thrown away.
+
+```text
+Strided Read (Stride = 32 floats = 128 bytes):
+
+Fetch 1:  [f0=USED] [f1 discarded] [f2 discarded] ... [f31 discarded]  -> 4B used / 128B fetched
+Fetch 2:  [f32=USED] [f33 discarded] ... [f63 discarded]               -> 4B used / 128B fetched
+Fetch 3:  [f64=USED] [f65 discarded] ... [f95 discarded]               -> 4B used / 128B fetched
+
+Bandwidth utilization: 4B / 128B = 3.125%
+Bus waste: 96.875% -- bus is choked with unused data!
+```
+
+### Direct Bridge to CUDA: Warp Memory Coalescing
+In CUDA architecture, a warp consists of **32 parallel threads** executing the exact same instruction simultaneously:
+* **Coalesced Access (Golden Rule of CUDA)**: If Thread 0 reads `ptr[0]`, Thread 1 reads `ptr[1]`, ..., Thread 31 reads `ptr[31]`, their 32 requests fall cleanly into a single aligned 128-byte segment. The GPU hardware memory controller fulfills all 32 threads in **1 single memory transaction**!
+* **Non-Coalesced / Strided Access**: If each thread reads with a stride of 32 (Thread 0 reads `ptr[0]`, Thread 1 reads `ptr[32]`, etc.), the 32 addresses land in 32 separate cache lines. The memory controller is forced to issue **32 separate memory transactions**, serializing the warp and throttling kernel throughput down to a fraction of the GPU's memory bandwidth.
 
 ---
 
-## 5. Summary & Key Takeaways
+## 6. Summary & Key Takeaways
 
 1. **Physical Reality**: Hardware memory is strictly a 1-dimensional array of bytes. Tensors are an illusion created by stride arithmetic.
 2. **Stride Equation**: `Address = Base + (row * row_stride + col * col_stride) * sizeof(T)`.
 3. **Prefer Flat Buffers**: Never use double-pointer indirection (`T**`) in GPU or high-throughput systems. Always use flat contiguous allocations with strided pointer offsets.
 4. **Memory Pitch**: Use padded row strides to ensure every row aligns cleanly with 64-byte or 128-byte hardware cache lines.
+5. **Hardware Granularity**: Memory is moved in cache lines (64B or 128B). Non-unit strides discard up to 96.8% of memory bus bandwidth.
+6. **CUDA Warp Coalescing**: Align thread memory access so 32 threads in a warp touch contiguous addresses, consolidating 32 memory requests into a single hardware transaction.
