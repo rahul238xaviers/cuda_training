@@ -36,19 +36,21 @@ export default function BookPlatform() {
   const [isTeacherOpen, setIsTeacherOpen] = useState<boolean>(false);
 
   // Navigation Sidebar Resizing & Collapse State
-  const [sidebarWidth, setSidebarWidth] = useState<number>(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('sidebar_width');
-      if (saved) return Math.max(220, Math.min(520, parseInt(saved, 10)));
-    }
-    return 290;
-  });
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(() => {
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem('sidebar_collapsed') === 'true';
-    }
-    return false;
-  });
+  // Always start with SSR-safe defaults, then hydrate from localStorage in useEffect.
+  // Using localStorage in useState initializers causes hydration mismatches because
+  // the server renders with the fallback while the client immediately gets the stored value.
+  const [sidebarWidth, setSidebarWidth] = useState<number>(290);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(false);
+
+  // Hydrate persisted sidebar prefs after mount (client-only)
+  useEffect(() => {
+    try {
+      const savedWidth = localStorage.getItem('sidebar_width');
+      if (savedWidth) setSidebarWidth(Math.max(220, Math.min(520, parseInt(savedWidth, 10))));
+      const savedCollapsed = localStorage.getItem('sidebar_collapsed');
+      if (savedCollapsed !== null) setIsSidebarCollapsed(savedCollapsed === 'true');
+    } catch {}
+  }, []);
 
   const handleResizeSidebar = (w: number) => {
     setSidebarWidth(w);
