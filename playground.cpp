@@ -46,6 +46,7 @@ int main() {
   //   4. Inner loop 'c' goes from c0 to c0 + TILE
   //   5. Copy: dst[c * Rows + r] = src[r * Cols + c];
   // --- YOUR CODE STARTS HERE ---
+  // Step 1: Step through tile grid by TILE increments
 
   // --- YOUR CODE ENDS HERE ---
 
@@ -68,15 +69,19 @@ int main() {
   cout << "========================================\n";
   cout << "Problem 3: Cache-Blocked 2D Transpose\n";
   cout << "========================================\n";
-  cout << "Matrix Size: " << Rows << " x " << Cols << " (" << (total_elements * sizeof(float)) / (1024 * 1024) << " MB)\n";
-  cout << "Tile Size:   " << TILE << " x " << TILE << " (" << (TILE * TILE * sizeof(float)) / 1024 << " KB)\n";
+  cout << "Matrix Size: " << Rows << " x " << Cols << " ("
+       << (total_elements * sizeof(float)) / (1024 * 1024) << " MB)\n";
+  cout << "Tile Size:   " << TILE << " x " << TILE << " ("
+       << (TILE * TILE * sizeof(float)) / 1024 << " KB)\n";
   cout << "Time:        " << elapsed_sec * 1000.0 << " ms\n";
   cout << "Throughput:  " << throughput << " GB/s\n\n";
 
   if (passed) {
-    cout << "\033[1;32m[TEST PASSED] Matrix Transpose is 100% correct!\033[0m\n";
+    cout
+        << "\033[1;32m[TEST PASSED] Matrix Transpose is 100% correct!\033[0m\n";
   } else {
-    cout << "\033[1;31m[TEST FAILED] Transpose values do not match expected.\033[0m\n";
+    cout << "\033[1;31m[TEST FAILED] Transpose values do not match "
+            "expected.\033[0m\n";
   }
 
   return passed ? 0 : 1;

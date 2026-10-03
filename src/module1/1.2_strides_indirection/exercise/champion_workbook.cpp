@@ -67,17 +67,7 @@ int main() {
 
         // TODO: Compute y[r] using CSR indirection traversal.
         // --- YOUR CODE STARTS HERE ---
-        for (int row_ptr_incr = 0; row_ptr_incr < 4; row_ptr_incr++) {
-            int current_row_ptr_index_value = row_ptr[row_ptr_incr];
-            int next_row_ptr_index_value = row_ptr[row_ptr_incr + 1];
-            float verctorMultiplicationValue = 0.0f;
-            for (int start = current_row_ptr_index_value; start < next_row_ptr_index_value;
-                 start++) {
-                verctorMultiplicationValue += values[start] * x[col_indices[start]];
-            }
 
-            y[row_ptr_incr] = verctorMultiplicationValue;
-        }
         // --- YOUR CODE ENDS HERE ---
 
         // Row 0: 10*1 + 20*3 = 70
@@ -119,15 +109,7 @@ int main() {
 
         // TODO: Permute (d0, d1, d2) -> (d0, d2, d1).
         // --- YOUR CODE STARTS HERE ---
-        for (int d0 = 0; d0 < D0; ++d0) {
-            for (int d1 = 0; d1 < D1; ++d1) {
-                for (int d2 = 0; d2 < D2; ++d2) {
-                    int srcIndex = d0 * D1 * D2 + d1 * D2 + d2;
-                    int destIndex = d0 * D1 * D2 + d2 * D1 + d1;
-                    dst[destIndex] = src[srcIndex];
-                }
-            }
-        }
+
         // --- YOUR CODE ENDS HERE ---
 
         auto end = std::chrono::high_resolution_clock::now();
