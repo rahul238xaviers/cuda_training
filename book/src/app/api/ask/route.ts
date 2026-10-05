@@ -1,12 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { spawnSync } from 'child_process';
 import fs from 'fs';
+import path from 'path';
 import { WORKSPACE_ROOT } from '@/lib/workspace';
 
 export async function POST(request: NextRequest) {
   try {
     const { prompt, context } = await request.json();
-    const agyPath = '/Users/rahulkumar/.local/bin/agy';
+    const homeDir = process.env.HOME || process.env.USERPROFILE || '';
+    const agyPath = homeDir ? path.join(homeDir, '.local', 'bin', 'agy') : 'agy';
 
     if (!fs.existsSync(agyPath)) {
       return NextResponse.json({

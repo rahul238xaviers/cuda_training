@@ -9,7 +9,7 @@
 
 ## Check the Graphics Card details
 
-**Source**: [`src/cuda/gpu_check.cu`](../src/cuda/gpu_check.cu)
+**Source**: [`src/cuda/gpu_check.cu`](src/cuda/gpu_check.cu)
 
 Compile & run:
 ```bash
@@ -25,7 +25,7 @@ nvcc -O2 -arch=sm_75 src/cuda/gpu_check.cu -o output/gpu_check
 - Array shape is stated as **rows × cols**.
 - Exercises either state the array shape **or** say "assume perfect tiling."
 
-> **Device reference**: [gpu_check.cu](../src/cuda/gpu_check.cu) prints every
+> **Device reference**: [gpu_check.cu](src/cuda/gpu_check.cu) prints every
 > hardware limit on this machine (registers/SM, clocks, bandwidth, budgets).
 
 ---

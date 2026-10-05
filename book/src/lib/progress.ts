@@ -96,7 +96,8 @@ export function recordTierProgress(
   topicId: string,
   tier: 'beginner' | 'intermediate' | 'champion',
   passed: boolean,
-  testsCount: number = 3
+  testsCount: number = 3,
+  testsPassedCount?: number
 ): UserProgressData {
   const data = loadUserProgress();
   if (!data.topics[topicId]) {
@@ -111,9 +112,13 @@ export function recordTierProgress(
   }
 
   const topic = data.topics[topicId];
+  const actualPassed = typeof testsPassedCount === 'number'
+    ? testsPassedCount
+    : (passed ? testsCount : 0);
+
   topic.tiers[tier] = {
     status: passed ? 'passed' : 'pending',
-    testsPassed: passed ? testsCount : 0,
+    testsPassed: actualPassed,
     totalTests: testsCount,
     passedAt: passed ? new Date().toISOString() : undefined,
   };

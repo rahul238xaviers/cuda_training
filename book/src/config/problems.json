@@ -1,0 +1,127 @@
+{
+  "$schema": "./problems.schema.json",
+  "version": "1.0.0",
+  "chapters": {
+    "1.1": {
+      "beginner": [
+        {
+          "problem_num": 1,
+          "title": "Strided Pointer Stepping & Sub-Vector Accumulation",
+          "label": "Problem 1: Strided Pointer Stepping & Accumulation"
+        },
+        {
+          "problem_num": 2,
+          "title": "Binary Weight Blob Deserialization via Byte Offsets",
+          "label": "Problem 2: Binary Weight Blob Deserialization"
+        },
+        {
+          "problem_num": 3,
+          "title": "In-Place Tensor Reversal via Two-Pointer Convergence",
+          "label": "Problem 3: In-Place Reversal via Two-Pointer Convergence"
+        },
+        {
+          "problem_num": 4,
+          "title": "Circular Ring Buffer Pointer Wrapping",
+          "label": "Problem 4: Circular Ring Buffer Pointer Wrapping"
+        }
+      ],
+      "intermediate": [
+        {
+          "problem_num": 1,
+          "title": "2D Pitched Memory Buffer Row Offset Resolution",
+          "label": "Problem 1: 2D Pitched Memory Buffer Row Offset Resolution"
+        },
+        {
+          "problem_num": 2,
+          "title": "128-Bit Vectorized Stream Copy (float4 Emulation)",
+          "label": "Problem 2: 128-Bit Vectorized Stream Copy"
+        },
+        {
+          "problem_num": 3,
+          "title": "Pointer Cache-Line Alignment & Padding Bytes Calculation",
+          "label": "Problem 3: Cache-Line Alignment & Padding Calculation"
+        }
+      ],
+      "champion": [
+        {
+          "problem_num": 1,
+          "title": "Custom Aligned Bump/Arena Allocator",
+          "label": "Problem 1: Custom Aligned Bump Allocator"
+        },
+        {
+          "problem_num": 2,
+          "title": "Double-Buffered Asynchronous Pipeline Pointer Ping-Pong",
+          "label": "Problem 2: Double-Buffered Asynchronous Pipeline"
+        },
+        {
+          "problem_num": 3,
+          "title": "Tiled 16x16 Matrix Transpose vs Cache-Thrashing Benchmark",
+          "label": "Problem 3: Tiled 16x16 Transpose Cache Benchmark"
+        }
+      ]
+    },
+    "1.2": {
+      "beginner": [
+        {
+          "problem_num": 1,
+          "title": "Strided Signal Decimation (Downsampling)",
+          "label": "Problem 1: Strided Signal Decimation (Downsampling)"
+        },
+        {
+          "problem_num": 2,
+          "title": "Column Extraction via Non-Unit Strides",
+          "label": "Problem 2: Column Extraction via Non-Unit Strides"
+        },
+        {
+          "problem_num": 3,
+          "title": "Pointer Indirection Table & Matrix Trace",
+          "label": "Problem 3: Pointer Indirection Table & Matrix Trace"
+        }
+      ],
+      "intermediate": [
+        {
+          "problem_num": 1,
+          "title": "Interleaved Multi-Channel Audio De-Muxing",
+          "label": "Problem 1: Interleaved Multi-Channel Audio De-Muxing"
+        },
+        {
+          "problem_num": 2,
+          "title": "Ragged/Nested Tensor Indirection & Reductions",
+          "label": "Problem 2: Ragged/Nested Tensor Indirection & Reductions"
+        },
+        {
+          "problem_num": 3,
+          "title": "Strided 2D Matrix Sub-Grid Slicing",
+          "label": "Problem 3: Strided 2D Matrix Sub-Grid Slicing"
+        }
+      ],
+      "champion": [
+        {
+          "problem_num": 1,
+          "title": "CSR Matrix Compression (Dense -> CSR Packing)",
+          "label": "Problem 1: CSR Matrix Compression (Dense -> CSR Packing)"
+        },
+        {
+          "problem_num": 2,
+          "title": "CSR Matrix Decompression (CSR -> Dense Unpacking)",
+          "label": "Problem 2: CSR Matrix Decompression (CSR -> Dense Unpacking)"
+        },
+        {
+          "problem_num": 3,
+          "title": "Compressed Sparse Row (CSR) SpMV Indirection",
+          "label": "Problem 3: Compressed Sparse Row (CSR) SpMV Indirection"
+        },
+        {
+          "problem_num": 4,
+          "title": "Generalized 3D Tensor Stride Permutation",
+          "label": "Problem 4: Generalized 3D Tensor Stride Permutation"
+        },
+        {
+          "problem_num": 5,
+          "title": "Cache-Blocked 2D Matrix Transposition (TILE=32)",
+          "label": "Problem 5: Cache-Blocked 2D Matrix Transpose (TILE=32)"
+        }
+      ]
+    }
+  }
+}

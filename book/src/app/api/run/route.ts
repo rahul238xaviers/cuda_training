@@ -11,6 +11,8 @@ import {
   PlaygroundType,
 } from '@/lib/workspace';
 import { recordTierProgress } from '@/lib/progress';
+import { recordProblemStatus, getCanonicalProblems, getUserProblemsWithStatus } from '@/lib/db';
+import { registerCanonicalExerciseProblems } from '@/lib/problemParser';
 
 export async function POST(request: NextRequest) {
   try {
@@ -185,15 +187,77 @@ export async function POST(request: NextRequest) {
       outputStdout = `📦 [SANDBOX: ${relSandboxPath}]\n` + outputStdout;
     }
 
-    if (runResult.status === 0 && topicLocation && tier) {
-      const isPassed = !outputStdout.includes('[FAILED]') && !outputStdout.includes('FAILED');
-      if (isPassed) {
-        const testsCount = countTestsInWorkbook(sandboxSourceFile) || 3;
-        const progressId = topicLocation.isKernel
-          ? `k${topicLocation.moduleNum}.${topicLocation.displayTopicId.replace(/^K\d+\./, '')}`
-          : topicLocation.displayTopicId;
-        recordTierProgress(progressId, tier, true, testsCount);
+    let problemBreakdown: Array<{
+      problemId: string;
+      problemNum: number;
+      title: string;
+      status: 'passed' | 'failed' | 'pending';
+    }> = [];
+    let testsPassedCount = 0;
+    let totalCanonicalTests = 0;
+
+    if (topicLocation && tier) {
+      const volId = topicLocation.isKernel ? 'vol3' : topicLocation.isCuda ? 'vol2' : 'vol1';
+      const cleanStdout = outputStdout.replace(/\x1B\[[0-?]*[ -/]*[@-~]/g, '');
+      const lines = cleanStdout.split('\n');
+
+      let canonicalProblems = getCanonicalProblems(chapterId, tier);
+      if (canonicalProblems.length === 0) {
+        const exFile = path.join(topicLocation.fullPath, 'exercise', `${tier}_workbook.${topicLocation.ext}`);
+        if (fs.existsSync(exFile)) {
+          registerCanonicalExerciseProblems(chapterId, volId, tier, exFile);
+          canonicalProblems = getCanonicalProblems(chapterId, tier);
+        }
       }
+
+      totalCanonicalTests = canonicalProblems.length > 0
+        ? canonicalProblems.length
+        : (countTestsInWorkbook(sandboxSourceFile) || 3);
+
+      for (const p of canonicalProblems) {
+        let pStatus: 'passed' | 'failed' | 'pending' = 'pending';
+
+        if (runResult.status === 0) {
+          const pRegex = new RegExp(`Problem\\s+${p.problem_num}[:\\s(]`, 'i');
+          const matchingLines = lines.filter((l) => pRegex.test(l));
+
+          if (matchingLines.length > 0) {
+            const joined = matchingLines.join(' ');
+            if (joined.includes('[PASSED]') || joined.includes('PASSED')) {
+              pStatus = 'passed';
+            } else if (joined.includes('[FAILED]') || joined.includes('FAILED')) {
+              pStatus = 'failed';
+            }
+          }
+        } else {
+          pStatus = 'failed';
+        }
+
+        if (pStatus !== 'pending') {
+          recordProblemStatus(p.problem_id, pStatus, durationMs);
+        }
+
+        problemBreakdown.push({
+          problemId: p.problem_id,
+          problemNum: p.problem_num,
+          title: p.title,
+          status: pStatus,
+        });
+      }
+
+      // If canonical problems were recorded in SQLite, get the updated user problem statuses
+      const updatedUserProblems = getUserProblemsWithStatus(chapterId, tier);
+      testsPassedCount = updatedUserProblems.length > 0
+        ? updatedUserProblems.filter((p) => p.status === 'passed').length
+        : problemBreakdown.filter((p) => p.status === 'passed').length;
+
+      const isAllPassed = runResult.status === 0 && testsPassedCount === totalCanonicalTests && totalCanonicalTests > 0;
+
+      const progressId = topicLocation.isKernel
+        ? `k${topicLocation.moduleNum}.${topicLocation.displayTopicId.replace(/^K\d+\./, '')}`
+        : topicLocation.displayTopicId;
+
+      recordTierProgress(progressId, tier, isAllPassed, totalCanonicalTests, testsPassedCount);
     }
 
     return NextResponse.json({
@@ -205,6 +269,10 @@ export async function POST(request: NextRequest) {
       stdout: outputStdout,
       stderr: runResult.stderr || (runResult.error ? runResult.error.message : ''),
       durationMs,
+      problemBreakdown,
+      testsPassed: testsPassedCount,
+      testsCount: totalCanonicalTests,
+      isFullySolved: runResult.status === 0 && testsPassedCount === totalCanonicalTests && totalCanonicalTests > 0,
     });
   } catch (err: any) {
     return NextResponse.json(

@@ -1,7 +1,11 @@
 import path from 'path';
 import fs from 'fs';
+import { spawnSync } from 'child_process';
 import { loadUserProgress } from './progress';
 import { loadCurriculumManifest } from './curriculum';
+import { getCanonicalProblems, getUserProblemsWithStatus } from './db';
+import { registerCanonicalExerciseProblems } from './problemParser';
+import { autoSyncWorkbookSolution } from './autoSync';
 
 export const WORKSPACE_ROOT = path.resolve(process.cwd(), '..');
 export const SRC_DIR = path.join(WORKSPACE_ROOT, 'src');
@@ -63,6 +67,8 @@ export function getPlaygroundInfo(type: PlaygroundType = 'cpp'): PlaygroundInfo 
 export interface TierMeta {
   status: 'passed' | 'pending';
   tests: number;
+  testsPassed?: number;
+  newProblemsCount?: number;
 }
 
 export interface ChapterMeta {
@@ -206,15 +212,48 @@ export function scanDynamicChapters(): ChapterMeta[] {
 
       const solExists = fs.existsSync(solPath);
       const exExists = fs.existsSync(exPath);
-      const isSolved = chProgress?.tiers?.[tier]?.status === 'passed';
 
-      const count = solExists ? countTestsInWorkbook(solPath) : exExists ? countTestsInWorkbook(exPath) : 3;
+      if (exExists) {
+        registerCanonicalExerciseProblems(id, 'vol1', tier, exPath);
+        if (solExists) {
+          autoSyncWorkbookSolution(exPath, solPath);
+        }
+      }
+
+      const canonicalProblems = getCanonicalProblems(id, tier);
+      const count = canonicalProblems.length > 0
+        ? canonicalProblems.length
+        : exExists
+        ? countTestsInWorkbook(exPath)
+        : solExists
+        ? countTestsInWorkbook(solPath)
+        : 3;
+
+      const userProblems = getUserProblemsWithStatus(id, tier);
+      let passedCount = userProblems.filter((p) => p.status === 'passed').length;
+
+      // Migration fallback from user_progress.json
+      if (userProblems.length > 0 && passedCount === 0 && chProgress?.tiers?.[tier]?.status === 'passed') {
+        const legacyPassed = chProgress?.tiers?.[tier]?.testsPassed || 3;
+        passedCount = Math.min(legacyPassed, count);
+      } else if (userProblems.length === 0 && chProgress?.tiers?.[tier]?.status === 'passed') {
+        passedCount = Math.min(chProgress?.tiers?.[tier]?.testsPassed || 3, count);
+      }
+
+      const isSolved = passedCount === count && count > 0;
       const status: 'passed' | 'pending' = isSolved ? 'passed' : 'pending';
-      tiers[tier] = { status, tests: count };
+      const newProblemsCount = Math.max(0, count - passedCount);
+
+      tiers[tier] = {
+        status,
+        tests: count,
+        testsPassed: passedCount,
+        newProblemsCount,
+      };
 
       totalTests += count;
+      passedTests += passedCount;
       if (status === 'passed') {
-        passedTests += chProgress?.tiers?.[tier]?.testsPassed || count;
         passedTiersCount++;
       }
     }
@@ -450,20 +489,48 @@ export function scanDynamicCudaModules(): CudaModuleMeta[] {
 
         const userProgress = loadUserProgress();
         const cudaProg = userProgress.topics[id] || userProgress.topics[topicDisplayId] || userProgress.topics[`cuda-${topicDisplayId}`];
-        const isSolved = cudaProg?.tiers?.[tier]?.status === 'passed';
 
-        const count = solExists
-          ? countTestsInWorkbook(solPath)
+        if (exExists) {
+          registerCanonicalExerciseProblems(id, 'vol2', tier, exPath);
+          if (solExists) {
+            autoSyncWorkbookSolution(exPath, solPath);
+          }
+        }
+
+        const canonicalProblems = getCanonicalProblems(id, tier);
+        const count = canonicalProblems.length > 0
+          ? canonicalProblems.length
           : exExists
           ? countTestsInWorkbook(exPath)
+          : solExists
+          ? countTestsInWorkbook(solPath)
           : 3;
 
+        const userProblems = getUserProblemsWithStatus(id, tier);
+        let passedCount = userProblems.filter((p) => p.status === 'passed').length;
+
+        // Migration fallback from user_progress.json
+        if (userProblems.length > 0 && passedCount === 0 && cudaProg?.tiers?.[tier]?.status === 'passed') {
+          const legacyPassed = cudaProg?.tiers?.[tier]?.testsPassed || 3;
+          passedCount = Math.min(legacyPassed, count);
+        } else if (userProblems.length === 0 && cudaProg?.tiers?.[tier]?.status === 'passed') {
+          passedCount = Math.min(cudaProg?.tiers?.[tier]?.testsPassed || 3, count);
+        }
+
+        const isSolved = passedCount === count && count > 0;
         const status: 'passed' | 'pending' = isSolved ? 'passed' : 'pending';
-        tiers[tier] = { status, tests: count };
+        const newProblemsCount = Math.max(0, count - passedCount);
+
+        tiers[tier] = {
+          status,
+          tests: count,
+          testsPassed: passedCount,
+          newProblemsCount,
+        };
 
         totalTests += count;
+        passedTests += passedCount;
         if (status === 'passed') {
-          passedTests += cudaProg?.tiers?.[tier]?.testsPassed || count;
           passedTiersCount++;
         }
       }
@@ -630,20 +697,48 @@ export function scanDynamicKernelModules(): KernelModuleMeta[] {
 
         const userProgress = loadUserProgress();
         const kernelProg = userProgress.topics[id] || userProgress.topics[`k${m}.${subIdx}`];
-        const isSolved = kernelProg?.tiers?.[tier]?.status === 'passed';
 
-        const count = solExists
-          ? countTestsInWorkbook(solCu)
+        if (exExists) {
+          registerCanonicalExerciseProblems(id, 'vol3', tier, exCu);
+          if (solExists) {
+            autoSyncWorkbookSolution(exCu, solCu);
+          }
+        }
+
+        const canonicalProblems = getCanonicalProblems(id, tier);
+        const count = canonicalProblems.length > 0
+          ? canonicalProblems.length
           : exExists
           ? countTestsInWorkbook(exCu)
+          : solExists
+          ? countTestsInWorkbook(solCu)
           : 3;
 
+        const userProblems = getUserProblemsWithStatus(id, tier);
+        let passedCount = userProblems.filter((p) => p.status === 'passed').length;
+
+        // Migration fallback from user_progress.json
+        if (userProblems.length > 0 && passedCount === 0 && kernelProg?.tiers?.[tier]?.status === 'passed') {
+          const legacyPassed = kernelProg?.tiers?.[tier]?.testsPassed || 3;
+          passedCount = Math.min(legacyPassed, count);
+        } else if (userProblems.length === 0 && kernelProg?.tiers?.[tier]?.status === 'passed') {
+          passedCount = Math.min(kernelProg?.tiers?.[tier]?.testsPassed || 3, count);
+        }
+
+        const isSolved = passedCount === count && count > 0;
         const status: 'passed' | 'pending' = isSolved ? 'passed' : 'pending';
-        tiers[tier] = { status, tests: count };
+        const newProblemsCount = Math.max(0, count - passedCount);
+
+        tiers[tier] = {
+          status,
+          tests: count,
+          testsPassed: passedCount,
+          newProblemsCount,
+        };
 
         totalTests += count;
+        passedTests += passedCount;
         if (status === 'passed') {
-          passedTests += kernelProg?.tiers?.[tier]?.testsPassed || count;
           passedTiersCount++;
         }
       }
@@ -862,26 +957,39 @@ export function getChapterFolder(chapterId: string): string | null {
 }
 
 export function getClangFormatBin(): string {
-  const candidates = [
-    '/Library/Developer/CommandLineTools/usr/bin/clang-format',
-    '/opt/homebrew/Cellar/llvm/22.1.7_1/bin/clang-format',
+  const envPath = `/opt/homebrew/bin:/opt/homebrew/opt/llvm/bin:/usr/local/bin:${process.env.PATH || ''}`;
+  try {
+    const whichRes = spawnSync('which', ['clang-format'], {
+      encoding: 'utf-8',
+      env: { ...process.env, PATH: envPath },
+    });
+    if (whichRes.status === 0 && whichRes.stdout.trim()) {
+      return whichRes.stdout.trim();
+    }
+  } catch {}
+
+  const standardCandidates = [
+    '/opt/homebrew/opt/llvm/bin/clang-format',
     '/opt/homebrew/bin/clang-format',
     '/usr/local/bin/clang-format',
     '/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang-format',
+    '/Library/Developer/CommandLineTools/usr/bin/clang-format',
   ];
-  for (const c of candidates) {
+  for (const c of standardCandidates) {
     if (fs.existsSync(c)) return c;
   }
+
   try {
-    const llvmPath = '/opt/homebrew/Cellar/llvm';
-    if (fs.existsSync(llvmPath)) {
-      const versions = fs.readdirSync(llvmPath);
+    const llvmCellar = '/opt/homebrew/Cellar/llvm';
+    if (fs.existsSync(llvmCellar)) {
+      const versions = fs.readdirSync(llvmCellar);
       for (const v of versions) {
-        const bin = path.join(llvmPath, v, 'bin/clang-format');
+        const bin = path.join(llvmCellar, v, 'bin/clang-format');
         if (fs.existsSync(bin)) return bin;
       }
     }
   } catch {}
+
   return 'clang-format';
 }
 

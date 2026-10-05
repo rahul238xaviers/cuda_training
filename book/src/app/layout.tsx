@@ -14,7 +14,7 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark h-full" suppressHydrationWarning>
       <body
-        className="h-full bg-[#080b11] text-slate-200 antialiased overflow-hidden"
+        className="h-full bg-[var(--bg-app)] text-[var(--text-primary)] antialiased overflow-hidden"
         suppressHydrationWarning
       >
         {children}

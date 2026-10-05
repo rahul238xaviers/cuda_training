@@ -17,8 +17,10 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
   Compass,
+  Pencil,
 } from 'lucide-react';
 import { ActiveNode } from './SidebarTree';
+import { ThemeToggle } from './ThemeToggle';
 
 interface HeaderBarProps {
   activeNode: ActiveNode;
@@ -159,7 +161,7 @@ export function HeaderBar({
     (activeNode.chapterId?.startsWith('k') ? 'vol3' : /^[2-7]\./.test(activeNode.chapterId || '') ? 'vol2' : 'vol1');
 
   return (
-    <header className="h-14 min-h-14 bg-[#131720] border-b border-[#21262d] px-4 flex items-center justify-between gap-4 select-none">
+    <header className="h-14 min-h-14 bg-[var(--bg-header)] border-b border-[var(--border-subtle)] px-4 flex items-center justify-between gap-4 select-none header-bar-container">
       {/* Left: Sidebar Toggle & Breadcrumb Navigation */}
       <div className="flex items-center gap-2.5">
         {onToggleSidebar && isSidebarCollapsed && (
@@ -195,26 +197,30 @@ export function HeaderBar({
         )}
 
         {activeNode.type === 'workbook' && (
-          <div className="flex items-center bg-[#111726] p-0.5 rounded-lg border border-[#1e293b]">
+          <div className="flex items-center gap-2">
             <button
               onClick={() => onTargetChange('solution')}
-              className={`px-3 py-1 rounded-md text-xs font-medium transition-all ${
+              title="View Reference Solution"
+              className={`header-target-btn h-8 px-3 rounded-lg text-xs font-medium flex items-center gap-1.5 transition-all cursor-pointer ${
                 target === 'solution'
-                  ? 'bg-[#1e293b] text-emerald-400 shadow-sm'
-                  : 'text-slate-400 hover:text-slate-200'
+                  ? 'header-target-btn-active-solution shadow-sm'
+                  : 'header-target-btn-inactive'
               }`}
             >
-              Solution (Reference ✅)
+              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
+              <span>Solution (Reference)</span>
             </button>
             <button
               onClick={() => onTargetChange('exercise')}
-              className={`px-3 py-1 rounded-md text-xs font-medium transition-all ${
+              title="Switch to Exercise Starter"
+              className={`header-target-btn h-8 px-3 rounded-lg text-xs font-medium flex items-center gap-1.5 transition-all cursor-pointer ${
                 target === 'exercise'
-                  ? 'bg-[#1e293b] text-sky-400 shadow-sm'
-                  : 'text-slate-400 hover:text-slate-200'
+                  ? 'header-target-btn-active-exercise shadow-sm'
+                  : 'header-target-btn-inactive'
               }`}
             >
-              Exercise (Clean Starter ✏️)
+              <Pencil className="w-3.5 h-3.5 text-sky-500" />
+              <span>Exercise (Starter)</span>
             </button>
           </div>
         )}
@@ -243,10 +249,10 @@ export function HeaderBar({
                   chapterId: activeNode.chapterId,
                 })
               }
-              className="px-3 py-1.5 rounded-md bg-[#141d2e] hover:bg-[#1a263c] text-xs font-medium text-amber-300 border border-[#1e293b] flex items-center gap-1.5 transition-colors"
+              className="header-action-btn btn-cheatsheet h-8 px-3 rounded-lg bg-[#141d2e] hover:bg-[#1a263c] text-xs font-medium text-amber-300 border border-[#1e293b] flex items-center gap-1.5 transition-colors cursor-pointer"
             >
               <Zap className="w-3.5 h-3.5 text-amber-400" />
-              Cheat Sheet
+              <span>Cheat Sheet</span>
             </button>
             <button
               onClick={() =>
@@ -257,10 +263,10 @@ export function HeaderBar({
                   tier: 'champion',
                 })
               }
-              className="px-3 py-1.5 rounded-md bg-emerald-600/20 hover:bg-emerald-600/30 text-xs font-medium text-emerald-300 border border-emerald-500/30 flex items-center gap-1.5 transition-colors"
+              className="header-action-btn btn-workbook h-8 px-3 rounded-lg bg-emerald-600/20 hover:bg-emerald-600/30 text-xs font-medium text-emerald-300 border border-emerald-500/30 flex items-center gap-1.5 transition-colors cursor-pointer"
             >
               <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
-              Open Lab Workbook
+              <span>Open Lab Workbook</span>
             </button>
           </>
         )}
@@ -276,10 +282,10 @@ export function HeaderBar({
                   chapterId: activeNode.chapterId,
                 })
               }
-              className="px-3 py-1.5 rounded-md bg-[#141d2e] hover:bg-[#1a263c] text-xs font-medium text-sky-300 border border-[#1e293b] flex items-center gap-1.5 transition-colors"
+              className="header-action-btn btn-theory h-8 px-3 rounded-lg bg-[#141d2e] hover:bg-[#1a263c] text-xs font-medium text-sky-300 border border-[#1e293b] flex items-center gap-1.5 transition-colors cursor-pointer"
             >
               <BookOpen className="w-3.5 h-3.5 text-sky-400" />
-              Full Theory
+              <span>Full Theory</span>
             </button>
             <button
               onClick={() =>
@@ -290,10 +296,10 @@ export function HeaderBar({
                   tier: 'champion',
                 })
               }
-              className="px-3 py-1.5 rounded-md bg-emerald-600/20 hover:bg-emerald-600/30 text-xs font-medium text-emerald-300 border border-emerald-500/30 flex items-center gap-1.5 transition-colors"
+              className="header-action-btn btn-workbook h-8 px-3 rounded-lg bg-emerald-600/20 hover:bg-emerald-600/30 text-xs font-medium text-emerald-300 border border-emerald-500/30 flex items-center gap-1.5 transition-colors cursor-pointer"
             >
               <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
-              Test Workbook
+              <span>Test Workbook</span>
             </button>
           </>
         )}
@@ -305,7 +311,7 @@ export function HeaderBar({
               <button
                 onClick={onForkToSandbox}
                 title="Fork code directly into your Root Sandbox Playground"
-                className="px-2.5 py-1.5 rounded-md bg-[#121929] hover:bg-[#18233a] text-xs font-medium text-sky-300 border border-[#1e293b] hover:border-sky-500/40 flex items-center gap-1.5 transition-all shadow-sm cursor-pointer"
+                className="header-action-btn btn-fork h-8 px-3 rounded-lg bg-[#121929] hover:bg-[#18233a] text-xs font-medium text-sky-300 border border-[#1e293b] hover:border-sky-500/40 flex items-center gap-1.5 transition-all shadow-sm cursor-pointer"
               >
                 <Share2 className="w-3.5 h-3.5 text-sky-400" />
                 <span>Fork to Sandbox</span>
@@ -315,7 +321,7 @@ export function HeaderBar({
               <button
                 onClick={onStartOver}
                 title="Reset code to original exercise starter template"
-                className="px-2.5 py-1.5 rounded-md bg-[#161d2d] hover:bg-rose-950/40 text-xs font-medium text-slate-300 hover:text-rose-300 border border-[#1e293b] hover:border-rose-500/40 flex items-center gap-1.5 transition-all shadow-sm cursor-pointer"
+                className="header-action-btn btn-start-over h-8 px-3 rounded-lg bg-[#161d2d] hover:bg-rose-950/40 text-xs font-medium text-slate-300 hover:text-rose-300 border border-[#1e293b] hover:border-rose-500/40 flex items-center gap-1.5 transition-all shadow-sm cursor-pointer"
               >
                 <RotateCcw className="w-3.5 h-3.5 text-slate-400" />
                 <span>Start Over</span>
@@ -324,40 +330,24 @@ export function HeaderBar({
             {onReset && (
               <button
                 onClick={onReset}
-                title="Reload from disk"
-                className="p-1.5 rounded-md bg-[#141d2e] hover:bg-[#1a263c] text-slate-400 hover:text-slate-200 border border-[#1e293b] transition-colors cursor-pointer"
+                title="Reload workbook code from disk"
+                className="header-action-btn btn-reset h-8 px-2.5 rounded-lg bg-[#141d2e] hover:bg-[#1a263c] text-slate-400 hover:text-slate-200 border border-[#1e293b] flex items-center gap-1.5 transition-colors cursor-pointer"
               >
                 <RotateCcw className="w-3.5 h-3.5" />
+                <span>Reload</span>
               </button>
             )}
-            {onFormat && (
-              <button
-                onClick={onFormat}
-                title="Format code with clang-format (Shift+Alt+F)"
-                className="px-2.5 py-1.5 rounded-md bg-[#141d2e] hover:bg-[#1a263c] text-xs font-medium text-slate-200 border border-[#1e293b] flex items-center gap-1.5 transition-colors cursor-pointer"
-              >
-                <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-                <span>Format</span>
-              </button>
-            )}
-            <button
-              onClick={onSave}
-              className="px-3 py-1.5 rounded-md bg-[#141d2e] hover:bg-[#1a263c] text-xs font-medium text-slate-200 border border-[#1e293b] flex items-center gap-1.5 transition-colors cursor-pointer"
-            >
-              <Save className="w-3.5 h-3.5 text-slate-400" />
-              Save
-            </button>
             <button
               onClick={onRun}
               disabled={isRunning}
-              className={`px-3.5 py-1.5 rounded-md text-xs font-semibold flex items-center gap-1.5 transition-all shadow-md cursor-pointer ${
+              className={`header-action-btn btn-run h-8 px-3.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all shadow-md cursor-pointer ${
                 isRunning
                   ? 'bg-emerald-700/50 text-emerald-200 cursor-not-allowed'
                   : 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-emerald-900/30'
               }`}
             >
               <Play className={`w-3.5 h-3.5 ${isRunning ? 'animate-spin' : ''}`} />
-              {isRunning ? 'Running in Sandbox...' : '▶ Run in Sandbox'}
+              <span>{isRunning ? 'Running in Sandbox...' : 'Run in Sandbox'}</span>
             </button>
           </>
         )}
@@ -369,39 +359,23 @@ export function HeaderBar({
               <button
                 onClick={onClearConsole}
                 title="Clear Terminal"
-                className="p-1.5 rounded-md bg-[#141d2e] hover:bg-[#1a263c] text-slate-400 hover:text-slate-200 border border-[#1e293b] transition-colors"
+                className="header-action-btn btn-clear h-8 px-2.5 rounded-lg bg-[#141d2e] hover:bg-[#1a263c] text-slate-400 hover:text-slate-200 border border-[#1e293b] flex items-center gap-1.5 transition-colors"
               >
                 <Trash2 className="w-3.5 h-3.5" />
+                <span>Clear</span>
               </button>
             )}
-            {onFormat && (
-              <button
-                onClick={onFormat}
-                title="Format code with clang-format (Shift+Alt+F)"
-                className="px-2.5 py-1.5 rounded-md bg-[#141d2e] hover:bg-[#1a263c] text-xs font-medium text-slate-200 border border-[#1e293b] flex items-center gap-1.5 transition-colors cursor-pointer"
-              >
-                <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-                <span>Format</span>
-              </button>
-            )}
-            <button
-              onClick={onSave}
-              className="px-3 py-1.5 rounded-md bg-[#141d2e] hover:bg-[#1a263c] text-xs font-medium text-slate-200 border border-[#1e293b] flex items-center gap-1.5 transition-colors cursor-pointer"
-            >
-              <Save className="w-3.5 h-3.5 text-slate-400" />
-              Save
-            </button>
             <button
               onClick={onRun}
               disabled={isRunning}
-              className={`px-3.5 py-1.5 rounded-md text-xs font-semibold flex items-center gap-1.5 transition-all shadow-md ${
+              className={`header-action-btn btn-run h-8 px-3.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all shadow-md ${
                 isRunning
                   ? 'bg-sky-700/50 text-sky-200 cursor-not-allowed'
                   : 'bg-sky-600 hover:bg-sky-500 text-white shadow-sky-900/30'
               }`}
             >
               <Play className={`w-3.5 h-3.5 ${isRunning ? 'animate-spin' : ''}`} />
-              {isRunning ? 'Running in Sandbox...' : '▶ Run Sandbox'}
+              <span>{isRunning ? 'Running Sandbox...' : 'Run Sandbox'}</span>
             </button>
           </>
         )}
@@ -410,7 +384,7 @@ export function HeaderBar({
         <button
           onClick={() => onSwitchNode({ type: 'guide', volumeId: activeNode.volumeId || 'vol1' })}
           title="How to Read This Book & Curriculum Orientation"
-          className={`px-2.5 py-1.5 rounded-md text-xs font-medium border flex items-center gap-1.5 transition-all cursor-pointer ${
+          className={`header-action-btn btn-guide h-8 px-3 rounded-lg text-xs font-medium border flex items-center gap-1.5 transition-all cursor-pointer ${
             activeNode.type === 'guide'
               ? 'bg-[#1f6feb]/20 text-[#58a6ff] border-[#1f6feb]/40 shadow-xs'
               : 'bg-[#161b24] hover:bg-[#21262d] text-slate-300 hover:text-white border-[#30363d]'
@@ -423,7 +397,7 @@ export function HeaderBar({
         {/* Antigravity Teacher Toggle */}
         <button
           onClick={onToggleTeacher}
-          className={`px-3 py-1.5 rounded-md text-xs font-medium border flex items-center gap-1.5 transition-all cursor-pointer ${
+          className={`header-action-btn btn-teacher h-8 px-3 rounded-lg text-xs font-medium border flex items-center gap-1.5 transition-all cursor-pointer ${
             isTeacherOpen
               ? 'bg-indigo-600/30 text-indigo-300 border-indigo-500/50 shadow-sm shadow-indigo-500/20'
               : 'bg-[#161b24] hover:bg-[#21262d] text-slate-300 hover:text-white border-[#30363d]'
@@ -432,6 +406,9 @@ export function HeaderBar({
           <Sparkles className="w-3.5 h-3.5 text-indigo-400" />
           <span>Ask Teacher</span>
         </button>
+
+        {/* Next.js Studio Theme Toggle */}
+        <ThemeToggle variant="header" />
       </div>
     </header>
   );

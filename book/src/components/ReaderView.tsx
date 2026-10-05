@@ -77,13 +77,13 @@ export function ReaderView({ title, content, chapterId = '1.1', type, onNavigate
           .filter((l) => l.trim().length > 0)
           .map((line) => `<div class="py-1 tracking-wide">${line}</div>`)
           .join('');
-        return `<div class="my-6 rounded-xl border border-sky-500/30 bg-[#0e1420] shadow-lg overflow-hidden select-text"><div class="flex items-center justify-between px-4 py-2 bg-[#141b2a] border-b border-[#212b3d] text-xs select-none"><span class="text-[11px] font-mono text-sky-400 font-semibold tracking-wider uppercase flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-sky-400"></span> Mathematical Definition & Address Scaling</span><span class="text-[10px] text-slate-400 font-mono">Systems Arithmetic</span></div><div class="p-4 text-center font-mono text-[13px] md:text-sm text-sky-100 font-medium overflow-x-auto">${formulaLines}</div></div>`;
+        return `<div class="formula-card my-6 rounded-xl border border-sky-500/30 bg-[#0e1420] shadow-lg overflow-hidden select-text"><div class="formula-card-header flex items-center justify-between px-4 py-2 bg-[#141b2a] border-b border-[#212b3d] text-xs select-none"><span class="formula-card-title text-[11px] font-mono text-sky-400 font-semibold tracking-wider uppercase flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-sky-400"></span> Mathematical Definition & Address Scaling</span><span class="formula-card-subtitle text-[10px] text-slate-400 font-mono">Systems Arithmetic</span></div><div class="formula-card-body p-4 text-center font-mono text-[13px] md:text-sm text-sky-100 font-medium overflow-x-auto">${formulaLines}</div></div>`;
       }
 
       // Case 2: Plain Monospace Text or Memory Timeline (No line numbers)
       if (!cleanLang || cleanLang === 'text') {
         const safeText = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-        return `<div class="my-6 rounded-xl border border-[#2d3748] bg-[#0b0f19] shadow-lg overflow-hidden select-text"><div class="flex items-center justify-between px-4 py-2 bg-[#121824] border-b border-[#1f2937] text-xs select-none"><div class="flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-indigo-400"></span><span class="text-[11px] font-mono text-indigo-300 font-semibold tracking-wider uppercase">System Architecture & Schematic</span></div><span class="text-[10px] text-slate-400 font-mono">Hardware Reference</span></div><div class="p-4 overflow-x-auto"><div class="font-mono text-xs leading-relaxed text-slate-200 whitespace-pre">${safeText}</div></div></div>`;
+        return `<div class="schematic-card my-6 rounded-xl border border-[#2d3748] bg-[#0b0f19] shadow-lg overflow-hidden select-text"><div class="schematic-card-header flex items-center justify-between px-4 py-2 bg-[#121824] border-b border-[#1f2937] text-xs select-none"><div class="flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-indigo-400"></span><span class="schematic-card-title text-[11px] font-mono text-indigo-300 font-semibold tracking-wider uppercase">System Architecture & Schematic</span></div><span class="schematic-card-subtitle text-[10px] text-slate-400 font-mono">Hardware Reference</span></div><div class="schematic-card-body p-4 overflow-x-auto"><div class="font-mono text-xs leading-relaxed text-slate-200 whitespace-pre">${safeText}</div></div></div>`;
       }
 
       // Case 3: Executable Programming Code (IDE-grade with line-number gutter)
@@ -182,7 +182,7 @@ export function ReaderView({ title, content, chapterId = '1.1', type, onNavigate
   return (
     <div
       ref={containerRef}
-      className="flex-1 overflow-y-auto bg-[#0d1117] p-8 md:p-12 lg:px-16 w-full select-text relative"
+      className="flex-1 overflow-y-auto bg-[var(--bg-card)] text-[var(--text-primary)] p-8 md:p-12 lg:px-16 w-full select-text relative reader-view-container"
     >
       {/* Floating Text Highlighter Palette */}
       <HighlightPalette
@@ -202,11 +202,11 @@ export function ReaderView({ title, content, chapterId = '1.1', type, onNavigate
 
       <div className="max-w-4xl mx-auto">
         {/* Top Header & Study Tools */}
-        <div className="mb-8 pb-6 border-b border-[#262d3d] flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div className="mb-8 pb-6 border-b border-[var(--border-subtle)] flex flex-col md:flex-row md:items-center md:justify-between gap-4 reader-header">
           <div>
             <div className="flex items-center gap-2 text-xs font-mono mb-2.5">
               {type === 'theory' ? (
-                <span className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-sky-500/10 text-sky-300 border border-sky-500/20 font-medium">
+                <span className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-sky-500/10 text-sky-400 border border-sky-500/20 font-medium">
                   <BookOpen className="w-3.5 h-3.5" /> CHAPTER {chapterId} THEORY
                 </span>
               ) : (
@@ -215,10 +215,10 @@ export function ReaderView({ title, content, chapterId = '1.1', type, onNavigate
                 </span>
               )}
             </div>
-            <h1 className="text-2xl md:text-3xl font-bold text-[#f0f6fc] tracking-tight leading-tight">
+            <h1 className="text-2xl md:text-3xl font-bold text-[var(--text-primary)] tracking-tight leading-tight reader-title">
               {title}
             </h1>
-            <p className="mt-2 text-xs text-[#8b949e] font-sans">
+            <p className="mt-2 text-xs text-[var(--text-secondary)] font-sans reader-subtitle">
               Hardware Mental Models • Physical Architecture & Memory Mechanics
             </p>
           </div>
@@ -227,7 +227,7 @@ export function ReaderView({ title, content, chapterId = '1.1', type, onNavigate
           <div className="flex items-center gap-2 shrink-0">
             <button
               onClick={handleToggleBookmark}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-medium transition-all ${
+              className={`reader-action-btn flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-medium transition-all ${
                 isBookmarked
                   ? 'bg-amber-500/10 text-amber-300 border-amber-500/30 hover:bg-amber-500/20'
                   : 'bg-[#161b22] text-slate-300 border-[#30363d] hover:bg-[#21262d] hover:text-white'
@@ -239,7 +239,7 @@ export function ReaderView({ title, content, chapterId = '1.1', type, onNavigate
 
             <button
               onClick={() => setIsDrawerOpen(true)}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#161b22] hover:bg-[#21262d] border border-[#30363d] text-xs font-medium text-slate-300 hover:text-white transition-all"
+              className="reader-action-btn flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#161b22] hover:bg-[#21262d] border border-[#30363d] text-xs font-medium text-slate-300 hover:text-white transition-all"
             >
               <Highlighter className="w-3.5 h-3.5 text-amber-400" />
               <span>Notes</span>

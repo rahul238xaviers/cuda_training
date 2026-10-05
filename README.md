@@ -170,7 +170,7 @@ To compile and test workbooks inside the running container:
 docker exec -it cuda_systems_lab bash
 
 # Inside the container, compile any workbook with nvcc or clang:
-nvcc -O3 -std=c++17 -arch=sm_80 src/module3/3.1_threads_registers/exercise/beginner_workbook.cu -o /tmp/test && /tmp/test
+nvcc -O3 -std=c++17 -arch=sm_80 src/module3/3.1_threads_registers/exercise/beginner_workbook.cu -o output/test && ./output/test
 
 # Run automated batch evaluation:
 bash src/compile_and_run_cuda.sh all
@@ -273,10 +273,10 @@ src/moduleX/<topic_name>/
 4. **Compile & Verify**:
    ```bash
    # Compile and test C++ workbook:
-   clang++ -std=c++20 -O3 src/module1/1.1_basic_offsets/exercise/beginner_workbook.cpp -o /tmp/test && /tmp/test
+   clang++ -std=c++20 -O3 src/module1/1.1_basic_offsets/exercise/beginner_workbook.cpp -o output/test && ./output/test
 
    # Compile and test CUDA workbook:
-   nvcc -O3 -std=c++17 -arch=sm_80 src/module3/3.1_threads_registers/exercise/beginner_workbook.cu -o /tmp/test && /tmp/test
+   nvcc -O3 -std=c++17 -arch=sm_80 src/module3/3.1_threads_registers/exercise/beginner_workbook.cu -o output/test && ./output/test
    ```
 5. **Scorecard**: Workbooks feature built-in test suites verifying edge cases, memory bounds, and correctness:
    ```text

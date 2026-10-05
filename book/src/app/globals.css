@@ -3,10 +3,11 @@
 
 @layer base {
   :root {
-    --bg-app: #0d1117;
-    --bg-sidebar: #131720;
-    --bg-card: #161b24;
-    --bg-card-hover: #1c2230;
+    --bg-app: #080b11;
+    --bg-sidebar: #0a0d14;
+    --bg-header: #131720;
+    --bg-card: #0d1117;
+    --bg-card-hover: #161b24;
     --border-subtle: #21262d;
     --border-bright: #30363d;
     --text-primary: #e6edf3;
@@ -157,4 +158,1304 @@
   font-style: italic;
   margin: 1.2rem 0;
 }
+
+/* =========================================================================
+   1. CUDA NIGHT THEME (html[data-theme="cuda-night"])
+   Obsidian Carbon Background & Soothing Very Light Green-White Text with NVIDIA Green
+   ========================================================================= */
+html[data-theme="cuda-night"] {
+  --bg-app: #060b08;
+  --bg-sidebar: #08100b;
+  --bg-header: #08100b;
+  --bg-card: #070d09;
+  --bg-card-hover: #0d1a11;
+  --border-subtle: #142e1e;
+  --border-bright: #1c3d28;
+  --text-primary: #e8f7ee;
+  --text-secondary: #b4e3c8;
+  --text-muted: #6ba884;
+  --accent: #76b900;
+  --success: #76b900;
+}
+
+html[data-theme="cuda-night"] body,
+html[data-theme="cuda-night"] .app-root-container {
+  background-color: #060b08 !important;
+  color: #e8f7ee !important;
+}
+
+/* Sidebar in CUDA Night */
+html[data-theme="cuda-night"] .sidebar-aside {
+  background-color: #08100b !important;
+  border-color: #142e1e !important;
+}
+
+html[data-theme="cuda-night"] .sidebar-brand-header {
+  background-color: #08100b !important;
+  border-color: #142e1e !important;
+}
+
+html[data-theme="cuda-night"] .module-card-completed {
+  background: linear-gradient(to bottom, #0b1a10, #07130b) !important;
+  border-color: #163a22 !important;
+}
+
+html[data-theme="cuda-night"] .module-header-completed {
+  background-color: #0e2416 !important;
+  color: #e8f7ee !important;
+}
+
+html[data-theme="cuda-night"] .module-badge-completed {
+  background-color: #143d22 !important;
+  color: #86efac !important;
+  border-color: #22c55e40 !important;
+}
+
+html[data-theme="cuda-night"] .module-treeline-completed {
+  border-color: #1c4028 !important;
+}
+
+html[data-theme="cuda-night"] .module-card-inprogress {
+  background: linear-gradient(to bottom, #171a0b, #0f1207) !important;
+  border-color: #2e3a16 !important;
+}
+
+html[data-theme="cuda-night"] .module-header-inprogress {
+  background-color: #24290e !important;
+  color: #fef08a !important;
+}
+
+html[data-theme="cuda-night"] .module-badge-inprogress {
+  background-color: #3d3a14 !important;
+  color: #fef08a !important;
+  border-color: #eab30840 !important;
+}
+
+html[data-theme="cuda-night"] .module-card-pending {
+  background-color: #09120c !important;
+  border-color: #14281b !important;
+}
+
+html[data-theme="cuda-night"] .module-header-pending {
+  background-color: #0c1810 !important;
+  color: #e8f7ee !important;
+}
+
+html[data-theme="cuda-night"] .module-badge-pending {
+  background-color: #0e1e14 !important;
+  color: #6ba884 !important;
+  border-color: #14281b !important;
+}
+
+/* Header in CUDA Night */
+html[data-theme="cuda-night"] .header-bar-container {
+  background-color: #08100b !important;
+  border-bottom: 1px solid #142e1e !important;
+}
+
+/* Reader View in CUDA Night */
+html[data-theme="cuda-night"] .reader-view-container {
+  background-color: #060b08 !important;
+  color: #e8f7ee !important;
+}
+
+html[data-theme="cuda-night"] .reader-header {
+  border-color: #142e1e !important;
+}
+
+html[data-theme="cuda-night"] .reader-title {
+  color: #e8f7ee !important;
+}
+
+html[data-theme="cuda-night"] .reader-subtitle {
+  color: #7cb992 !important;
+}
+
+html[data-theme="cuda-night"] .prose-dark {
+  color: #d6ede0 !important;
+}
+
+html[data-theme="cuda-night"] .prose-dark h1,
+html[data-theme="cuda-night"] .prose-dark h2 {
+  color: #e8f7ee !important;
+  border-bottom: 1px solid #142e1e !important;
+}
+
+html[data-theme="cuda-night"] .prose-dark h3 {
+  color: #76b900 !important;
+}
+
+html[data-theme="cuda-night"] .prose-dark p,
+html[data-theme="cuda-night"] .prose-dark ul,
+html[data-theme="cuda-night"] .prose-dark ol {
+  color: #d6ede0 !important;
+}
+
+html[data-theme="cuda-night"] .prose-dark strong {
+  color: #76b900 !important;
+}
+
+html[data-theme="cuda-night"] .prose-dark code:not(pre code) {
+  background-color: #0c1a10 !important;
+  color: #86efac !important;
+  border: 1px solid #142e1e !important;
+}
+
+html[data-theme="cuda-night"] .prose-dark pre {
+  background-color: #040805 !important;
+  border: 1px solid #142e1e !important;
+}
+
+html[data-theme="cuda-night"] .prose-dark pre code {
+  color: #e8f7ee !important;
+}
+
+html[data-theme="cuda-night"] .prose-dark table {
+  border-color: #142e1e !important;
+}
+
+html[data-theme="cuda-night"] .prose-dark th {
+  background-color: #0e2014 !important;
+  color: #e8f7ee !important;
+  border-color: #142e1e !important;
+}
+
+html[data-theme="cuda-night"] .prose-dark td {
+  background-color: #08100b !important;
+  color: #d6ede0 !important;
+  border-color: #142e1e !important;
+}
+
+/* Fallback mappings for CUDA Night */
+html[data-theme="cuda-night"] [class*="bg-[#080b11]"],
+html[data-theme="cuda-night"] [class*="bg-[#070a10]"],
+html[data-theme="cuda-night"] [class*="bg-[#06080d]"],
+html[data-theme="cuda-night"] [class*="bg-[#05070c]"],
+html[data-theme="cuda-night"] [class*="bg-[#0a0d14]"],
+html[data-theme="cuda-night"] [class*="bg-[#0d1117]"],
+html[data-theme="cuda-night"] [class*="bg-[#06080e]"],
+html[data-theme="cuda-night"] [class*="bg-[#090d14]"] {
+  background-color: #060b08 !important;
+}
+
+html[data-theme="cuda-night"] [class*="bg-[#0b0e14]"],
+html[data-theme="cuda-night"] [class*="bg-[#0e1422]"],
+html[data-theme="cuda-night"] [class*="bg-[#131720]"],
+html[data-theme="cuda-night"] [class*="bg-[#090d16]"],
+html[data-theme="cuda-night"] [class*="bg-[#0c1018]"],
+html[data-theme="cuda-night"] [class*="bg-[#0c1017]"] {
+  background-color: #09120c !important;
+}
+
+html[data-theme="cuda-night"] [class*="bg-[#111724]"],
+html[data-theme="cuda-night"] [class*="bg-[#151c2d]"],
+html[data-theme="cuda-night"] [class*="bg-[#161b24]"],
+html[data-theme="cuda-night"] [class*="bg-[#121826]"],
+html[data-theme="cuda-night"] [class*="bg-[#1c2230]"],
+html[data-theme="cuda-night"] [class*="bg-[#162032]"],
+html[data-theme="cuda-night"] [class*="bg-[#0e1420]"],
+html[data-theme="cuda-night"] [class*="bg-[#141b2a]"],
+html[data-theme="cuda-night"] [class*="bg-[#0b0f19]"],
+html[data-theme="cuda-night"] [class*="bg-[#121824]"],
+html[data-theme="cuda-night"] [class*="bg-[#141923]"] {
+  background-color: #0e1a12 !important;
+}
+
+html[data-theme="cuda-night"] [class*="border-[#"] {
+  border-color: #142e1e !important;
+}
+
+html[data-theme="cuda-night"] [class*="text-slate-100"],
+html[data-theme="cuda-night"] [class*="text-slate-200"],
+html[data-theme="cuda-night"] [class*="text-slate-300"],
+html[data-theme="cuda-night"] [class*="text-[#f0f6fc]"],
+html[data-theme="cuda-night"] [class*="text-[#e6edf3]"] {
+  color: #e8f7ee !important;
+}
+
+html[data-theme="cuda-night"] [class*="text-slate-400"] {
+  color: #b4e3c8 !important;
+}
+
+html[data-theme="cuda-night"] [class*="text-slate-500"],
+html[data-theme="cuda-night"] [class*="text-[#8b949e]"] {
+  color: #6ba884 !important;
+}
+
+/* CUDA Night Segregated Target Buttons */
+html[data-theme="cuda-night"] .header-target-btn {
+  border: 1.5px solid #142e1e !important;
+  background-color: #09120c !important;
+  color: #6ba884 !important;
+}
+
+html[data-theme="cuda-night"] .header-target-btn:hover {
+  background-color: #0e1e14 !important;
+  border-color: #1e452c !important;
+  color: #e8f7ee !important;
+}
+
+html[data-theme="cuda-night"] .header-target-btn-active-solution {
+  background-color: #0e2b17 !important;
+  color: #76b900 !important;
+  border: 1.5px solid #76b900 !important;
+  font-weight: 600 !important;
+}
+
+html[data-theme="cuda-night"] .header-target-btn-active-exercise {
+  background-color: #0c1f2e !important;
+  color: #38bdf8 !important;
+  border: 1.5px solid #38bdf8 !important;
+  font-weight: 600 !important;
+}
+
+html[data-theme="cuda-night"] .header-target-btn-inactive {
+  background-color: #09120c !important;
+  border: 1.5px solid #142e1e !important;
+  color: #6ba884 !important;
+}
+
+html[data-theme="cuda-night"] .header-target-btn-inactive:hover {
+  color: #e8f7ee !important;
+}
+
+html[data-theme="cuda-night"] .header-action-btn {
+  background-color: #09140d !important;
+  border: 1.5px solid #142e1e !important;
+  color: #b4e3c8 !important;
+}
+
+html[data-theme="cuda-night"] .header-action-btn:hover {
+  background-color: #0f2416 !important;
+  border-color: #1e452c !important;
+  color: #e8f7ee !important;
+}
+
+html[data-theme="cuda-night"] .header-action-btn.btn-fork {
+  border: 1.5px solid #38bdf880 !important;
+  color: #7dd3fc !important;
+}
+
+html[data-theme="cuda-night"] .header-action-btn.btn-start-over {
+  border: 1.5px solid #f43f5e80 !important;
+  color: #fda4af !important;
+}
+
+html[data-theme="cuda-night"] .header-action-btn.btn-reset {
+  border: 1.5px solid #142e1e !important;
+  color: #b4e3c8 !important;
+}
+
+html[data-theme="cuda-night"] .header-action-btn.btn-format {
+  border: 1.5px solid #eab30880 !important;
+  color: #fef08a !important;
+}
+
+html[data-theme="cuda-night"] .header-action-btn.btn-save {
+  border: 1.5px solid #76b90090 !important;
+  color: #e8f7ee !important;
+}
+
+html[data-theme="cuda-night"] .header-action-btn.btn-guide {
+  border: 1.5px solid #38bdf880 !important;
+  color: #7dd3fc !important;
+}
+
+html[data-theme="cuda-night"] .header-action-btn.btn-teacher {
+  border: 1.5px solid #818cf880 !important;
+  color: #c7d2fe !important;
+}
+
+html[data-theme="cuda-night"] .theme-toggle-btn {
+  border: 1.5px solid #76b90080 !important;
+  color: #76b900 !important;
+}
+
+html[data-theme="cuda-night"] .editor-action-btn.btn-lint {
+  border: 1.5px solid #38bdf880 !important;
+  color: #7dd3fc !important;
+}
+
+html[data-theme="cuda-night"] .editor-action-btn.btn-format {
+  border: 1.5px solid #eab30880 !important;
+  color: #fef08a !important;
+}
+
+html[data-theme="cuda-night"] .editor-action-btn.btn-panel-toggle {
+  border: 1.5px solid #142e1e !important;
+  color: #b4e3c8 !important;
+}
+
+html[data-theme="cuda-night"] .editor-action-btn.btn-save {
+  border: 1.5px solid #76b90090 !important;
+  color: #e8f7ee !important;
+}
+
+html[data-theme="cuda-night"] .editor-subbar {
+  background-color: #08100b !important;
+  border-color: #142e1e !important;
+  color: #b4e3c8 !important;
+}
+
+html[data-theme="cuda-night"] .editor-subbar span {
+  color: #e8f7ee !important;
+}
+
+html[data-theme="cuda-night"] .editor-action-btn {
+  background-color: #09140d !important;
+  border-color: #142e1e !important;
+  color: #b4e3c8 !important;
+}
+
+html[data-theme="cuda-night"] .editor-action-btn:hover {
+  background-color: #0f2416 !important;
+  border-color: #1e452c !important;
+  color: #e8f7ee !important;
+}
+
+html[data-theme="cuda-night"] .editor-kbd {
+  background-color: #050a07 !important;
+  border-color: #142e1e !important;
+  color: #6ba884 !important;
+}
+
+html[data-theme="cuda-night"] .editor-problems-bar {
+  background-color: #060b08 !important;
+  border-color: #142e1e !important;
+}
+
+html[data-theme="cuda-night"] .editor-problems-bar span {
+  color: #b4e3c8 !important;
+}
+
+/* CUDA Night Sidebar Navigation Elements */
+html[data-theme="cuda-night"] .sidebar-vol-tabs {
+  background-color: #060b08 !important;
+  border-color: #142e1e !important;
+}
+
+html[data-theme="cuda-night"] .sidebar-vol-btn {
+  background-color: #09120c !important;
+  border-color: #142e1e !important;
+  color: #6ba884 !important;
+}
+
+html[data-theme="cuda-night"] .sidebar-vol-btn-active {
+  background-color: #0e2416 !important;
+  border-color: #76b900 !important;
+  color: #e8f7ee !important;
+}
+
+html[data-theme="cuda-night"] .sidebar-vol-btn-active span {
+  color: #e8f7ee !important;
+}
+
+html[data-theme="cuda-night"] .module-topics-container {
+  background-color: #050a07 !important;
+  border-top-color: #142e1e !important;
+}
+
+html[data-theme="cuda-night"] .topic-item {
+  color: #b4e3c8 !important;
+  background-color: transparent !important;
+}
+
+html[data-theme="cuda-night"] .topic-item:hover {
+  background-color: #0e1e14 !important;
+  color: #e8f7ee !important;
+}
+
+html[data-theme="cuda-night"] .topic-item-active {
+  background-color: #0e2b17 !important;
+  border-color: #76b90080 !important;
+  color: #e8f7ee !important;
+}
+
+html[data-theme="cuda-night"] .topic-item-active .topic-title {
+  color: #e8f7ee !important;
+  font-weight: 600 !important;
+}
+
+html[data-theme="cuda-night"] .topic-item-active .topic-badge {
+  background-color: #143d22 !important;
+  color: #86efac !important;
+  border-color: #76b90080 !important;
+}
+
+html[data-theme="cuda-night"] .topic-badge {
+  background-color: #0b1a10 !important;
+  color: #76b900 !important;
+  border-color: #142e1e !important;
+}
+
+html[data-theme="cuda-night"] .topic-title {
+  color: #e8f7ee !important;
+}
+
+html[data-theme="cuda-night"] .topic-children-container {
+  background-color: #08120b !important;
+  border-left-color: #76b900 !important;
+}
+
+html[data-theme="cuda-night"] .topic-sublink {
+  color: #b4e3c8 !important;
+}
+
+html[data-theme="cuda-night"] .topic-sublink:hover {
+  background-color: #0d1e13 !important;
+  color: #e8f7ee !important;
+}
+
+html[data-theme="cuda-night"] .topic-sublink-active {
+  background-color: #122919 !important;
+  color: #76b900 !important;
+  font-weight: 600 !important;
+}
+
+/* CUDA Night Formula & Schematic Cards */
+html[data-theme="cuda-night"] .formula-card {
+  background-color: #07130b !important;
+  border: 1px solid #143d22 !important;
+  box-shadow: 0 4px 12px rgba(118, 185, 0, 0.08) !important;
+}
+
+html[data-theme="cuda-night"] .formula-card-header {
+  background-color: #0c2415 !important;
+  border-bottom: 1px solid #143d22 !important;
+}
+
+html[data-theme="cuda-night"] .formula-card-title {
+  color: #86efac !important;
+}
+
+html[data-theme="cuda-night"] .formula-card-subtitle {
+  color: #76b900 !important;
+}
+
+html[data-theme="cuda-night"] .formula-card-body {
+  background-color: #040805 !important;
+  color: #e8f7ee !important;
+}
+
+html[data-theme="cuda-night"] .formula-card-body div {
+  color: #e8f7ee !important;
+  font-weight: 600 !important;
+}
+
+html[data-theme="cuda-night"] .schematic-card {
+  background-color: #08100b !important;
+  border: 1px solid #142e1e !important;
+}
+
+html[data-theme="cuda-night"] .schematic-card-header {
+  background-color: #0e1a12 !important;
+  border-bottom: 1px solid #142e1e !important;
+}
+
+html[data-theme="cuda-night"] .schematic-card-title {
+  color: #76b900 !important;
+}
+
+html[data-theme="cuda-night"] .schematic-card-subtitle {
+  color: #6ba884 !important;
+}
+
+html[data-theme="cuda-night"] .schematic-card-body {
+  background-color: #040805 !important;
+  color: #d6ede0 !important;
+}
+
+html[data-theme="cuda-night"] .schematic-card-body div {
+  color: #d6ede0 !important;
+}
+
+html[data-theme="cuda-night"] .reader-action-btn {
+  background-color: #09140d !important;
+  border-color: #142e1e !important;
+  color: #b4e3c8 !important;
+}
+
+html[data-theme="cuda-night"] .reader-action-btn:hover {
+  background-color: #0f2416 !important;
+  border-color: #1e452c !important;
+  color: #e8f7ee !important;
+}
+
+/* =========================================================================
+   2. NEXT.JS STUDIO LIGHT THEME (html[data-theme="next-light"])
+   Inspired by Next.js Dev Tools & Dashboard System
+   ========================================================================= */
+html[data-theme="next-light"] {
+  --bg-app: #f9fafb;
+  --bg-sidebar: #ffffff;
+  --bg-header: #ffffff;
+  --bg-card: #ffffff;
+  --bg-card-hover: #f3f4f6;
+  --border-subtle: #e5e7eb;
+  --border-bright: #d1d5db;
+  --text-primary: #111827;
+  --text-secondary: #4b5563;
+  --text-muted: #6b7280;
+  --accent: #0284c7;
+  --success: #059669;
+  --warning: #d97706;
+  --danger: #dc2626;
+}
+
+html[data-theme="next-light"] body,
+html[data-theme="next-light"] .app-root-container {
+  background-color: #f9fafb !important;
+  color: #111827 !important;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Inter", Roboto, "Helvetica Neue", sans-serif;
+  letter-spacing: -0.011em;
+}
+
+/* 1. Main Reader View Container & Content (theory.md & cheat sheet) */
+html[data-theme="next-light"] .reader-view-container {
+  background-color: #ffffff !important;
+  color: #111827 !important;
+}
+
+html[data-theme="next-light"] .reader-header {
+  border-color: #e5e7eb !important;
+}
+
+html[data-theme="next-light"] .reader-title {
+  color: #111827 !important;
+}
+
+html[data-theme="next-light"] .reader-subtitle {
+  color: #4b5563 !important;
+}
+
+/* Reader Prose & Cheat Sheet Tables in Light Theme */
+html[data-theme="next-light"] .prose-dark {
+  color: #1f2937 !important;
+}
+
+html[data-theme="next-light"] .prose-dark h1,
+html[data-theme="next-light"] .prose-dark h2 {
+  color: #111827 !important;
+  border-bottom: 1px solid #e5e7eb !important;
+}
+
+html[data-theme="next-light"] .prose-dark h3 {
+  color: #0284c7 !important;
+}
+
+html[data-theme="next-light"] .prose-dark p,
+html[data-theme="next-light"] .prose-dark ul,
+html[data-theme="next-light"] .prose-dark ol {
+  color: #1f2937 !important;
+}
+
+html[data-theme="next-light"] .prose-dark strong {
+  color: #111827 !important;
+}
+
+html[data-theme="next-light"] .prose-dark table {
+  background-color: #ffffff !important;
+  border: 1px solid #e5e7eb !important;
+  border-radius: 8px !important;
+  overflow: hidden !important;
+  box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.05) !important;
+}
+
+html[data-theme="next-light"] .prose-dark th {
+  background-color: #f9fafb !important;
+  color: #111827 !important;
+  border: 1px solid #e5e7eb !important;
+  font-weight: 600 !important;
+}
+
+html[data-theme="next-light"] .prose-dark td {
+  background-color: #ffffff !important;
+  color: #1f2937 !important;
+  border: 1px solid #e5e7eb !important;
+}
+
+html[data-theme="next-light"] .prose-dark code:not(pre code) {
+  background-color: #f3f4f6 !important;
+  color: #0284c7 !important;
+  border: 1px solid #e5e7eb !important;
+  font-weight: 500 !important;
+}
+
+html[data-theme="next-light"] .prose-dark pre {
+  background-color: #0f172a !important;
+  border: 1px solid #334155 !important;
+  border-radius: 8px !important;
+}
+
+html[data-theme="next-light"] .prose-dark pre code {
+  color: #e2e8f0 !important;
+}
+
+html[data-theme="next-light"] .prose-dark blockquote {
+  background-color: #f0f9ff !important;
+  border-left: 3px solid #0284c7 !important;
+  color: #334155 !important;
+  padding: 0.75rem 1rem !important;
+  border-radius: 0 8px 8px 0 !important;
+}
+
+/* 2. Left Tree Navigation (Sidebar) in Light Theme */
+html[data-theme="next-light"] .sidebar-aside {
+  background-color: #ffffff !important;
+  border-right: 1px solid #e5e7eb !important;
+}
+
+html[data-theme="next-light"] .sidebar-brand-header {
+  background-color: #ffffff !important;
+  border-bottom: 1px solid #e5e7eb !important;
+}
+
+/* Remove dark gradients on module cards */
+html[data-theme="next-light"] .module-card,
+html[data-theme="next-light"] .bg-gradient-to-b {
+  background-image: none !important;
+}
+
+/* Completed Module Card */
+html[data-theme="next-light"] .module-card-completed {
+  background-color: #f0fdf4 !important;
+  border: 1px solid #bbf7d0 !important;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.04) !important;
+}
+
+html[data-theme="next-light"] .module-header-completed {
+  background-color: #dcfce7 !important;
+  color: #166534 !important;
+}
+
+html[data-theme="next-light"] .module-badge-completed {
+  background-color: #bbf7d0 !important;
+  color: #15803d !important;
+  border-color: #86efac !important;
+}
+
+html[data-theme="next-light"] .module-title-completed {
+  color: #166534 !important;
+}
+
+html[data-theme="next-light"] .module-treeline-completed {
+  border-color: #86efac !important;
+}
+
+/* In-Progress Module Card */
+html[data-theme="next-light"] .module-card-inprogress {
+  background-color: #fffbeb !important;
+  border: 1px solid #fde68a !important;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.04) !important;
+}
+
+html[data-theme="next-light"] .module-header-inprogress {
+  background-color: #fef3c7 !important;
+  color: #92400e !important;
+}
+
+html[data-theme="next-light"] .module-badge-inprogress {
+  background-color: #fde68a !important;
+  color: #b45309 !important;
+  border-color: #fcd34d !important;
+}
+
+html[data-theme="next-light"] .module-title-inprogress {
+  color: #92400e !important;
+}
+
+html[data-theme="next-light"] .module-treeline-inprogress {
+  border-color: #fcd34d !important;
+}
+
+/* Pending Module Card */
+html[data-theme="next-light"] .module-card-pending {
+  background-color: #ffffff !important;
+  border: 1px solid #e5e7eb !important;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.04) !important;
+}
+
+html[data-theme="next-light"] .module-header-pending {
+  background-color: #f9fafb !important;
+  color: #111827 !important;
+}
+
+html[data-theme="next-light"] .module-badge-pending {
+  background-color: #f3f4f6 !important;
+  color: #4b5563 !important;
+  border-color: #e5e7eb !important;
+}
+
+html[data-theme="next-light"] .module-title-pending {
+  color: #111827 !important;
+}
+
+html[data-theme="next-light"] .module-treeline-pending {
+  border-color: #e5e7eb !important;
+}
+
+/* 3. HeaderBar in Light Theme */
+html[data-theme="next-light"] .header-bar-container {
+  background-color: #ffffff !important;
+  border-bottom: 1px solid #e5e7eb !important;
+  color: #111827 !important;
+}
+
+/* 4. Comprehensive Layout Surfaces & Panels */
+html[data-theme="next-light"] [class*="bg-[#080b11]"],
+html[data-theme="next-light"] [class*="bg-[#070a10]"],
+html[data-theme="next-light"] [class*="bg-[#06080d]"],
+html[data-theme="next-light"] [class*="bg-[#05070c]"],
+html[data-theme="next-light"] [class*="bg-[#0a0d14]"],
+html[data-theme="next-light"] [class*="bg-[#06080e]"],
+html[data-theme="next-light"] [class*="bg-[#090d14]"] {
+  background-color: #f9fafb !important;
+}
+
+html[data-theme="next-light"] [class*="bg-[#0d1117]"],
+html[data-theme="next-light"] [class*="bg-[#0b0e14]"],
+html[data-theme="next-light"] [class*="bg-[#0e1422]"],
+html[data-theme="next-light"] [class*="bg-[#131720]"],
+html[data-theme="next-light"] [class*="bg-[#090d16]"],
+html[data-theme="next-light"] [class*="bg-[#0c1018]"],
+html[data-theme="next-light"] [class*="bg-[#10141d]"],
+html[data-theme="next-light"] [class*="bg-[#161b24]"],
+html[data-theme="next-light"] [class*="bg-[#121620]"],
+html[data-theme="next-light"] [class*="bg-[#161b22]"],
+html[data-theme="next-light"] [class*="bg-[#0c1017]"] {
+  background-color: #ffffff !important;
+}
+
+html[data-theme="next-light"] [class*="bg-[#111724]"],
+html[data-theme="next-light"] [class*="bg-[#151c2d]"],
+html[data-theme="next-light"] [class*="bg-[#121826]"],
+html[data-theme="next-light"] [class*="bg-[#1c2230]"],
+html[data-theme="next-light"] [class*="bg-[#162032]"],
+html[data-theme="next-light"] [class*="bg-[#0e1420]"],
+html[data-theme="next-light"] [class*="bg-[#141b2a]"],
+html[data-theme="next-light"] [class*="bg-[#0b0f19]"],
+html[data-theme="next-light"] [class*="bg-[#121824]"],
+html[data-theme="next-light"] [class*="bg-[#21262d]"],
+html[data-theme="next-light"] [class*="bg-[#10241d]"],
+html[data-theme="next-light"] [class*="bg-[#221b0b]"],
+html[data-theme="next-light"] [class*="bg-[#141d30]"],
+html[data-theme="next-light"] [class*="bg-[#141b29]"],
+html[data-theme="next-light"] [class*="bg-[#10233b]"],
+html[data-theme="next-light"] [class*="bg-[#1a183b]"],
+html[data-theme="next-light"] [class*="bg-[#2b1f0c]"],
+html[data-theme="next-light"] [class*="bg-[#15233c]"],
+html[data-theme="next-light"] [class*="bg-[#1b1c38]"],
+html[data-theme="next-light"] [class*="bg-[#291e0e]"],
+html[data-theme="next-light"] [class*="bg-[#101726]"],
+html[data-theme="next-light"] [class*="bg-[#121326]"],
+html[data-theme="next-light"] [class*="bg-[#1a1409]"],
+html[data-theme="next-light"] [class*="bg-[#141923]"],
+html[data-theme="next-light"] [class*="bg-[#0e141e]"],
+html[data-theme="next-light"] [class*="bg-[#16202e]"],
+html[data-theme="next-light"] [class*="bg-[#0d1520]"],
+html[data-theme="next-light"] [class*="bg-[#212836]"] {
+  background-color: #f3f4f6 !important;
+}
+
+/* Subtle Borders */
+html[data-theme="next-light"] [class*="border-[#"] {
+  border-color: #e5e7eb !important;
+}
+
+/* Clean High-Contrast Typography */
+html[data-theme="next-light"] [class*="text-slate-100"],
+html[data-theme="next-light"] [class*="text-slate-200"],
+html[data-theme="next-light"] [class*="text-slate-300"],
+html[data-theme="next-light"] [class*="text-[#f0f6fc]"],
+html[data-theme="next-light"] [class*="text-[#e6edf3]"] {
+  color: #111827 !important;
+}
+
+html[data-theme="next-light"] [class*="text-slate-400"],
+html[data-theme="next-light"] [class*="text-[#8b949e]"] {
+  color: #4b5563 !important;
+}
+
+html[data-theme="next-light"] [class*="text-slate-500"],
+html[data-theme="next-light"] [class*="text-[#6e7681]"] {
+  color: #6b7280 !important;
+}
+
+html[data-theme="next-light"] [class*="text-slate-600"] {
+  color: #9ca3af !important;
+}
+
+html[data-theme="next-light"] [class*="hover:bg-[#"]:hover {
+  background-color: #f3f4f6 !important;
+}
+
+/* Segregated Target Buttons (Solution vs Exercise) */
+html[data-theme="next-light"] .header-target-btn {
+  border: 1.5px solid #cbd5e1 !important;
+  background-color: #ffffff !important;
+  color: #64748b !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04) !important;
+}
+
+html[data-theme="next-light"] .header-target-btn:hover {
+  background-color: #f8fafc !important;
+  border-color: #94a3b8 !important;
+  color: #0f172a !important;
+}
+
+html[data-theme="next-light"] .header-target-btn-active-solution {
+  background-color: #f0fdf4 !important;
+  color: #047857 !important;
+  border: 1.5px solid #10b981 !important;
+  box-shadow: 0 1px 3px rgba(16, 185, 129, 0.2) !important;
+  font-weight: 600 !important;
+}
+
+html[data-theme="next-light"] .header-target-btn-active-solution:hover {
+  background-color: #dcfce7 !important;
+  border-color: #059669 !important;
+}
+
+html[data-theme="next-light"] .header-target-btn-active-exercise {
+  background-color: #f0f9ff !important;
+  color: #0284c7 !important;
+  border: 1.5px solid #0284c7 !important;
+  box-shadow: 0 1px 3px rgba(2, 132, 199, 0.2) !important;
+  font-weight: 600 !important;
+}
+
+html[data-theme="next-light"] .header-target-btn-active-exercise:hover {
+  background-color: #e0f2fe !important;
+  border-color: #0369a1 !important;
+}
+
+html[data-theme="next-light"] .header-target-btn-inactive {
+  background-color: #ffffff !important;
+  border: 1.5px solid #cbd5e1 !important;
+  color: #64748b !important;
+}
+
+html[data-theme="next-light"] .header-target-btn-inactive:hover {
+  background-color: #f8fafc !important;
+  border-color: #94a3b8 !important;
+  color: #0f172a !important;
+}
+
+/* Header Action Buttons with Clear, Colored Boundaries */
+html[data-theme="next-light"] .header-action-btn {
+  background-color: #ffffff !important;
+  border: 1.5px solid #cbd5e1 !important;
+  color: #334155 !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05) !important;
+}
+
+html[data-theme="next-light"] .header-action-btn:hover {
+  background-color: #f8fafc !important;
+  border-color: #94a3b8 !important;
+  color: #0f172a !important;
+}
+
+html[data-theme="next-light"] .header-action-btn span {
+  color: inherit !important;
+}
+
+/* Specific Clear Boundary Colors per Button */
+html[data-theme="next-light"] .header-action-btn.btn-fork {
+  border: 1.5px solid #38bdf8 !important;
+  background-color: #f0f9ff !important;
+  color: #0369a1 !important;
+}
+
+html[data-theme="next-light"] .header-action-btn.btn-fork:hover {
+  border-color: #0284c7 !important;
+  background-color: #e0f2fe !important;
+  color: #0c4a6e !important;
+}
+
+html[data-theme="next-light"] .header-action-btn.btn-start-over {
+  border: 1.5px solid #f87171 !important;
+  background-color: #fff1f2 !important;
+  color: #be123c !important;
+}
+
+html[data-theme="next-light"] .header-action-btn.btn-start-over:hover {
+  border-color: #e11d48 !important;
+  background-color: #ffe4e6 !important;
+  color: #9f1239 !important;
+}
+
+html[data-theme="next-light"] .header-action-btn.btn-reset {
+  border: 1.5px solid #94a3b8 !important;
+  background-color: #f8fafc !important;
+  color: #475569 !important;
+}
+
+html[data-theme="next-light"] .header-action-btn.btn-reset:hover {
+  border-color: #64748b !important;
+  background-color: #f1f5f9 !important;
+  color: #0f172a !important;
+}
+
+html[data-theme="next-light"] .header-action-btn.btn-format {
+  border: 1.5px solid #f59e0b !important;
+  background-color: #fffbeb !important;
+  color: #b45309 !important;
+}
+
+html[data-theme="next-light"] .header-action-btn.btn-format:hover {
+  border-color: #d97706 !important;
+  background-color: #fef3c7 !important;
+  color: #92400e !important;
+}
+
+html[data-theme="next-light"] .header-action-btn.btn-save {
+  border: 1.5px solid #60a5fa !important;
+  background-color: #eff6ff !important;
+  color: #1d4ed8 !important;
+}
+
+html[data-theme="next-light"] .header-action-btn.btn-save:hover {
+  border-color: #2563eb !important;
+  background-color: #dbeafe !important;
+  color: #1e40af !important;
+}
+
+html[data-theme="next-light"] .header-action-btn.btn-run {
+  border: 1.5px solid #059669 !important;
+  background-color: #059669 !important;
+  color: #ffffff !important;
+  box-shadow: 0 2px 5px rgba(5, 150, 105, 0.28) !important;
+}
+
+html[data-theme="next-light"] .header-action-btn.btn-run:hover {
+  border-color: #047857 !important;
+  background-color: #047857 !important;
+  color: #ffffff !important;
+}
+
+html[data-theme="next-light"] .header-action-btn.btn-guide {
+  border: 1.5px solid #0284c7 !important;
+  background-color: #f0f9ff !important;
+  color: #0369a1 !important;
+}
+
+html[data-theme="next-light"] .header-action-btn.btn-guide:hover {
+  border-color: #0369a1 !important;
+  background-color: #e0f2fe !important;
+  color: #0c4a6e !important;
+}
+
+html[data-theme="next-light"] .header-action-btn.btn-teacher {
+  border: 1.5px solid #818cf8 !important;
+  background-color: #eef2ff !important;
+  color: #4338ca !important;
+}
+
+html[data-theme="next-light"] .header-action-btn.btn-teacher:hover {
+  border-color: #6366f1 !important;
+  background-color: #e0e7ff !important;
+  color: #3730a3 !important;
+}
+
+html[data-theme="next-light"] .theme-toggle-btn {
+  border: 1.5px solid #94a3b8 !important;
+  background-color: #ffffff !important;
+  color: #1e293b !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06) !important;
+}
+
+html[data-theme="next-light"] .theme-toggle-btn:hover {
+  border-color: #64748b !important;
+  background-color: #f8fafc !important;
+}
+
+html[data-theme="next-light"] .header-action-btn.btn-cheatsheet {
+  border: 1.5px solid #f59e0b !important;
+  background-color: #fffbeb !important;
+  color: #b45309 !important;
+}
+
+html[data-theme="next-light"] .header-action-btn.btn-theory {
+  border: 1.5px solid #0284c7 !important;
+  background-color: #f0f9ff !important;
+  color: #0369a1 !important;
+}
+
+html[data-theme="next-light"] .header-action-btn.btn-workbook {
+  border: 1.5px solid #10b981 !important;
+  background-color: #f0fdf4 !important;
+  color: #15803d !important;
+}
+
+html[data-theme="next-light"] .header-action-btn.btn-clear {
+  border: 1.5px solid #f87171 !important;
+  background-color: #fff1f2 !important;
+  color: #be123c !important;
+}
+
+/* Editor Subbar & Tools */
+html[data-theme="next-light"] .editor-subbar {
+  background-color: #ffffff !important;
+  border-bottom: 1px solid #e5e7eb !important;
+  color: #4b5563 !important;
+}
+
+html[data-theme="next-light"] .editor-subbar span {
+  color: #111827 !important;
+}
+
+html[data-theme="next-light"] .editor-subbar span.text-slate-500 {
+  color: #6b7280 !important;
+}
+
+html[data-theme="next-light"] .editor-action-btn {
+  background-color: #ffffff !important;
+  border: 1.5px solid #cbd5e1 !important;
+  color: #374151 !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04) !important;
+}
+
+html[data-theme="next-light"] .editor-action-btn:hover {
+  background-color: #f3f4f6 !important;
+  border-color: #94a3b8 !important;
+  color: #111827 !important;
+}
+
+html[data-theme="next-light"] .editor-action-btn span {
+  color: inherit !important;
+}
+
+/* Editor Subbar Specific Buttons with Distinct Boundaries */
+html[data-theme="next-light"] .editor-action-btn.btn-lint {
+  border: 1.5px solid #38bdf8 !important;
+  background-color: #f0f9ff !important;
+  color: #0369a1 !important;
+}
+
+html[data-theme="next-light"] .editor-action-btn.btn-format {
+  border: 1.5px solid #f59e0b !important;
+  background-color: #fffbeb !important;
+  color: #b45309 !important;
+}
+
+html[data-theme="next-light"] .editor-action-btn.btn-panel-toggle {
+  border: 1.5px solid #94a3b8 !important;
+  background-color: #f8fafc !important;
+  color: #334155 !important;
+}
+
+html[data-theme="next-light"] .editor-action-btn.btn-save {
+  border: 1.5px solid #60a5fa !important;
+  background-color: #eff6ff !important;
+  color: #1d4ed8 !important;
+}
+
+html[data-theme="next-light"] .editor-kbd {
+  background-color: #f3f4f6 !important;
+  border: 1px solid #e5e7eb !important;
+  color: #6b7280 !important;
+}
+
+/* Problems Tracking Bar in Editor */
+html[data-theme="next-light"] .editor-problems-bar {
+  background-color: #f9fafb !important;
+  border-bottom: 1px solid #e5e7eb !important;
+}
+
+html[data-theme="next-light"] .editor-problems-bar span {
+  color: #374151 !important;
+}
+
+html[data-theme="next-light"] .editor-problems-bar button {
+  background-color: #ffffff !important;
+  border: 1px solid #e5e7eb !important;
+  color: #374151 !important;
+}
+
+html[data-theme="next-light"] .editor-problems-bar button:hover {
+  background-color: #f3f4f6 !important;
+  color: #111827 !important;
+}
+
+/* Sidebar Volume Category Tabs */
+html[data-theme="next-light"] .sidebar-vol-tabs {
+  background-color: #f3f4f6 !important;
+  border-color: #e5e7eb !important;
+}
+
+html[data-theme="next-light"] .sidebar-vol-btn {
+  background-color: #ffffff !important;
+  border-color: #e5e7eb !important;
+  color: #4b5563 !important;
+}
+
+html[data-theme="next-light"] .sidebar-vol-btn:hover {
+  background-color: #f9fafb !important;
+  color: #111827 !important;
+}
+
+html[data-theme="next-light"] .sidebar-vol-btn-active {
+  background-color: #ffffff !important;
+  border-color: #0284c7 !important;
+  color: #0284c7 !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08) !important;
+}
+
+html[data-theme="next-light"] .sidebar-vol-btn-active span {
+  color: #0284c7 !important;
+}
+
+html[data-theme="next-light"] .sidebar-vol-btn span.text-slate-500 {
+  color: #6b7280 !important;
+}
+
+/* Sidebar Module Topics & Child Navigation */
+html[data-theme="next-light"] .module-topics-container {
+  background-color: #f9fafb !important;
+  border-top-color: #e5e7eb !important;
+}
+
+html[data-theme="next-light"] .topic-item {
+  color: #374151 !important;
+  background-color: transparent !important;
+}
+
+html[data-theme="next-light"] .topic-item:hover {
+  background-color: #f3f4f6 !important;
+  color: #111827 !important;
+}
+
+html[data-theme="next-light"] .topic-item-active {
+  background-color: #e0f2fe !important;
+  border-color: #7dd3fc !important;
+  color: #0369a1 !important;
+}
+
+html[data-theme="next-light"] .topic-item-active .topic-title {
+  color: #0369a1 !important;
+  font-weight: 600 !important;
+}
+
+html[data-theme="next-light"] .topic-item-active .topic-badge {
+  background-color: #bae6fd !important;
+  color: #0284c7 !important;
+  border-color: #7dd3fc !important;
+}
+
+html[data-theme="next-light"] .topic-item-active svg {
+  color: #0284c7 !important;
+}
+
+html[data-theme="next-light"] .topic-item-active .text-slate-500 {
+  color: #0369a1 !important;
+}
+
+html[data-theme="next-light"] .topic-badge {
+  background-color: #f3f4f6 !important;
+  color: #0284c7 !important;
+  border-color: #e5e7eb !important;
+}
+
+html[data-theme="next-light"] .topic-title {
+  color: #1f2937 !important;
+}
+
+html[data-theme="next-light"] .topic-children-container {
+  background-color: #ffffff !important;
+  border-left-color: #0284c7 !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03) !important;
+}
+
+html[data-theme="next-light"] .topic-sublink {
+  color: #4b5563 !important;
+}
+
+html[data-theme="next-light"] .topic-sublink:hover {
+  background-color: #f3f4f6 !important;
+  color: #111827 !important;
+}
+
+html[data-theme="next-light"] .topic-sublink-active {
+  background-color: #f0f9ff !important;
+  color: #0284c7 !important;
+  font-weight: 600 !important;
+}
+
+/* Formula Card (The Fundamental Scaling Formula, Alignment Formula, etc.) */
+html[data-theme="next-light"] .formula-card {
+  background-color: #f0f9ff !important;
+  border: 1px solid #7dd3fc !important;
+  box-shadow: 0 4px 14px rgba(2, 132, 199, 0.08) !important;
+}
+
+html[data-theme="next-light"] .formula-card-header {
+  background-color: #e0f2fe !important;
+  border-bottom: 1px solid #bae6fd !important;
+}
+
+html[data-theme="next-light"] .formula-card-title {
+  color: #0369a1 !important;
+  font-weight: 700 !important;
+}
+
+html[data-theme="next-light"] .formula-card-subtitle {
+  color: #0284c7 !important;
+}
+
+html[data-theme="next-light"] .formula-card-body {
+  background-color: #ffffff !important;
+  color: #0c4a6e !important;
+}
+
+html[data-theme="next-light"] .formula-card-body div {
+  color: #0c4a6e !important;
+  font-weight: 600 !important;
+}
+
+/* Schematic & Monospace Cards */
+html[data-theme="next-light"] .schematic-card {
+  background-color: #f8fafc !important;
+  border: 1px solid #e2e8f0 !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03) !important;
+}
+
+html[data-theme="next-light"] .schematic-card-header {
+  background-color: #f1f5f9 !important;
+  border-bottom: 1px solid #e2e8f0 !important;
+}
+
+html[data-theme="next-light"] .schematic-card-title {
+  color: #4338ca !important;
+}
+
+html[data-theme="next-light"] .schematic-card-subtitle {
+  color: #64748b !important;
+}
+
+html[data-theme="next-light"] .schematic-card-body {
+  background-color: #ffffff !important;
+  color: #1e293b !important;
+}
+
+html[data-theme="next-light"] .schematic-card-body div {
+  color: #1e293b !important;
+}
+
+/* Reader Toolbar Actions (Bookmark & Notes) */
+html[data-theme="next-light"] .reader-action-btn {
+  background-color: #ffffff !important;
+  border: 1px solid #e5e7eb !important;
+  color: #374151 !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04) !important;
+}
+
+html[data-theme="next-light"] .reader-action-btn:hover {
+  background-color: #f3f4f6 !important;
+  border-color: #d1d5db !important;
+  color: #111827 !important;
+}
+
+
+
+
 

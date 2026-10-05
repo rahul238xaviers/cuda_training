@@ -9,6 +9,7 @@ import { KernelSpecView } from '@/components/KernelSpecView';
 import { TeacherDrawer } from '@/components/TeacherDrawer';
 import { OrientationGuide } from '@/components/OrientationGuide';
 import { Loader2 } from 'lucide-react';
+import { getStoredTheme, applyTheme } from '@/lib/theme';
 
 export default function BookPlatform() {
   const [treeData, setTreeData] = useState<any>(null);
@@ -81,6 +82,8 @@ export default function BookPlatform() {
   };
 
   useEffect(() => {
+    const saved = getStoredTheme();
+    applyTheme(saved);
     loadTree();
   }, []);
 
@@ -212,13 +215,35 @@ export default function BookPlatform() {
     }, 1200);
   };
 
+  // Format code via clang-format (returns formatted code or null)
+  const handleFormat = useCallback(async (): Promise<string | null> => {
+    if (!activeCode) return null;
+    try {
+      const res = await fetch('/api/format', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code: activeCode }),
+      });
+      const data = await res.json();
+      if (data.success && data.formatted) {
+        handleCodeChange(data.formatted);
+        return data.formatted;
+      }
+    } catch (err) {
+      console.error('Format failed:', err);
+    }
+    return null;
+  }, [activeCode]);
+
   // Global keydown listener to intercept Cmd+S and Cmd+B
   useEffect(() => {
-    const handleGlobalKeyDown = (e: KeyboardEvent) => {
+    const handleGlobalKeyDown = async (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 's') {
         e.preventDefault();
         e.stopPropagation();
-        handleSave();
+        // Format first on Cmd+S, then save
+        const formatted = await handleFormat();
+        handleSave(formatted || undefined);
       } else if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'b') {
         e.preventDefault();
         e.stopPropagation();
@@ -230,7 +255,7 @@ export default function BookPlatform() {
     return () => {
       window.removeEventListener('keydown', handleGlobalKeyDown, { capture: true });
     };
-  }, [handleSave, handleToggleSidebar]);
+  }, [handleFormat, handleSave, handleToggleSidebar]);
 
   // Compile and run active node in isolated sandbox
   const handleRun = async () => {
@@ -267,16 +292,33 @@ export default function BookPlatform() {
       setDurationMs(result.durationMs);
       setExitCode(result.exitCode ?? (result.success ? 0 : 1));
 
+      if (result.problemBreakdown && result.problemBreakdown.length > 0) {
+        setNodeData((prev: any) => {
+          if (!prev) return prev;
+          return {
+            ...prev,
+            problems: result.problemBreakdown,
+            testsPassed: result.testsPassed ?? prev.testsPassed,
+            testsCount: result.testsCount ?? prev.testsCount,
+            newProblemsCount: Math.max(0, (result.testsCount ?? prev.testsCount) - (result.testsPassed ?? prev.testsPassed)),
+          };
+        });
+      }
+
       if (result.success) {
         setRunStatus('success');
         setTerminalOutput(result.stdout || '(Executed in sandbox with return code 0)');
         loadTree();
       } else {
         setRunStatus('error');
+        const parts = [];
+        if (result.stdout) parts.push(result.stdout);
+        if (result.stderr) parts.push(result.stderr);
+        const combined = parts.join('\n\n') || '(No output)';
         const errText =
           result.stage === 'compilation'
-            ? `[SANDBOX COMPILATION ERROR]:\n${result.stderr || result.stdout}`
-            : `[SANDBOX RUNTIME ERROR (Exit ${result.exitCode})]:\n${result.stderr || result.stdout}`;
+            ? `[SANDBOX COMPILATION ERROR]:\n${combined}`
+            : `[SANDBOX RUNTIME ERROR (Exit ${result.exitCode})]:\n${combined}`;
         setTerminalOutput(errText);
       }
     } catch (err: any) {
@@ -363,25 +405,8 @@ export default function BookPlatform() {
     setRunStatus('idle');
   };
 
-  const handleFormat = async () => {
-    if (!activeCode) return;
-    try {
-      const res = await fetch('/api/format', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ code: activeCode }),
-      });
-      const data = await res.json();
-      if (data.success && data.formatted) {
-        handleCodeChange(data.formatted);
-      }
-    } catch (err) {
-      console.error('Format failed:', err);
-    }
-  };
-
   return (
-    <div className="flex h-screen w-screen overflow-hidden bg-[#080b11]">
+    <div className="flex h-screen w-screen overflow-hidden bg-[var(--bg-app)] text-[var(--text-primary)] app-root-container">
       {/* 1. Left Tree Navigation Sidebar */}
       <SidebarTree
         treeData={treeData}
@@ -456,12 +481,16 @@ export default function BookPlatform() {
                   }
                   code={activeCode}
                   onChange={handleCodeChange}
-                  onSave={() => handleSave()}
+                  onSave={(savedCode) => handleSave(savedCode)}
                   saveStatus={saveStatus}
                   output={terminalOutput}
                   runStatus={runStatus}
                   durationMs={durationMs}
                   exitCode={exitCode}
+                  problems={nodeData?.problems}
+                  testsCount={nodeData?.testsCount}
+                  testsPassed={nodeData?.testsPassed}
+                  newProblemsCount={nodeData?.newProblemsCount}
                 />
               )}
 

@@ -60,6 +60,75 @@ float accumulate_sum_ilp4(const float* data, size_t n) {
 ```
 **Hardware Impact**: On modern superscalar CPUs, this 4-way accumulator unrolling achieves nearly **4x arithmetic throughput** over naive accumulation by filling execution port bubbles.
 
+### Technique 2: Tree-Based In-Place Reduction (CUDA Halving Loop)
+When multiple processing cores or SIMD lanes cooperate on an array of size `N`, they do not traverse sequentially. Instead, they perform a **tree reduction** by folding the upper half of the array into the lower half:
+
+```text
+Pass 1 (s = 32): arr[0..31]  += arr[32..63]  --> 32 sums remain
+Pass 2 (s = 16): arr[0..15]  += arr[16..31]  --> 16 sums remain
+Pass 3 (s = 8):  arr[0..7]   += arr[8..15]   --> 8 sums remain
+Pass 4 (s = 4):  arr[0..3]   += arr[4..7]    --> 4 sums remain
+Pass 5 (s = 2):  arr[0..1]   += arr[2..3]    --> 2 sums remain
+Pass 6 (s = 1):  arr[0]      += arr[1]       --> arr[0] holds the final total sum!
+```
+Total passes: `log2(N)` (for `N = 64`, exactly 6 passes instead of 64 sequential additions).
+
+#### Where Does the Stride Index `s` Start? (`s = N / 2`)
+A common beginner question is: *Why start at `s = 32` instead of `s = 64`?*
+* The array size is `N = 64`, meaning valid memory indices are `arr[0]` through `arr[63]`.
+* In each step, index `i` is paired with index `i + s`: `arr[i] += arr[i + s]`.
+* If you started at `s = 64`: at the very first element `i = 0`, you would access `arr[0 + 64]` which is `arr[64]`. This is **out of bounds** and causes a segmentation fault!
+* When starting at `s = N / 2 = 32`:
+  * `i = 0` pairs with `arr[0 + 32] = arr[32]`.
+  * `i = 31` pairs with `arr[31 + 32] = arr[63]` (the very last valid element).
+  * Every single element from `0` to `63` is accounted for with zero out-of-bounds reads.
+
+---
+
+### Technique 3: The Bit-Shift Operators (`>>` vs `<<`) — The Bench Mental Model
+In systems and GPU kernel code, you will frequently see `s >>= 1` rather than `s /= 2`. Shifting bits directly is a fundamental 1-cycle ALU operation.
+
+To never confuse left shift and right shift, use the **Bench Analogy**:
+
+Imagine a fixed-seat bench where numbers are placed with the biggest values on the left and smallest on the right:
+```text
+Place Values: [128] [64] [32] [16] [8] [4] [2] [1]
+Number (8):     0    0    0    0    1   0   0   0
+```
+
+The arrowheads (`<<` and `>>`) literally point to the direction you push the people on the bench:
+
+1. **Right Shift: `>>` (Divide by Powers of 2)**
+   * Points to the **right**: `>>>`
+   * Push everyone to the right by `k` seats:
+   * A newcomer `0` sits down on the empty seats on the left for each shift.
+   * The `k` people on the far right **fall off the bench** into the void.
+   * **Universal Formula**: `x >> k = x / (2^k)` (integer division, dropping the remainder)
+     * `x >> 1 = x / (2^1) = x / 2`
+     * `x >> 2 = x / (2^2) = x / 4`
+     * `x >> 3 = x / (2^3) = x / 8`
+   * Example: `32 >> 2 = 32 / 4 = 8`.
+
+2. **Left Shift: `<<` (Multiply by Powers of 2)**
+   * Points to the **left**: `<<<`
+   * Push everyone to the left by `k` seats:
+   * A newcomer `0` sits down on the empty seats on the right for each shift.
+   * The `k` people on the far left **fall off the bench** into the void.
+   * **Universal Formula**: `x << k = x * (2^k)`
+     * `x << 1 = x * (2^1) = x * 2`
+     * `x << 2 = x * (2^2) = x * 4`
+     * `x << 3 = x * (2^3) = x * 8`
+   * Example: `5 << 3 = 5 * 8 = 40`.
+
+```cpp
+// Tree reduction loop: Halving s from N/2 down to 1:
+for (int s = N / 2; s > 0; s >>= 1) {
+    for (int i = 0; i < s; ++i) {
+        arr[i] += arr[i + s];
+    }
+}
+```
+
 ---
 
 ## 2. In-Place Swapping: Pointer Swap vs. Memory Copy

@@ -9,6 +9,10 @@ import {
   PlaygroundType,
   METAL_KERNELS,
 } from '@/lib/workspace';
+import { loadUserProgress } from '@/lib/progress';
+import { registerCanonicalExerciseProblems } from '@/lib/problemParser';
+import { autoSyncWorkbookSolution } from '@/lib/autoSync';
+import { getCanonicalProblems, getUserProblemsWithStatus } from '@/lib/db';
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
@@ -136,29 +140,46 @@ export async function GET(request: NextRequest) {
       fs.writeFileSync(targetSolPath, exerciseCode, 'utf-8');
     }
 
-    const solutionCode = fs.existsSync(solPath) && fs.statSync(solPath).size > 0
-      ? fs.readFileSync(solPath, 'utf-8')
-      : exerciseCode;
+    const volId = isKernel ? 'vol3' : isCuda ? 'vol2' : 'vol1';
+    const effectiveSolPath = fs.existsSync(solPath) ? solPath : targetSolPath;
 
-    // Count tests
-    const testsCount = fs.existsSync(solPath)
-      ? countTestsInWorkbook(solPath)
-      : fs.existsSync(exPath)
-      ? countTestsInWorkbook(exPath)
-      : 0;
-
-    let isSolved = false;
-    if (fs.existsSync(solPath) && fs.statSync(solPath).size > 0) {
-      if (!fs.existsSync(exPath)) {
-        isSolved = fs.statSync(solPath).size > 200;
-      } else {
-        const s = fs.readFileSync(solPath, 'utf-8').trim();
-        const e = fs.readFileSync(exPath, 'utf-8').trim();
-        isSolved = s !== e && s.length > 200;
+    // Register canonical problems from exercise and auto-sync into solution if needed
+    if (fs.existsSync(exPath)) {
+      registerCanonicalExerciseProblems(chapterId, volId, tier, exPath);
+      if (fs.existsSync(effectiveSolPath)) {
+        autoSyncWorkbookSolution(exPath, effectiveSolPath);
       }
     }
 
-    const chosenPath = fs.existsSync(solPath) ? solPath : targetSolPath;
+    const solutionCode = fs.existsSync(effectiveSolPath) && fs.statSync(effectiveSolPath).size > 0
+      ? fs.readFileSync(effectiveSolPath, 'utf-8')
+      : exerciseCode;
+
+    // Query canonical & user problems from SQLite
+    const canonicalProblems = getCanonicalProblems(chapterId, tier);
+    const userProblems = getUserProblemsWithStatus(chapterId, tier);
+
+    const testsCount = canonicalProblems.length > 0
+      ? canonicalProblems.length
+      : fs.existsSync(exPath)
+      ? countTestsInWorkbook(exPath)
+      : fs.existsSync(effectiveSolPath)
+      ? countTestsInWorkbook(effectiveSolPath)
+      : 0;
+
+    let passedCount = userProblems.filter((p) => p.status === 'passed').length;
+
+    // Migration fallback from user_progress.json
+    const userProgress = loadUserProgress();
+    const topicProg = userProgress.topics[chapterId] || userProgress.topics[displayTopicId] || userProgress.topics[`cuda-${displayTopicId}`];
+    if (userProblems.length > 0 && passedCount === 0 && topicProg?.tiers?.[tier]?.status === 'passed') {
+      passedCount = Math.min(topicProg?.tiers?.[tier]?.testsPassed || 3, testsCount);
+    } else if (userProblems.length === 0 && topicProg?.tiers?.[tier]?.status === 'passed') {
+      passedCount = Math.min(topicProg?.tiers?.[tier]?.testsPassed || 3, testsCount);
+    }
+
+    const isSolved = passedCount === testsCount && testsCount > 0;
+    const newProblemsCount = Math.max(0, testsCount - passedCount);
 
     return NextResponse.json({
       type: 'workbook',
@@ -174,8 +195,11 @@ export async function GET(request: NextRequest) {
       exerciseCode,
       defaultTarget: 'solution',
       testsCount,
+      testsPassed: passedCount,
+      newProblemsCount,
+      problems: userProblems,
       status: isSolved ? 'passed' : 'pending',
-      relPath: path.relative(WORKSPACE_ROOT, chosenPath),
+      relPath: path.relative(WORKSPACE_ROOT, effectiveSolPath),
     });
   }
 

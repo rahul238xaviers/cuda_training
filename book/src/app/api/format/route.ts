@@ -12,6 +12,7 @@ export async function POST(request: NextRequest) {
     }
 
     const clangFormat = getClangFormatBin();
+    const envPath = `/opt/homebrew/bin:/opt/homebrew/opt/llvm/bin:/usr/local/bin:${process.env.PATH || ''}`;
     const formatResult = spawnSync(
       clangFormat,
       ['-style={BasedOnStyle: Google, IndentWidth: 4, ColumnLimit: 100, AccessModifierOffset: -4}'],
@@ -20,6 +21,10 @@ export async function POST(request: NextRequest) {
         cwd: WORKSPACE_ROOT,
         encoding: 'utf-8',
         timeout: 5000,
+        env: {
+          ...process.env,
+          PATH: envPath,
+        },
       }
     );
 

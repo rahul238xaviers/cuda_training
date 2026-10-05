@@ -19,6 +19,7 @@ import {
   Bookmark,
 } from 'lucide-react';
 import { getBookmarks } from '@/lib/annotations';
+import { ThemeToggle } from './ThemeToggle';
 import {
   ChapterMeta,
   CudaModuleMeta,
@@ -49,6 +50,67 @@ interface SidebarTreeProps {
   onResize?: (width: number) => void;
   isCollapsed?: boolean;
   onToggleCollapse?: () => void;
+}
+
+type ModuleStatus = 'completed' | 'in_progress' | 'pending';
+
+interface ModuleStatusInfo {
+  status: ModuleStatus;
+  completedTopics: number;
+  totalTopics: number;
+  passedTests: number;
+  totalTests: number;
+}
+
+function getModuleStatus(
+  topics: Array<{ completed: boolean; passedTests?: number; totalTests?: number }>,
+  completedFlag?: boolean,
+  passedTests?: number
+): ModuleStatusInfo {
+  const completedTopics = (topics || []).filter((t) => t.completed).length;
+  const totalTopics = (topics || []).length;
+  const sumPassedTests = passedTests ?? (topics || []).reduce((acc, t) => acc + (t.passedTests || 0), 0);
+  const sumTotalTests = (topics || []).reduce((acc, t) => acc + (t.totalTests || 0), 0);
+
+  const isCompleted = completedFlag || (totalTopics > 0 && completedTopics === totalTopics);
+  const isInProgress = !isCompleted && (completedTopics > 0 || sumPassedTests > 0);
+  const status: ModuleStatus = isCompleted ? 'completed' : isInProgress ? 'in_progress' : 'pending';
+
+  return {
+    status,
+    completedTopics,
+    totalTopics,
+    passedTests: sumPassedTests,
+    totalTests: sumTotalTests,
+  };
+}
+
+function getModuleStyle(status: ModuleStatus, accent: 'sky' | 'indigo' | 'amber') {
+  if (status === 'completed') {
+    return {
+      card: 'module-card module-card-completed border-emerald-500/40 bg-gradient-to-b from-[#0e1d17] to-[#08120e] shadow-[0_0_14px_rgba(16,185,129,0.07)]',
+      header: 'module-header module-header-completed bg-[#10241d]/90 hover:bg-[#152e25] text-emerald-100',
+      badge: 'module-badge module-badge-completed bg-emerald-500/25 text-emerald-300 border border-emerald-500/40 font-bold',
+      treeLine: 'module-treeline module-treeline-completed border-emerald-500/40',
+      title: 'module-title module-title-completed text-emerald-100 font-semibold',
+    };
+  }
+  if (status === 'in_progress') {
+    return {
+      card: 'module-card module-card-inprogress border-amber-500/40 bg-gradient-to-b from-[#1c1509] to-[#0f0c05] shadow-[0_0_14px_rgba(245,158,11,0.07)]',
+      header: 'module-header module-header-inprogress bg-[#221b0b]/90 hover:bg-[#2b220e] text-amber-100',
+      badge: 'module-badge module-badge-inprogress bg-amber-500/25 text-amber-300 border border-amber-500/40 font-bold',
+      treeLine: 'module-treeline module-treeline-inprogress border-amber-500/40',
+      title: 'module-title module-title-inprogress text-amber-100 font-semibold',
+    };
+  }
+  return {
+    card: 'module-card module-card-pending border-[#1b2333] bg-[#0c1018]/60',
+    header: 'module-header module-header-pending bg-[#0e1422] hover:bg-[#121929] text-slate-300',
+    badge: 'module-badge module-badge-pending bg-slate-800/90 text-slate-400 border border-slate-700/50 font-bold',
+    treeLine: 'module-treeline module-treeline-pending border-slate-800/80',
+    title: 'module-title module-title-pending text-slate-300 font-medium',
+  };
 }
 
 export function SidebarTree({
@@ -330,7 +392,7 @@ export function SidebarTree({
   return (
     <aside
       style={{ width }}
-      className="h-full bg-[#0a0d14] border-r border-[#1a2333] flex flex-col select-none relative shrink-0 transition-[width] duration-75"
+      className="sidebar-aside h-full bg-[var(--bg-sidebar)] border-r border-[var(--border-subtle)] flex flex-col select-none relative shrink-0 transition-[width] duration-75"
     >
       {/* Draggable resize handle */}
       {onResize && (
@@ -345,7 +407,7 @@ export function SidebarTree({
       )}
 
       {/* Brand & Sandbox Header */}
-      <div className="p-3 border-b border-[#21262d] bg-[#131720]/95 backdrop-blur-md">
+      <div className="sidebar-brand-header p-3 border-b border-[var(--border-subtle)] bg-[var(--bg-header)]/95 backdrop-blur-md">
         <div className="flex items-center justify-between relative">
           <div className="flex items-center gap-2">
             <div className="w-6 h-6 rounded-md bg-[#1c2230] border border-[#30363d] flex items-center justify-center text-sky-400">
@@ -453,24 +515,64 @@ export function SidebarTree({
           </div>
         </div>
 
-        {/* Sleek Minimal Progress Tracker (Uncrowded, Refined) */}
-        <div className="mt-2.5 px-0.5">
-          <div className="flex items-center justify-between text-[10px] mb-1">
-            <span className="text-slate-400 font-medium flex items-center gap-1.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
-              <span>Course Mastery</span>
-            </span>
-            <span className="font-mono text-slate-300 font-semibold">
-              {treeData?.stats?.percent ?? 0}% <span className="text-slate-500 font-normal">({treeData?.stats?.testsPassed ?? 0}/{treeData?.stats?.totalTests ?? 0})</span>
-            </span>
-          </div>
-          <div className="w-full h-1 bg-[#10141d] rounded-full overflow-hidden border border-[#21262d]">
-            <div
-              className="h-full bg-emerald-500 rounded-full transition-all duration-500"
-              style={{ width: `${Math.max(1, treeData?.stats?.percent ?? 0)}%` }}
-            />
-          </div>
-        </div>
+        {/* Sleek Minimal Progress Tracker (Volume-Specific Chapters & Overall Tests) */}
+        {(() => {
+          const currentVolDone =
+            activeVolume === 'vol1'
+              ? treeData?.stats?.chaptersDone ?? 0
+              : activeVolume === 'vol2'
+              ? treeData?.stats?.cudaTopicsDone ?? 0
+              : treeData?.stats?.kernelTopicsDone ?? 0;
+
+          const currentVolTotal =
+            activeVolume === 'vol1'
+              ? treeData?.stats?.totalChapters ?? 20
+              : activeVolume === 'vol2'
+              ? treeData?.stats?.totalCudaTopics ?? 22
+              : treeData?.stats?.totalKernelTopics ?? 25;
+
+          const currentVolPercent =
+            currentVolTotal > 0 ? Math.round((currentVolDone / currentVolTotal) * 100) : 0;
+
+          return (
+            <div className="mt-2.5 px-0.5">
+              <div className="flex items-center justify-between text-[10px] mb-1">
+                <span className="text-slate-300 font-medium flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                  <span>
+                    {activeVolume === 'vol1'
+                      ? 'Volume 1 (C++ Systems)'
+                      : activeVolume === 'vol2'
+                      ? 'Volume 2 (CUDA Systems)'
+                      : 'Volume 3 (GPU Kernels)'}
+                  </span>
+                </span>
+                <span className="font-mono text-slate-200 font-semibold">
+                  {currentVolDone}/{currentVolTotal}{' '}
+                  <span className="text-slate-400 font-normal">({currentVolPercent}%)</span>
+                </span>
+              </div>
+              <div className="w-full h-1 bg-[#10141d] rounded-full overflow-hidden border border-[#21262d]">
+                <div
+                  className="h-full bg-emerald-500 rounded-full transition-all duration-500"
+                  style={{ width: `${Math.max(1, currentVolPercent)}%` }}
+                />
+              </div>
+              <div className="flex items-center justify-between mt-1 text-[9px] text-slate-500 font-mono">
+                <span>
+                  {activeVolume === 'vol1'
+                    ? 'Chapters Mastered'
+                    : activeVolume === 'vol2'
+                    ? 'Topics Mastered'
+                    : 'Kernels Mastered'}
+                </span>
+                <span title="Total individual verified test cases passed across all workbooks">
+                  {treeData?.stats?.testsPassed ?? 0} tests passed total
+                </span>
+              </div>
+            </div>
+          );
+        })()}
 
         {/* Pinned Course Orientation Guide Button */}
         <button
@@ -515,7 +617,7 @@ export function SidebarTree({
           };
 
           return (
-            <div className="mt-3 p-1 rounded-xl bg-[#090d16] border border-[#232b3d] grid grid-cols-3 gap-1.5 shadow-inner">
+            <div className="sidebar-vol-tabs mt-3 p-1 rounded-xl bg-[#090d16] border border-[#232b3d] grid grid-cols-3 gap-1.5 shadow-inner">
               {volDefs.map((vol) => {
                 const isActive = activeVolume === vol.id;
                 const styles = accentStyles[vol.accent];
@@ -533,9 +635,9 @@ export function SidebarTree({
                         onSelectNode({ type: 'theory', volumeId: 'vol3', chapterId: openKernelTopicId || 'k1.1' });
                       }
                     }}
-                    className={`relative flex flex-col items-center justify-center py-2 px-1 rounded-lg border text-center cursor-pointer transition-all duration-150 select-none ${
+                    className={`sidebar-vol-btn relative flex flex-col items-center justify-center py-2 px-1 rounded-lg border text-center cursor-pointer transition-all duration-150 select-none ${
                       isActive
-                        ? `${styles.active} font-bold`
+                        ? `sidebar-vol-btn-active ${styles.active} font-bold`
                         : 'border-[#192233] bg-[#0e1422]/70 text-slate-400 hover:text-slate-200 hover:bg-[#141d30] hover:border-[#2a3854]'
                     }`}
                   >
@@ -576,172 +678,212 @@ export function SidebarTree({
       </div>
 
       {/* Reactive Navigation Body */}
-      <div className="flex-1 overflow-y-auto px-2 py-2 space-y-1">
+      <div className="flex-1 overflow-y-auto px-2 py-2 space-y-1.5">
         {/* ===================== VOLUME 1: C++ SYSTEMS (5 MODULES) ===================== */}
         {activeVolume === 'vol1' && (
-          <div className="space-y-1">
+          <div className="space-y-2">
             {filteredCppModules.map((mod: CppModuleMeta) => {
               const isModOpen = openCppModuleId === mod.id;
+              const statusInfo = getModuleStatus(mod.topics, mod.completed, mod.passedTests);
+              const style = getModuleStyle(statusInfo.status, 'sky');
 
               return (
-                <div key={mod.id} className="rounded-lg overflow-hidden border border-[#141b29] bg-[#0c1018]/60 mb-1">
-                  {/* Module Header Row */}
+                <div key={mod.id} className={`rounded-lg overflow-hidden border ${style.card} transition-all`}>
+                  {/* Module Header Row (Parent Level) */}
                   <div
                     onClick={() => toggleCppModule(mod.id)}
-                    className="flex items-center justify-between px-2.5 py-1.5 cursor-pointer bg-[#0e1422] hover:bg-[#121929] transition-all"
+                    className={`flex items-center justify-between px-2.5 py-2 cursor-pointer transition-all ${style.header}`}
                   >
                     <div className="flex items-center gap-2 min-w-0 pr-1">
-                      <span className="font-mono text-[9px] px-1.5 py-0.5 rounded bg-sky-500/10 text-sky-400 font-bold border border-sky-500/20 shrink-0">
+                      <span className={`font-mono text-[9px] px-1.5 py-0.5 rounded shrink-0 ${style.badge}`}>
                         Part {mod.displayNum}
                       </span>
-                      <span className="truncate text-xs font-semibold text-slate-200" title={mod.displayTitle}>
+                      <span className={`truncate text-xs ${style.title}`} title={mod.displayTitle}>
                         {mod.displayTitle}
                       </span>
                     </div>
 
                     <div className="flex items-center gap-1.5 shrink-0">
-                      <span className="text-[10px] text-slate-500 font-mono">
-                        {mod.topics.length}
-                      </span>
-                      {isModOpen ? (
-                        <ChevronDown className="w-3 h-3 text-slate-400" />
+                      {statusInfo.status === 'completed' ? (
+                        <span
+                          title="All chapters in this module completed"
+                          className="flex items-center gap-1 text-[9px] font-mono px-1.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-bold"
+                        >
+                          <Check className="w-2.5 h-2.5 stroke-[3]" /> Mastered
+                        </span>
+                      ) : statusInfo.status === 'in_progress' ? (
+                        <span
+                          title={`${statusInfo.completedTopics} of ${statusInfo.totalTopics} chapters mastered (${statusInfo.passedTests} tests passed)`}
+                          className="flex items-center gap-1 text-[9px] font-mono px-1.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40 font-bold"
+                        >
+                          <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
+                          {statusInfo.completedTopics}/{statusInfo.totalTopics}
+                        </span>
                       ) : (
-                        <ChevronRight className="w-3 h-3 text-slate-400" />
+                        <span
+                          title="Pending module"
+                          className="text-[9px] font-mono px-1.5 py-0.5 rounded-full bg-slate-800/80 text-slate-500 border border-slate-700/40"
+                        >
+                          0/{statusInfo.totalTopics}
+                        </span>
+                      )}
+
+                      {isModOpen ? (
+                        <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
+                      ) : (
+                        <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
                       )}
                     </div>
                   </div>
 
-                  {/* Module Topics */}
+                  {/* Module Topics (Child Level — visibly indented with tree guide line) */}
                   {isModOpen && (
-                    <div className="p-1 space-y-1 border-t border-[#141b29]">
-                      {mod.topics.map((ch: ChapterMeta) => {
-                        const isOpen = openChapterId === ch.id;
-                        const isCurrentChapter = activeNode.chapterId === ch.id;
+                    <div className="module-topics-container pt-1.5 pb-2 pl-3.5 pr-1.5 bg-[#06080e]/70 border-t border-[#141b29]/80">
+                      <div className={`space-y-1 pl-2.5 border-l-2 ${style.treeLine}`}>
+                        {mod.topics.map((ch: ChapterMeta) => {
+                          const isOpen = openChapterId === ch.id;
+                          const isCurrentChapter = activeNode.chapterId === ch.id;
 
-                        return (
-                          <div key={ch.id} className="rounded-md overflow-hidden transition-all">
-                            {/* Chapter Header */}
-                            <div
-                              onClick={() => {
-                                toggleChapter(ch.id);
-                                if (!isOpen) {
-                                  onSelectNode({ type: 'theory', volumeId: 'vol1', chapterId: ch.id });
-                                }
-                              }}
-                              className={`flex items-center justify-between px-2 py-1.5 rounded-md text-xs cursor-pointer transition-all ${
-                                isCurrentChapter
-                                  ? 'bg-[#151f30] text-slate-100 font-medium'
-                                  : 'hover:bg-[#101622] text-slate-300'
-                              }`}
-                            >
-                              <div className="flex items-center gap-2 min-w-0 pr-1">
-                                <span className="font-mono text-[10px] text-sky-400 font-bold shrink-0">
-                                  {ch.id}
-                                </span>
-                                <span className="truncate text-[11.5px]" title={ch.title}>
-                                  {ch.title}
-                                </span>
-                              </div>
-
-                              <div className="flex items-center gap-1.5 shrink-0">
-                                {bookmarkedIds.has(ch.id) && (
-                                  <Bookmark className="w-3 h-3 text-amber-400 fill-amber-400 shrink-0" />
-                                )}
-                                {ch.completed ? (
-                                  <span title="All tests passed" className="text-emerald-400 flex items-center">
-                                    <Check className="w-3 h-3" />
-                                  </span>
-                                ) : (
-                                  <span className="text-[9.5px] text-slate-500 font-mono">
-                                    {ch.totalTests}
-                                  </span>
-                                )}
-                                {isOpen ? (
-                                  <ChevronDown className="w-3 h-3 text-slate-500" />
-                                ) : (
-                                  <ChevronRight className="w-3 h-3 text-slate-500" />
-                                )}
-                              </div>
-                            </div>
-
-                            {/* Sub-Items */}
-                            {isOpen && (
-                              <div className="ml-3 pl-2 py-1 my-0.5 space-y-0.5 border-l border-[#1a2333]">
-                                <button
-                                  onClick={() =>
-                                    onSelectNode({ type: 'theory', volumeId: 'vol1', chapterId: ch.id })
+                          return (
+                            <div key={ch.id} className="rounded-md overflow-hidden transition-all">
+                              {/* Chapter Header (Child Item) */}
+                              <div
+                                onClick={() => {
+                                  toggleChapter(ch.id);
+                                  if (!isOpen) {
+                                    onSelectNode({ type: 'theory', volumeId: 'vol1', chapterId: ch.id });
                                   }
-                                  className={`w-full flex items-center gap-2 px-2 py-1 rounded text-[11px] text-left transition-all ${
-                                    activeNode.type === 'theory' && activeNode.chapterId === ch.id
-                                      ? 'bg-sky-500/15 text-sky-300 font-medium'
-                                      : 'text-slate-400 hover:text-slate-200 hover:bg-[#111724]'
-                                  }`}
-                                >
-                                  <BookOpen className="w-3 h-3 text-sky-400 shrink-0" />
-                                  <span className="truncate">Theory & Models</span>
-                                </button>
+                                }}
+                                className={`topic-item flex items-center justify-between px-2 py-1.5 rounded-md text-xs cursor-pointer transition-all ${
+                                  isCurrentChapter
+                                    ? 'topic-item-active bg-[#15233c] text-white font-medium border border-sky-500/40 shadow-sm'
+                                    : 'hover:bg-[#101726] text-slate-300 hover:text-white border border-transparent'
+                                }`}
+                              >
+                                <div className="flex items-center gap-2 min-w-0 pr-1">
+                                  <span className="topic-badge font-mono text-[10px] px-1.5 py-0.5 rounded bg-sky-500/10 text-sky-400 font-bold border border-sky-500/25 shrink-0">
+                                    {ch.id}
+                                  </span>
+                                  <span className="topic-title truncate text-[11.5px]" title={ch.title}>
+                                    {ch.title}
+                                  </span>
+                                </div>
 
-                                {ch.hasCheatSheet && (
+                                <div className="flex items-center gap-1.5 shrink-0">
+                                  {bookmarkedIds.has(ch.id) && (
+                                    <Bookmark className="w-3 h-3 text-amber-400 fill-amber-400 shrink-0" />
+                                  )}
+                                  {ch.completed ? (
+                                    <span title="All tests passed" className="text-emerald-400 flex items-center">
+                                      <Check className="w-3 h-3" />
+                                    </span>
+                                  ) : (ch.passedTests ?? 0) > 0 ? (
+                                    <span className="text-[9.5px] text-amber-400 font-mono font-medium">
+                                      {ch.passedTests}/{ch.totalTests}
+                                    </span>
+                                  ) : (
+                                    <span className="text-[9.5px] text-slate-500 font-mono">
+                                      {ch.totalTests}
+                                    </span>
+                                  )}
+                                  {isOpen ? (
+                                    <ChevronDown className="w-3 h-3 text-slate-500" />
+                                  ) : (
+                                    <ChevronRight className="w-3 h-3 text-slate-500" />
+                                  )}
+                                </div>
+                              </div>
+
+                              {/* Grandchildren (Theory, Cheat Sheet, Workbooks — indented deeper) */}
+                              {isOpen && (
+                                <div className="topic-children-container ml-3 pl-2.5 py-1 my-1 space-y-0.5 border-l-2 border-sky-500/25 bg-[#0e1422]/50 rounded-r-md">
                                   <button
                                     onClick={() =>
-                                      onSelectNode({
-                                        type: 'cheat_sheet',
-                                        volumeId: 'vol1',
-                                        chapterId: ch.id,
-                                      })
+                                      onSelectNode({ type: 'theory', volumeId: 'vol1', chapterId: ch.id })
                                     }
-                                    className={`w-full flex items-center gap-2 px-2 py-1 rounded text-[11px] text-left transition-all ${
-                                      activeNode.type === 'cheat_sheet' && activeNode.chapterId === ch.id
-                                        ? 'bg-amber-500/15 text-amber-300 font-medium'
+                                    className={`topic-sublink w-full flex items-center gap-2 px-2 py-1 rounded text-[11px] text-left transition-all ${
+                                      activeNode.type === 'theory' && activeNode.chapterId === ch.id
+                                        ? 'topic-sublink-active bg-sky-500/15 text-sky-300 font-medium'
                                         : 'text-slate-400 hover:text-slate-200 hover:bg-[#111724]'
                                     }`}
                                   >
-                                    <Zap className="w-3 h-3 text-amber-400 shrink-0" />
-                                    <span className="truncate">Revision Cheat Sheet</span>
+                                    <BookOpen className="w-3 h-3 text-sky-400 shrink-0" />
+                                    <span className="truncate">Theory & Models</span>
                                   </button>
-                                )}
 
-                                <div className="pt-0.5 space-y-0.5">
-                                  {(['beginner', 'intermediate', 'champion'] as const).map((tier) => (
+                                  {ch.hasCheatSheet && (
                                     <button
-                                      key={tier}
                                       onClick={() =>
                                         onSelectNode({
-                                          type: 'workbook',
+                                          type: 'cheat_sheet',
                                           volumeId: 'vol1',
                                           chapterId: ch.id,
-                                          tier,
                                         })
                                       }
-                                      className={`w-full flex items-center justify-between px-2 py-1 rounded text-[11px] text-left transition-all ${
-                                        activeNode.type === 'workbook' &&
-                                        activeNode.chapterId === ch.id &&
-                                        activeNode.tier === tier
-                                          ? 'bg-sky-500/15 text-sky-300 font-medium'
+                                      className={`topic-sublink w-full flex items-center gap-2 px-2 py-1 rounded text-[11px] text-left transition-all ${
+                                        activeNode.type === 'cheat_sheet' && activeNode.chapterId === ch.id
+                                          ? 'topic-sublink-active bg-amber-500/15 text-amber-300 font-medium'
                                           : 'text-slate-400 hover:text-slate-200 hover:bg-[#111724]'
                                       }`}
                                     >
-                                      <div className="flex items-center gap-1.5 truncate">
-                                        <span
-                                          className={`w-1.5 h-1.5 rounded-full ${
-                                            ch.tiers[tier].status === 'passed'
-                                              ? 'bg-emerald-400'
-                                              : 'bg-slate-600'
-                                          }`}
-                                        />
-                                        <span className="truncate capitalize">{tier}</span>
-                                      </div>
-                                      <span className="text-[9.5px] font-mono text-slate-500">
-                                        {ch.tiers[tier].status === 'passed' ? 'Passed' : `${ch.tiers[tier].tests} tests`}
-                                      </span>
+                                      <Zap className="w-3 h-3 text-amber-400 shrink-0" />
+                                      <span className="truncate">Revision Cheat Sheet</span>
                                     </button>
-                                  ))}
+                                  )}
+
+                                  <div className="pt-0.5 space-y-0.5">
+                                    {(['beginner', 'intermediate', 'champion'] as const).map((tier) => (
+                                      <button
+                                        key={tier}
+                                        onClick={() =>
+                                          onSelectNode({
+                                            type: 'workbook',
+                                            volumeId: 'vol1',
+                                            chapterId: ch.id,
+                                            tier,
+                                          })
+                                        }
+                                        className={`topic-sublink w-full flex items-center justify-between px-2 py-1 rounded text-[11px] text-left transition-all ${
+                                          activeNode.type === 'workbook' &&
+                                          activeNode.chapterId === ch.id &&
+                                          activeNode.tier === tier
+                                            ? 'topic-sublink-active bg-sky-500/15 text-sky-300 font-medium'
+                                            : 'text-slate-400 hover:text-slate-200 hover:bg-[#111724]'
+                                        }`}
+                                      >
+                                        <div className="flex items-center gap-1.5 truncate">
+                                          <span
+                                            className={`w-1.5 h-1.5 rounded-full ${
+                                              ch.tiers[tier].status === 'passed'
+                                                ? 'bg-emerald-400'
+                                                : (ch.tiers[tier].testsPassed ?? 0) > 0
+                                                ? 'bg-amber-400'
+                                                : 'bg-slate-600'
+                                            }`}
+                                          />
+                                          <span className="truncate capitalize">{tier}</span>
+                                          {(ch.tiers[tier].newProblemsCount ?? 0) > 0 && (ch.tiers[tier].testsPassed ?? 0) > 0 && (
+                                            <span className="text-[9px] px-1 py-0.2 rounded bg-amber-500/20 text-amber-300 font-semibold border border-amber-500/30">
+                                              +{ch.tiers[tier].newProblemsCount} New
+                                            </span>
+                                          )}
+                                        </div>
+                                        <span className="text-[9.5px] font-mono text-slate-500">
+                                          {ch.tiers[tier].status === 'passed'
+                                            ? 'Passed'
+                                            : (ch.tiers[tier].testsPassed ?? 0) > 0
+                                            ? `${ch.tiers[tier].testsPassed}/${ch.tiers[tier].tests}`
+                                            : `${ch.tiers[tier].tests} tests`}
+                                        </span>
+                                      </button>
+                                    ))}
+                                  </div>
                                 </div>
-                              </div>
-                            )}
-                          </div>
-                        );
-                      })}
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
                     </div>
                   )}
                 </div>
@@ -752,168 +894,209 @@ export function SidebarTree({
 
         {/* ===================== VOLUME 2: CUDA SYSTEMS (6 MODULES) ===================== */}
         {activeVolume === 'vol2' && (
-          <div className="space-y-1">
+          <div className="space-y-2">
             {filteredCudaModules.map((mod: CudaModuleMeta) => {
               const isModOpen = openCudaModuleId === mod.id;
+              const statusInfo = getModuleStatus(mod.topics, mod.completed, mod.passedTests);
+              const style = getModuleStyle(statusInfo.status, 'indigo');
 
               return (
-                <div key={mod.id} className="rounded-lg overflow-hidden border border-[#141b29] bg-[#0c1018]/60 mb-1">
-                  {/* Module Header */}
+                <div key={mod.id} className={`rounded-lg overflow-hidden border ${style.card} transition-all`}>
+                  {/* Module Header Row (Parent Level) */}
                   <div
                     onClick={() => toggleCudaModule(mod.id)}
-                    className="flex items-center justify-between px-2.5 py-1.5 cursor-pointer bg-[#0e1422] hover:bg-[#121929] transition-all"
+                    className={`flex items-center justify-between px-2.5 py-2 cursor-pointer transition-all ${style.header}`}
                   >
                     <div className="flex items-center gap-2 min-w-0 pr-1">
-                      <span className="font-mono text-[9px] px-1.5 py-0.5 rounded bg-indigo-500/10 text-indigo-400 font-bold border border-indigo-500/20 shrink-0">
+                      <span className={`font-mono text-[9px] px-1.5 py-0.5 rounded shrink-0 ${style.badge}`}>
                         M{mod.displayNum}
                       </span>
-                      <span className="truncate text-xs font-semibold text-slate-200" title={mod.displayTitle}>
+                      <span className={`truncate text-xs ${style.title}`} title={mod.displayTitle}>
                         {mod.displayTitle}
                       </span>
                     </div>
 
                     <div className="flex items-center gap-1.5 shrink-0">
-                      <span className="text-[10px] text-slate-500 font-mono">
-                        {mod.topics.length}
-                      </span>
-                      {isModOpen ? (
-                        <ChevronDown className="w-3 h-3 text-slate-400" />
+                      {statusInfo.status === 'completed' ? (
+                        <span
+                          title="All topics in this module completed"
+                          className="flex items-center gap-1 text-[9px] font-mono px-1.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-bold"
+                        >
+                          <Check className="w-2.5 h-2.5 stroke-[3]" /> Mastered
+                        </span>
+                      ) : statusInfo.status === 'in_progress' ? (
+                        <span
+                          title={`${statusInfo.completedTopics} of ${statusInfo.totalTopics} topics mastered (${statusInfo.passedTests} tests passed)`}
+                          className="flex items-center gap-1 text-[9px] font-mono px-1.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40 font-bold"
+                        >
+                          <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
+                          {statusInfo.completedTopics}/{statusInfo.totalTopics}
+                        </span>
                       ) : (
-                        <ChevronRight className="w-3 h-3 text-slate-400" />
+                        <span
+                          title="Pending module"
+                          className="text-[9px] font-mono px-1.5 py-0.5 rounded-full bg-slate-800/80 text-slate-500 border border-slate-700/40"
+                        >
+                          0/{statusInfo.totalTopics}
+                        </span>
+                      )}
+
+                      {isModOpen ? (
+                        <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
+                      ) : (
+                        <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
                       )}
                     </div>
                   </div>
 
-                  {/* Module Topics */}
+                  {/* Module Topics (Child Level — visibly indented with tree guide line) */}
                   {isModOpen && (
-                    <div className="p-1 space-y-1 border-t border-[#141b29]">
-                      {mod.topics.map((topic: CudaTopicMeta) => {
-                        const isOpen = openCudaTopicId === topic.id;
-                        const isCurrentTopic = activeNode.chapterId === topic.id;
+                    <div className="module-topics-container pt-1.5 pb-2 pl-3.5 pr-1.5 bg-[#06080e]/70 border-t border-[#141b29]/80">
+                      <div className={`space-y-1 pl-2.5 border-l-2 ${style.treeLine}`}>
+                        {mod.topics.map((topic: CudaTopicMeta) => {
+                          const isOpen = openCudaTopicId === topic.id;
+                          const isCurrentTopic = activeNode.chapterId === topic.id;
 
-                        return (
-                          <div key={topic.id} className="rounded-md overflow-hidden transition-all">
-                            <div
-                              onClick={() => {
-                                toggleCudaTopic(topic.id);
-                                if (!isOpen) {
-                                  onSelectNode({ type: 'theory', volumeId: 'vol2', chapterId: topic.id });
-                                }
-                              }}
-                              className={`flex items-center justify-between px-2 py-1.5 rounded-md text-xs cursor-pointer transition-all ${
-                                isCurrentTopic
-                                  ? 'bg-[#151f30] text-slate-100 font-medium'
-                                  : 'hover:bg-[#101622] text-slate-300'
-                              }`}
-                            >
-                              <div className="flex items-center gap-2 min-w-0 pr-1">
-                                <span className="font-mono text-[10px] text-indigo-400 font-bold shrink-0">
-                                  {topic.displayId}
-                                </span>
-                                <span className="truncate text-[11.5px]" title={topic.title}>
-                                  {topic.title}
-                                </span>
-                              </div>
-
-                              <div className="flex items-center gap-1.5 shrink-0">
-                                {bookmarkedIds.has(topic.id) && (
-                                  <Bookmark className="w-3 h-3 text-amber-400 fill-amber-400 shrink-0" />
-                                )}
-                                {topic.completed ? (
-                                  <span title="All tests passed" className="text-emerald-400 flex items-center">
-                                    <Check className="w-3 h-3" />
-                                  </span>
-                                ) : (
-                                  <span className="text-[9.5px] text-slate-500 font-mono">
-                                    {topic.totalTests}
-                                  </span>
-                                )}
-                                {isOpen ? (
-                                  <ChevronDown className="w-3 h-3 text-slate-500" />
-                                ) : (
-                                  <ChevronRight className="w-3 h-3 text-slate-500" />
-                                )}
-                              </div>
-                            </div>
-
-                            {/* Subitems */}
-                            {isOpen && (
-                              <div className="ml-3 pl-2 py-1 my-0.5 space-y-0.5 border-l border-[#1a2333]">
-                                <button
-                                  onClick={() =>
-                                    onSelectNode({ type: 'theory', volumeId: 'vol2', chapterId: topic.id })
+                          return (
+                            <div key={topic.id} className="rounded-md overflow-hidden transition-all">
+                              {/* Topic Header (Child Item) */}
+                              <div
+                                onClick={() => {
+                                  toggleCudaTopic(topic.id);
+                                  if (!isOpen) {
+                                    onSelectNode({ type: 'theory', volumeId: 'vol2', chapterId: topic.id });
                                   }
-                                  className={`w-full flex items-center gap-2 px-2 py-1 rounded text-[11px] text-left transition-all ${
-                                    activeNode.type === 'theory' && activeNode.chapterId === topic.id
-                                      ? 'bg-indigo-500/15 text-indigo-300 font-medium'
-                                      : 'text-slate-400 hover:text-slate-200 hover:bg-[#111724]'
-                                  }`}
-                                >
-                                  <BookOpen className="w-3 h-3 text-indigo-400 shrink-0" />
-                                  <span className="truncate">Theory & Models</span>
-                                </button>
+                                }}
+                                className={`topic-item flex items-center justify-between px-2 py-1.5 rounded-md text-xs cursor-pointer transition-all ${
+                                  isCurrentTopic
+                                    ? 'topic-item-active bg-[#1b1c38] text-white font-medium border border-indigo-500/40 shadow-sm'
+                                    : 'hover:bg-[#121326] text-slate-300 hover:text-white border border-transparent'
+                                }`}
+                              >
+                                <div className="flex items-center gap-2 min-w-0 pr-1">
+                                  <span className="topic-badge font-mono text-[10px] px-1.5 py-0.5 rounded bg-indigo-500/10 text-indigo-400 font-bold border border-indigo-500/25 shrink-0">
+                                    {topic.displayId}
+                                  </span>
+                                  <span className="topic-title truncate text-[11.5px]" title={topic.title}>
+                                    {topic.title}
+                                  </span>
+                                </div>
 
-                                {topic.hasCheatSheet && (
+                                <div className="flex items-center gap-1.5 shrink-0">
+                                  {bookmarkedIds.has(topic.id) && (
+                                    <Bookmark className="w-3 h-3 text-amber-400 fill-amber-400 shrink-0" />
+                                  )}
+                                  {topic.completed ? (
+                                    <span title="All tests passed" className="text-emerald-400 flex items-center">
+                                      <Check className="w-3 h-3" />
+                                    </span>
+                                  ) : (topic.passedTests ?? 0) > 0 ? (
+                                    <span className="text-[9.5px] text-amber-400 font-mono font-medium">
+                                      {topic.passedTests}/{topic.totalTests}
+                                    </span>
+                                  ) : (
+                                    <span className="text-[9.5px] text-slate-500 font-mono">
+                                      {topic.totalTests}
+                                    </span>
+                                  )}
+                                  {isOpen ? (
+                                    <ChevronDown className="w-3 h-3 text-slate-500" />
+                                  ) : (
+                                    <ChevronRight className="w-3 h-3 text-slate-500" />
+                                  )}
+                                </div>
+                              </div>
+
+                              {/* Grandchildren (Theory, Cheat Sheet, Workbooks — indented deeper) */}
+                              {isOpen && (
+                                <div className="topic-children-container ml-3 pl-2.5 py-1 my-1 space-y-0.5 border-l-2 border-indigo-500/25 bg-[#0e1122]/50 rounded-r-md">
                                   <button
                                     onClick={() =>
-                                      onSelectNode({
-                                        type: 'cheat_sheet',
-                                        volumeId: 'vol2',
-                                        chapterId: topic.id,
-                                      })
+                                      onSelectNode({ type: 'theory', volumeId: 'vol2', chapterId: topic.id })
                                     }
-                                    className={`w-full flex items-center gap-2 px-2 py-1 rounded text-[11px] text-left transition-all ${
-                                      activeNode.type === 'cheat_sheet' && activeNode.chapterId === topic.id
-                                        ? 'bg-amber-500/15 text-amber-300 font-medium'
+                                    className={`topic-sublink w-full flex items-center gap-2 px-2 py-1 rounded text-[11px] text-left transition-all ${
+                                      activeNode.type === 'theory' && activeNode.chapterId === topic.id
+                                        ? 'topic-sublink-active bg-indigo-500/15 text-indigo-300 font-medium'
                                         : 'text-slate-400 hover:text-slate-200 hover:bg-[#111724]'
                                     }`}
                                   >
-                                    <Zap className="w-3 h-3 text-amber-400 shrink-0" />
-                                    <span className="truncate">Revision Cheat Sheet</span>
+                                    <BookOpen className="w-3 h-3 text-indigo-400 shrink-0" />
+                                    <span className="truncate">Theory & Models</span>
                                   </button>
-                                )}
 
-                                <div className="pt-0.5 space-y-0.5">
-                                  {(['beginner', 'intermediate', 'champion'] as const).map((tier) => (
+                                  {topic.hasCheatSheet && (
                                     <button
-                                      key={tier}
                                       onClick={() =>
                                         onSelectNode({
-                                          type: 'workbook',
+                                          type: 'cheat_sheet',
                                           volumeId: 'vol2',
                                           chapterId: topic.id,
-                                          tier,
                                         })
                                       }
-                                      className={`w-full flex items-center justify-between px-2 py-1 rounded text-[11px] text-left transition-all ${
-                                        activeNode.type === 'workbook' &&
-                                        activeNode.chapterId === topic.id &&
-                                        activeNode.tier === tier
-                                          ? 'bg-indigo-500/15 text-indigo-300 font-medium'
+                                      className={`topic-sublink w-full flex items-center gap-2 px-2 py-1 rounded text-[11px] text-left transition-all ${
+                                        activeNode.type === 'cheat_sheet' && activeNode.chapterId === topic.id
+                                          ? 'topic-sublink-active bg-amber-500/15 text-amber-300 font-medium'
                                           : 'text-slate-400 hover:text-slate-200 hover:bg-[#111724]'
                                       }`}
                                     >
-                                      <div className="flex items-center gap-1.5 truncate">
-                                        <span
-                                          className={`w-1.5 h-1.5 rounded-full ${
-                                            topic.tiers[tier].status === 'passed'
-                                              ? 'bg-emerald-400'
-                                              : 'bg-slate-600'
-                                          }`}
-                                        />
-                                        <span className="truncate capitalize">{tier}</span>
-                                      </div>
-                                      <span className="text-[9.5px] font-mono text-slate-500">
-                                        {topic.tiers[tier].status === 'passed' ? 'Passed' : `${topic.tiers[tier].tests} tests`}
-                                      </span>
+                                      <Zap className="w-3 h-3 text-amber-400 shrink-0" />
+                                      <span className="truncate">Revision Cheat Sheet</span>
                                     </button>
-                                  ))}
+                                  )}
+
+                                  <div className="pt-0.5 space-y-0.5">
+                                    {(['beginner', 'intermediate', 'champion'] as const).map((tier) => (
+                                      <button
+                                        key={tier}
+                                        onClick={() =>
+                                          onSelectNode({
+                                            type: 'workbook',
+                                            volumeId: 'vol2',
+                                            chapterId: topic.id,
+                                            tier,
+                                          })
+                                        }
+                                        className={`topic-sublink w-full flex items-center justify-between px-2 py-1 rounded text-[11px] text-left transition-all ${
+                                          activeNode.type === 'workbook' &&
+                                          activeNode.chapterId === topic.id &&
+                                          activeNode.tier === tier
+                                            ? 'topic-sublink-active bg-indigo-500/15 text-indigo-300 font-medium'
+                                            : 'text-slate-400 hover:text-slate-200 hover:bg-[#111724]'
+                                        }`}
+                                      >
+                                        <div className="flex items-center gap-1.5 truncate">
+                                          <span
+                                            className={`w-1.5 h-1.5 rounded-full ${
+                                              topic.tiers[tier].status === 'passed'
+                                                ? 'bg-emerald-400'
+                                                : (topic.tiers[tier].testsPassed ?? 0) > 0
+                                                ? 'bg-amber-400'
+                                                : 'bg-slate-600'
+                                            }`}
+                                          />
+                                          <span className="truncate capitalize">{tier}</span>
+                                          {(topic.tiers[tier].newProblemsCount ?? 0) > 0 && (topic.tiers[tier].testsPassed ?? 0) > 0 && (
+                                            <span className="text-[9px] px-1 py-0.2 rounded bg-amber-500/20 text-amber-300 font-semibold border border-amber-500/30">
+                                              +{topic.tiers[tier].newProblemsCount} New
+                                            </span>
+                                          )}
+                                        </div>
+                                        <span className="text-[9.5px] font-mono text-slate-500">
+                                          {topic.tiers[tier].status === 'passed'
+                                            ? 'Passed'
+                                            : (topic.tiers[tier].testsPassed ?? 0) > 0
+                                            ? `${topic.tiers[tier].testsPassed}/${topic.tiers[tier].tests}`
+                                            : `${topic.tiers[tier].tests} tests`}
+                                        </span>
+                                      </button>
+                                    ))}
+                                  </div>
                                 </div>
-                              </div>
-                            )}
-                          </div>
-                        );
-                      })}
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
                     </div>
                   )}
                 </div>
@@ -924,168 +1107,209 @@ export function SidebarTree({
 
         {/* ===================== VOLUME 3: PRODUCTION KERNELS (7 MODULES) ===================== */}
         {activeVolume === 'vol3' && (
-          <div className="space-y-1">
+          <div className="space-y-2">
             {filteredKernelModules.map((mod: KernelModuleMeta) => {
               const isModOpen = openKernelModuleId === mod.id;
+              const statusInfo = getModuleStatus(mod.topics, mod.completed, mod.passedTests);
+              const style = getModuleStyle(statusInfo.status, 'amber');
 
               return (
-                <div key={mod.id} className="rounded-lg overflow-hidden border border-[#141b29] bg-[#0c1018]/60 mb-1">
-                  {/* Module Header */}
+                <div key={mod.id} className={`rounded-lg overflow-hidden border ${style.card} transition-all`}>
+                  {/* Module Header Row (Parent Level) */}
                   <div
                     onClick={() => toggleKernelModule(mod.id)}
-                    className="flex items-center justify-between px-2.5 py-1.5 cursor-pointer bg-[#0e1422] hover:bg-[#121929] transition-all"
+                    className={`flex items-center justify-between px-2.5 py-2 cursor-pointer transition-all ${style.header}`}
                   >
                     <div className="flex items-center gap-2 min-w-0 pr-1">
-                      <span className="font-mono text-[9px] px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-400 font-bold border border-amber-500/20 shrink-0">
+                      <span className={`font-mono text-[9px] px-1.5 py-0.5 rounded shrink-0 ${style.badge}`}>
                         K{mod.displayNum}
                       </span>
-                      <span className="truncate text-xs font-semibold text-slate-200" title={mod.displayTitle}>
+                      <span className={`truncate text-xs ${style.title}`} title={mod.displayTitle}>
                         {mod.displayTitle}
                       </span>
                     </div>
 
                     <div className="flex items-center gap-1.5 shrink-0">
-                      <span className="text-[10px] text-slate-500 font-mono">
-                        {mod.topics.length}
-                      </span>
-                      {isModOpen ? (
-                        <ChevronDown className="w-3 h-3 text-slate-400" />
+                      {statusInfo.status === 'completed' ? (
+                        <span
+                          title="All topics in this module completed"
+                          className="flex items-center gap-1 text-[9px] font-mono px-1.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-bold"
+                        >
+                          <Check className="w-2.5 h-2.5 stroke-[3]" /> Mastered
+                        </span>
+                      ) : statusInfo.status === 'in_progress' ? (
+                        <span
+                          title={`${statusInfo.completedTopics} of ${statusInfo.totalTopics} topics mastered (${statusInfo.passedTests} tests passed)`}
+                          className="flex items-center gap-1 text-[9px] font-mono px-1.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40 font-bold"
+                        >
+                          <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
+                          {statusInfo.completedTopics}/{statusInfo.totalTopics}
+                        </span>
                       ) : (
-                        <ChevronRight className="w-3 h-3 text-slate-400" />
+                        <span
+                          title="Pending module"
+                          className="text-[9px] font-mono px-1.5 py-0.5 rounded-full bg-slate-800/80 text-slate-500 border border-slate-700/40"
+                        >
+                          0/{statusInfo.totalTopics}
+                        </span>
+                      )}
+
+                      {isModOpen ? (
+                        <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
+                      ) : (
+                        <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
                       )}
                     </div>
                   </div>
 
-                  {/* Module Topics */}
+                  {/* Module Topics (Child Level — visibly indented with tree guide line) */}
                   {isModOpen && (
-                    <div className="p-1 space-y-1 border-t border-[#141b29]">
-                      {mod.topics.map((topic: KernelTopicMeta) => {
-                        const isOpen = openKernelTopicId === topic.id;
-                        const isCurrentTopic = activeNode.chapterId === topic.id;
+                    <div className="module-topics-container pt-1.5 pb-2 pl-3.5 pr-1.5 bg-[#06080e]/70 border-t border-[#141b29]/80">
+                      <div className={`space-y-1 pl-2.5 border-l-2 ${style.treeLine}`}>
+                        {mod.topics.map((topic: KernelTopicMeta) => {
+                          const isOpen = openKernelTopicId === topic.id;
+                          const isCurrentTopic = activeNode.chapterId === topic.id;
 
-                        return (
-                          <div key={topic.id} className="rounded-md overflow-hidden transition-all">
-                            <div
-                              onClick={() => {
-                                toggleKernelTopic(topic.id);
-                                if (!isOpen) {
-                                  onSelectNode({ type: 'theory', volumeId: 'vol3', chapterId: topic.id });
-                                }
-                              }}
-                              className={`flex items-center justify-between px-2 py-1.5 rounded-md text-xs cursor-pointer transition-all ${
-                                isCurrentTopic
-                                  ? 'bg-[#151f30] text-slate-100 font-medium'
-                                  : 'hover:bg-[#101622] text-slate-300'
-                              }`}
-                            >
-                              <div className="flex items-center gap-2 min-w-0 pr-1">
-                                <span className="font-mono text-[10px] text-amber-400 font-bold shrink-0">
-                                  {topic.displayId}
-                                </span>
-                                <span className="truncate text-[11.5px]" title={topic.title}>
-                                  {topic.title}
-                                </span>
-                              </div>
-
-                              <div className="flex items-center gap-1.5 shrink-0">
-                                {bookmarkedIds.has(topic.id) && (
-                                  <Bookmark className="w-3 h-3 text-amber-400 fill-amber-400 shrink-0" />
-                                )}
-                                {topic.completed ? (
-                                  <span title="All tests passed" className="text-emerald-400 flex items-center">
-                                    <Check className="w-3 h-3" />
-                                  </span>
-                                ) : (
-                                  <span className="text-[9.5px] text-slate-500 font-mono">
-                                    {topic.totalTests}
-                                  </span>
-                                )}
-                                {isOpen ? (
-                                  <ChevronDown className="w-3 h-3 text-slate-500" />
-                                ) : (
-                                  <ChevronRight className="w-3 h-3 text-slate-500" />
-                                )}
-                              </div>
-                            </div>
-
-                            {/* Subitems */}
-                            {isOpen && (
-                              <div className="ml-3 pl-2 py-1 my-0.5 space-y-0.5 border-l border-[#1a2333]">
-                                <button
-                                  onClick={() =>
-                                    onSelectNode({ type: 'theory', volumeId: 'vol3', chapterId: topic.id })
+                          return (
+                            <div key={topic.id} className="rounded-md overflow-hidden transition-all">
+                              {/* Topic Header (Child Item) */}
+                              <div
+                                onClick={() => {
+                                  toggleKernelTopic(topic.id);
+                                  if (!isOpen) {
+                                    onSelectNode({ type: 'theory', volumeId: 'vol3', chapterId: topic.id });
                                   }
-                                  className={`w-full flex items-center gap-2 px-2 py-1 rounded text-[11px] text-left transition-all ${
-                                    activeNode.type === 'theory' && activeNode.chapterId === topic.id
-                                      ? 'bg-amber-500/15 text-amber-300 font-medium'
-                                      : 'text-slate-400 hover:text-slate-200 hover:bg-[#111724]'
-                                  }`}
-                                >
-                                  <BookOpen className="w-3 h-3 text-amber-400 shrink-0" />
-                                  <span className="truncate">Theory & Mental Model</span>
-                                </button>
+                                }}
+                                className={`topic-item flex items-center justify-between px-2 py-1.5 rounded-md text-xs cursor-pointer transition-all ${
+                                  isCurrentTopic
+                                    ? 'topic-item-active bg-[#291e0e] text-white font-medium border border-amber-500/40 shadow-sm'
+                                    : 'hover:bg-[#1a1409] text-slate-300 hover:text-white border border-transparent'
+                                }`}
+                              >
+                                <div className="flex items-center gap-2 min-w-0 pr-1">
+                                  <span className="topic-badge font-mono text-[10px] px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-400 font-bold border border-amber-500/25 shrink-0">
+                                    {topic.displayId}
+                                  </span>
+                                  <span className="topic-title truncate text-[11.5px]" title={topic.title}>
+                                    {topic.title}
+                                  </span>
+                                </div>
 
-                                {topic.hasCheatSheet && (
+                                <div className="flex items-center gap-1.5 shrink-0">
+                                  {bookmarkedIds.has(topic.id) && (
+                                    <Bookmark className="w-3 h-3 text-amber-400 fill-amber-400 shrink-0" />
+                                  )}
+                                  {topic.completed ? (
+                                    <span title="All tests passed" className="text-emerald-400 flex items-center">
+                                      <Check className="w-3 h-3" />
+                                    </span>
+                                  ) : (topic.passedTests ?? 0) > 0 ? (
+                                    <span className="text-[9.5px] text-amber-400 font-mono font-medium">
+                                      {topic.passedTests}/{topic.totalTests}
+                                    </span>
+                                  ) : (
+                                    <span className="text-[9.5px] text-slate-500 font-mono">
+                                      {topic.totalTests}
+                                    </span>
+                                  )}
+                                  {isOpen ? (
+                                    <ChevronDown className="w-3 h-3 text-slate-500" />
+                                  ) : (
+                                    <ChevronRight className="w-3 h-3 text-slate-500" />
+                                  )}
+                                </div>
+                              </div>
+
+                              {/* Grandchildren (Theory, Cheat Sheet, Workbooks — indented deeper) */}
+                              {isOpen && (
+                                <div className="topic-children-container ml-3 pl-2.5 py-1 my-1 space-y-0.5 border-l-2 border-amber-500/25 bg-[#17120a]/50 rounded-r-md">
                                   <button
                                     onClick={() =>
-                                      onSelectNode({
-                                        type: 'cheat_sheet',
-                                        volumeId: 'vol3',
-                                        chapterId: topic.id,
-                                      })
+                                      onSelectNode({ type: 'theory', volumeId: 'vol3', chapterId: topic.id })
                                     }
-                                    className={`w-full flex items-center gap-2 px-2 py-1 rounded text-[11px] text-left transition-all ${
-                                      activeNode.type === 'cheat_sheet' && activeNode.chapterId === topic.id
-                                        ? 'bg-amber-500/15 text-amber-300 font-medium'
+                                    className={`topic-sublink w-full flex items-center gap-2 px-2 py-1 rounded text-[11px] text-left transition-all ${
+                                      activeNode.type === 'theory' && activeNode.chapterId === topic.id
+                                        ? 'topic-sublink-active bg-amber-500/15 text-amber-300 font-medium'
                                         : 'text-slate-400 hover:text-slate-200 hover:bg-[#111724]'
                                     }`}
                                   >
-                                    <Zap className="w-3 h-3 text-amber-400 shrink-0" />
-                                    <span className="truncate">Revision Cheat Sheet</span>
+                                    <BookOpen className="w-3 h-3 text-amber-400 shrink-0" />
+                                    <span className="truncate">Theory & Mental Model</span>
                                   </button>
-                                )}
 
-                                <div className="pt-0.5 space-y-0.5">
-                                  {(['beginner', 'intermediate', 'champion'] as const).map((tier) => (
+                                  {topic.hasCheatSheet && (
                                     <button
-                                      key={tier}
                                       onClick={() =>
                                         onSelectNode({
-                                          type: 'workbook',
+                                          type: 'cheat_sheet',
                                           volumeId: 'vol3',
                                           chapterId: topic.id,
-                                          tier,
                                         })
                                       }
-                                      className={`w-full flex items-center justify-between px-2 py-1 rounded text-[11px] text-left transition-all ${
-                                        activeNode.type === 'workbook' &&
-                                        activeNode.chapterId === topic.id &&
-                                        activeNode.tier === tier
-                                          ? 'bg-amber-500/15 text-amber-300 font-medium'
+                                      className={`topic-sublink w-full flex items-center gap-2 px-2 py-1 rounded text-[11px] text-left transition-all ${
+                                        activeNode.type === 'cheat_sheet' && activeNode.chapterId === topic.id
+                                          ? 'topic-sublink-active bg-amber-500/15 text-amber-300 font-medium'
                                           : 'text-slate-400 hover:text-slate-200 hover:bg-[#111724]'
                                       }`}
                                     >
-                                      <div className="flex items-center gap-1.5 truncate">
-                                        <span
-                                          className={`w-1.5 h-1.5 rounded-full ${
-                                            topic.tiers[tier].status === 'passed'
-                                              ? 'bg-emerald-400'
-                                              : 'bg-slate-600'
-                                          }`}
-                                        />
-                                        <span className="truncate capitalize">{tier}</span>
-                                      </div>
-                                      <span className="text-[9.5px] font-mono text-slate-500">
-                                        {topic.tiers[tier].status === 'passed' ? 'Passed' : `${topic.tiers[tier].tests} tests`}
-                                      </span>
+                                      <Zap className="w-3 h-3 text-amber-400 shrink-0" />
+                                      <span className="truncate">Revision Cheat Sheet</span>
                                     </button>
-                                  ))}
+                                  )}
+
+                                  <div className="pt-0.5 space-y-0.5">
+                                    {(['beginner', 'intermediate', 'champion'] as const).map((tier) => (
+                                      <button
+                                        key={tier}
+                                        onClick={() =>
+                                          onSelectNode({
+                                            type: 'workbook',
+                                            volumeId: 'vol3',
+                                            chapterId: topic.id,
+                                            tier,
+                                          })
+                                        }
+                                        className={`topic-sublink w-full flex items-center justify-between px-2 py-1 rounded text-[11px] text-left transition-all ${
+                                          activeNode.type === 'workbook' &&
+                                          activeNode.chapterId === topic.id &&
+                                          activeNode.tier === tier
+                                            ? 'topic-sublink-active bg-amber-500/15 text-amber-300 font-medium'
+                                            : 'text-slate-400 hover:text-slate-200 hover:bg-[#111724]'
+                                        }`}
+                                      >
+                                        <div className="flex items-center gap-1.5 truncate">
+                                          <span
+                                            className={`w-1.5 h-1.5 rounded-full ${
+                                              topic.tiers[tier].status === 'passed'
+                                                ? 'bg-emerald-400'
+                                                : (topic.tiers[tier].testsPassed ?? 0) > 0
+                                                ? 'bg-amber-400'
+                                                : 'bg-slate-600'
+                                            }`}
+                                          />
+                                          <span className="truncate capitalize">{tier}</span>
+                                          {(topic.tiers[tier].newProblemsCount ?? 0) > 0 && (topic.tiers[tier].testsPassed ?? 0) > 0 && (
+                                            <span className="text-[9px] px-1 py-0.2 rounded bg-amber-500/20 text-amber-300 font-semibold border border-amber-500/30">
+                                              +{topic.tiers[tier].newProblemsCount} New
+                                            </span>
+                                          )}
+                                        </div>
+                                        <span className="text-[9.5px] font-mono text-slate-500">
+                                          {topic.tiers[tier].status === 'passed'
+                                            ? 'Passed'
+                                            : (topic.tiers[tier].testsPassed ?? 0) > 0
+                                            ? `${topic.tiers[tier].testsPassed}/${topic.tiers[tier].tests}`
+                                            : `${topic.tiers[tier].tests} tests`}
+                                        </span>
+                                      </button>
+                                    ))}
+                                  </div>
                                 </div>
-                              </div>
-                            )}
-                          </div>
-                        );
-                      })}
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
                     </div>
                   )}
                 </div>
@@ -1093,6 +1317,12 @@ export function SidebarTree({
             })}
           </div>
         )}
+      </div>
+
+      {/* Sidebar Footer with Theme Selector */}
+      <div className="p-2 border-t border-[#1a202c] bg-[#0b0e14] flex items-center justify-between shrink-0">
+        <ThemeToggle variant="sidebar" />
+        <span className="text-[10px] font-mono text-slate-500">⌘S format+save</span>
       </div>
     </aside>
   );
