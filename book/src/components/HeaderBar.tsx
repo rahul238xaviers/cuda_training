@@ -74,6 +74,20 @@ export function HeaderBar({
       );
     }
 
+    if (activeNode.type === 'practice') {
+      const fileName = activeNode.practiceKernel || 'gpu_check.cu';
+      return (
+        <div className="flex items-center gap-1.5 text-xs text-slate-400">
+          <Terminal className="w-3.5 h-3.5 text-teal-400" />
+          <span>Open Practice</span>
+          <span className="text-slate-600">/</span>
+          <span className="text-slate-300 font-medium">kernels/practice</span>
+          <span className="text-slate-600">/</span>
+          <span className="text-teal-300 font-mono font-medium">{fileName}</span>
+        </div>
+      );
+    }
+
     if (activeNode.type === 'playground') {
       const pgType = activeNode.playgroundType || 'cpp';
       const pgNames = {
@@ -225,6 +239,12 @@ export function HeaderBar({
           </div>
         )}
 
+        {activeNode.type === 'practice' && (
+          <span className="text-xs px-2.5 py-1 rounded-full bg-teal-500/10 text-teal-400 border border-teal-500/20 font-mono">
+            nvcc -O3 -std=c++17 --extended-lambda (Open Practice)
+          </span>
+        )}
+
         {activeNode.type === 'playground' && (
           <span className="text-xs px-2.5 py-1 rounded-full bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 font-mono">
             {activeNode.playgroundType === 'cuda'
@@ -352,8 +372,8 @@ export function HeaderBar({
           </>
         )}
 
-        {/* Playground Mode Actions */}
-        {activeNode.type === 'playground' && (
+        {/* Playground / Practice Mode Actions */}
+        {(activeNode.type === 'playground' || activeNode.type === 'practice') && (
           <>
             {onClearConsole && (
               <button
@@ -370,12 +390,20 @@ export function HeaderBar({
               disabled={isRunning}
               className={`header-action-btn btn-run h-8 px-3.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all shadow-md ${
                 isRunning
-                  ? 'bg-sky-700/50 text-sky-200 cursor-not-allowed'
+                  ? 'bg-teal-700/50 text-teal-200 cursor-not-allowed'
+                  : activeNode.type === 'practice'
+                  ? 'bg-teal-600 hover:bg-teal-500 text-white shadow-teal-900/30'
                   : 'bg-sky-600 hover:bg-sky-500 text-white shadow-sky-900/30'
               }`}
             >
               <Play className={`w-3.5 h-3.5 ${isRunning ? 'animate-spin' : ''}`} />
-              <span>{isRunning ? 'Running Sandbox...' : 'Run Sandbox'}</span>
+              <span>
+                {isRunning
+                  ? 'Running...'
+                  : activeNode.type === 'practice'
+                  ? 'Run Kernel (nvcc)'
+                  : 'Run Sandbox'}
+              </span>
             </button>
           </>
         )}

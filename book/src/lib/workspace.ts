@@ -9,8 +9,14 @@ import { autoSyncWorkbookSolution } from './autoSync';
 
 export const WORKSPACE_ROOT = path.resolve(process.cwd(), '..');
 export const SRC_DIR = path.join(WORKSPACE_ROOT, 'src');
-export const MODULE1_DIR = path.join(SRC_DIR, 'module1');
-export const KERNELS_DIR = path.join(SRC_DIR, 'kernels');
+export const CPP_SYSTEMS_DIR = path.join(SRC_DIR, 'cpp_systems');
+export const CUDA_SYSTEMS_DIR = path.join(SRC_DIR, 'cuda_systems');
+export const GPU_KERNELS_DIR = path.join(SRC_DIR, 'gpu_kernels');
+export const PRACTICE_DIR = path.join(WORKSPACE_ROOT, 'kernels', 'practice');
+
+// Backwards compatibility aliases
+export const MODULE1_DIR = CPP_SYSTEMS_DIR;
+export const KERNELS_DIR = GPU_KERNELS_DIR;
 export const SANDBOX_DIR = path.join(WORKSPACE_ROOT, 'sandbox', 'runs');
 
 export const PLAYGROUND_CPP_PATH = path.join(WORKSPACE_ROOT, 'playground.cpp');
@@ -61,6 +67,100 @@ export function getPlaygroundInfo(type: PlaygroundType = 'cpp'): PlaygroundInfo 
     subtitle: 'Zero-cost abstractions & low-level memory playground',
     language: 'cpp',
     ext: 'cpp',
+  };
+}
+
+export interface PracticeKernelMeta {
+  id: string;
+  filename: string;
+  title: string;
+  subtitle: string;
+  filePath: string;
+  language: 'cuda';
+  ext: 'cu';
+}
+
+export const PRACTICE_KERNEL_METADATA: Record<string, { title: string; subtitle: string }> = {
+  'gpu_check.cu': {
+    title: 'GPU Hardware Query',
+    subtitle: 'Inspect device properties, compute capability, SM count & memory bandwidth limits',
+  },
+  'grid_stride_loop.cu': {
+    title: 'Grid-Stride Loop Pattern',
+    subtitle: 'Flexible 1D grid-stride loop pattern decoupling workload size from grid configuration',
+  },
+  'matrixAddKernel.cu': {
+    title: '2D Matrix Addition',
+    subtitle: '2D grid and block coordinate mapping for element-wise matrix addition',
+  },
+  'reduce_block.cu': {
+    title: 'Block-Level Reduction',
+    subtitle: 'Intra-block parallel tree reduction using shared memory and __syncthreads()',
+  },
+  'reduce_two_stage.cu': {
+    title: 'Two-Stage Grid Reduction',
+    subtitle: 'Hierarchical multi-block reduction with atomic/grid intermediate buffer accumulation',
+  },
+  'register_pressure_kernel.cu': {
+    title: 'Register Pressure & Spilling Lab',
+    subtitle: 'Analyze register allocation per thread, spill limits, and warp occupancy trade-offs',
+  },
+  'tile_reverse.cu': {
+    title: 'Shared Memory Tile Reverse',
+    subtitle: 'Coalesced global loads, SRAM bank-conscious tile reversal, and coalesced writeback',
+  },
+  'vector_add.cu': {
+    title: 'Vector Addition Baseline',
+    subtitle: 'Fundamental 1D memory access pattern and thread index calculation',
+  },
+  'vector_dot_reduction.cu': {
+    title: 'Vector Dot Product & Reduction',
+    subtitle: 'Fused element-wise product and parallel reduction with warp shuffles and SRAM',
+  },
+};
+
+export function scanPracticeKernels(): PracticeKernelMeta[] {
+  if (!fs.existsSync(PRACTICE_DIR)) return [];
+
+  const files = fs.readdirSync(PRACTICE_DIR).filter((f) => f.endsWith('.cu'));
+  files.sort();
+
+  return files.map((filename) => {
+    const meta = PRACTICE_KERNEL_METADATA[filename] || {
+      title: filename.replace('.cu', '').replace(/[_-]/g, ' '),
+      subtitle: 'Open CUDA practice and logic experimentation kernel',
+    };
+
+    return {
+      id: filename.replace('.cu', ''),
+      filename,
+      title: meta.title,
+      subtitle: meta.subtitle,
+      filePath: path.join('kernels', 'practice', filename),
+      language: 'cuda',
+      ext: 'cu',
+    };
+  });
+}
+
+export function getPracticeKernelInfo(fileOrId: string): PracticeKernelMeta | null {
+  const filename = fileOrId.endsWith('.cu') ? fileOrId : `${fileOrId}.cu`;
+  const filePath = path.join(PRACTICE_DIR, filename);
+  if (!fs.existsSync(filePath)) return null;
+
+  const meta = PRACTICE_KERNEL_METADATA[filename] || {
+    title: filename.replace('.cu', '').replace(/[_-]/g, ' '),
+    subtitle: 'Open CUDA practice and logic experimentation kernel',
+  };
+
+  return {
+    id: filename.replace('.cu', ''),
+    filename,
+    title: meta.title,
+    subtitle: meta.subtitle,
+    filePath,
+    language: 'cuda',
+    ext: 'cu',
   };
 }
 
@@ -415,7 +515,7 @@ export function scanDynamicCudaModules(): CudaModuleMeta[] {
     const displayNum = mDef.num;
     const displayId = String(displayNum);
     const modFolder = `module${m}`;
-    const modDir = path.join(SRC_DIR, modFolder);
+    const modDir = path.join(CUDA_SYSTEMS_DIR, modFolder);
     if (!fs.existsSync(modDir)) continue;
 
     const entries = fs.readdirSync(modDir, { withFileTypes: true });
@@ -877,7 +977,7 @@ export function getTopicLocation(id: string, volumeId?: string): TopicLocation |
     if (modNum !== null && topicIndex !== null) {
       const targetId = `${modNum}.${topicIndex}`;
       const modFolder = `module${modNum}`;
-      const modDir = path.join(SRC_DIR, modFolder);
+      const modDir = path.join(CUDA_SYSTEMS_DIR, modFolder);
       if (fs.existsSync(modDir)) {
         const entries = fs.readdirSync(modDir, { withFileTypes: true });
         const folderEntry = entries.find(
@@ -916,14 +1016,14 @@ export function getTopicLocation(id: string, volumeId?: string): TopicLocation |
     }
   }
 
-  // Case C: Volume 1 C++ Systems (module1/1.x_...)
+  // Case C: Volume 1 C++ Systems (src/cpp_systems/1.x_...)
   const match = id.match(/^1\.(\d+)/);
   if (!match) return null;
 
   const topicIndex = match[1];
   const targetId = `1.${topicIndex}`;
-  const modFolder = 'module1';
-  const modDir = path.join(SRC_DIR, modFolder);
+  const modFolder = 'cpp_systems';
+  const modDir = CPP_SYSTEMS_DIR;
   if (!fs.existsSync(modDir)) return null;
 
   const entries = fs.readdirSync(modDir, { withFileTypes: true });

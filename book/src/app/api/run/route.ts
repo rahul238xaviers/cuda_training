@@ -7,6 +7,7 @@ import {
   SANDBOX_DIR,
   getTopicLocation,
   getPlaygroundInfo,
+  getPracticeKernelInfo,
   countTestsInWorkbook,
   PlaygroundType,
 } from '@/lib/workspace';
@@ -34,7 +35,25 @@ export async function POST(request: NextRequest) {
     let topicLocation: any = null;
 
     // 1. Identify Target Execution Context
-    if (type === 'playground') {
+    if (type === 'practice') {
+      const targetFile = body.practiceKernel || body.file || body.filename || 'gpu_check.cu';
+      const kInfo = getPracticeKernelInfo(targetFile);
+      if (!kInfo) {
+        return NextResponse.json(
+          { success: false, stage: 'setup', stderr: `Practice kernel ${targetFile} not found` },
+          { status: 404 }
+        );
+      }
+      isCuda = true;
+      isKernel = false;
+      sourceFileName = `sandbox_${kInfo.filename}`;
+      displayTitle = kInfo.title;
+
+      // Persist to user's practice kernel file
+      if (typeof code === 'string') {
+        fs.writeFileSync(kInfo.filePath, code, 'utf-8');
+      }
+    } else if (type === 'playground') {
       const pgInfo = getPlaygroundInfo(playgroundType as PlaygroundType);
       isCuda = pgInfo.ext === 'cu';
       isKernel = pgInfo.type === 'kernel';
@@ -81,7 +100,14 @@ export async function POST(request: NextRequest) {
 
     const sourceContent = typeof code === 'string'
       ? code
-      : fs.readFileSync(type === 'playground' ? getPlaygroundInfo(playgroundType as PlaygroundType).filePath : path.join(topicLocation.fullPath, target, `${tier}_workbook.${topicLocation.ext}`), 'utf-8');
+      : fs.readFileSync(
+          type === 'practice'
+            ? getPracticeKernelInfo(body.practiceKernel || body.file || 'gpu_check.cu')!.filePath
+            : type === 'playground'
+            ? getPlaygroundInfo(playgroundType as PlaygroundType).filePath
+            : path.join(topicLocation.fullPath, target, `${tier}_workbook.${topicLocation.ext}`),
+          'utf-8'
+        );
 
     fs.writeFileSync(sandboxSourceFile, sourceContent, 'utf-8');
 

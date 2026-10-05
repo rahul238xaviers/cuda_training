@@ -20,7 +20,7 @@ Write each kernel by hand — the point is the pattern lands in your hands.
 
 **Compile** for every lab:
 ```
-nvcc -O2 -arch=sm_75 --ptxas-options=-v src/cuda/<file>.cu -o output/<bin>
+nvcc -O2 -arch=sm_75 --ptxas-options=-v kernels/practice/<file>.cu -o output/<bin>
 ```
 Read the ptxas register/spill line after every build.
 

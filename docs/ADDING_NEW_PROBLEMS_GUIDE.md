@@ -28,7 +28,10 @@ Whenever a new problem is added, follow these four steps in order:
 
 ### Step 1: Write the Exercise Stub in `exercise/`
 
-Open `src/module<M>/<chapter_folder>/exercise/<tier>_workbook.cpp` (or `.cu`).
+Open the target workbook:
+* Volume 1: `src/cpp_systems/<chapter_folder>/exercise/<tier>_workbook.cpp`
+* Volume 2: `src/cuda_systems/<module_folder>/<chapter_folder>/exercise/<tier>_workbook.cu`
+* Volume 3: `src/gpu_kernels/<module_folder>/<kernel_folder>/exercise/<tier>_workbook.cu`
 
 Place the new problem block in sequential order (e.g., if Problems 1 to 3 exist, add Problem 4 before the scorecard block):
 
@@ -113,7 +116,10 @@ Add or update the chapter entry under `chapters.<chapterId>.<tier>`:
 
 ### Step 3: Implement the Solution in `solution/`
 
-Open `src/module<M>/<chapter_folder>/solution/<tier>_workbook.cpp` (or `.cu`).
+Open the matching workbook in `solution/`:
+* Volume 1: `src/cpp_systems/<chapter_folder>/solution/<tier>_workbook.cpp`
+* Volume 2: `src/cuda_systems/<module_folder>/<chapter_folder>/solution/<tier>_workbook.cu`
+* Volume 3: `src/gpu_kernels/<module_folder>/<kernel_folder>/solution/<tier>_workbook.cu`
 
 Add the working reference solution inside the problem block:
 
@@ -137,11 +143,11 @@ Add the working reference solution inside the problem block:
 Compile and run the updated workbook to ensure zero compiler warnings and clean execution:
 
 ```bash
-# For C++ Workbooks:
-clang++ -std=c++20 -O3 src/module<M>/<chapter>/solution/<tier>_workbook.cpp -o output/workbook_test && ./output/workbook_test
+# For Volume 1 C++ Workbooks:
+clang++ -std=c++20 -O3 src/cpp_systems/<chapter>/solution/<tier>_workbook.cpp -o output/workbook_test && ./output/workbook_test
 
-# For CUDA Workbooks (on NVIDIA machine):
-nvcc -O3 -std=c++17 src/module<M>/<chapter>/solution/<tier>_workbook.cu -o output/cuda_test && ./output/cuda_test
+# For Volume 2 & 3 CUDA Workbooks (on NVIDIA machine):
+nvcc -O3 -std=c++17 src/cuda_systems/<module>/<chapter>/solution/<tier>_workbook.cu -o output/cuda_test && ./output/cuda_test
 ```
 
 Verify in the web app (`http://localhost:3000`):

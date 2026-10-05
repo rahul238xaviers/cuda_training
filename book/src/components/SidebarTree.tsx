@@ -17,6 +17,10 @@ import {
   PanelLeftOpen,
   Compass,
   Bookmark,
+  Code2,
+  Plus,
+  Trash2,
+  X,
 } from 'lucide-react';
 import { getBookmarks } from '@/lib/annotations';
 import { ThemeToggle } from './ThemeToggle';
@@ -28,9 +32,10 @@ import {
   KernelModuleMeta,
   KernelTopicMeta,
   PlaygroundType,
+  PracticeKernelMeta,
 } from '@/lib/workspace';
 
-export type ActiveNodeType = 'theory' | 'cheat_sheet' | 'workbook' | 'playground' | 'kernel' | 'guide';
+export type ActiveNodeType = 'theory' | 'cheat_sheet' | 'workbook' | 'playground' | 'kernel' | 'guide' | 'practice';
 
 export interface ActiveNode {
   type: ActiveNodeType;
@@ -39,6 +44,7 @@ export interface ActiveNode {
   tier?: 'beginner' | 'intermediate' | 'champion';
   kernelId?: number;
   playgroundType?: PlaygroundType;
+  practiceKernel?: string;
 }
 
 interface SidebarTreeProps {
@@ -142,6 +148,102 @@ export function SidebarTree({
   // Multi-Playground Menu Dropdown
   const [isPlaygroundMenuOpen, setIsPlaygroundMenuOpen] = useState(false);
   const playgroundDropdownRef = useRef<HTMLDivElement>(null);
+
+  // Top-Level Navigation Mode: 'curriculum' vs 'practice'
+  const [navMode, setNavMode] = useState<'curriculum' | 'practice'>(
+    activeNode.type === 'practice' ? 'practice' : 'curriculum'
+  );
+
+  // Sync navMode when activeNode changes externally
+  useEffect(() => {
+    if (activeNode.type === 'practice') {
+      setNavMode('practice');
+    } else if (activeNode.type === 'theory' || activeNode.type === 'workbook' || activeNode.type === 'guide') {
+      setNavMode('curriculum');
+    }
+  }, [activeNode.type]);
+
+  const practiceKernels: PracticeKernelMeta[] = treeData?.practiceKernels || [];
+
+  // Practice Lab state: new kernel creator & search query
+  const [isCreatingKernel, setIsCreatingKernel] = useState(false);
+  const [newKernelName, setNewKernelName] = useState('');
+  const [practiceSearchQuery, setPracticeSearchQuery] = useState('');
+  const [isCreatingLoading, setIsCreatingLoading] = useState(false);
+  const [createError, setCreateError] = useState('');
+  const [deleteConfirmFile, setDeleteConfirmFile] = useState<string | null>(null);
+
+  const handleCreateNewKernel = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    const name = newKernelName.trim();
+    if (!name) return;
+
+    setIsCreatingLoading(true);
+    setCreateError('');
+    try {
+      const res = await fetch('/api/save', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: 'create_practice_kernel',
+          filename: name,
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setNewKernelName('');
+        setIsCreatingKernel(false);
+        onRefreshTree?.();
+        selectPracticeKernel(data.filename);
+      } else {
+        setCreateError(data.error || 'Failed to create kernel');
+      }
+    } catch (err: any) {
+      setCreateError(err.message || 'Network error');
+    } finally {
+      setIsCreatingLoading(false);
+    }
+  };
+
+  const handleDeleteKernel = async (filename: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    try {
+      const res = await fetch('/api/save', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: 'delete_practice_kernel',
+          filename,
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setDeleteConfirmFile(null);
+        onRefreshTree?.();
+        if (activeNode.type === 'practice' && activeNode.practiceKernel === filename) {
+          const remaining = practiceKernels.filter((k) => k.filename !== filename);
+          if (remaining.length > 0) {
+            selectPracticeKernel(remaining[0].filename);
+          } else {
+            setNavMode('curriculum');
+          }
+        }
+      }
+    } catch (err) {
+      console.error('Delete kernel failed:', err);
+    }
+  };
+
+  const filteredPracticeKernels = useMemo(() => {
+    if (!practiceSearchQuery.trim()) return practiceKernels;
+    const q = practiceSearchQuery.toLowerCase();
+    return practiceKernels.filter(
+      (k) =>
+        k.filename.toLowerCase().includes(q) ||
+        k.title.toLowerCase().includes(q) ||
+        k.subtitle.toLowerCase().includes(q)
+    );
+  }, [practiceKernels, practiceSearchQuery]);
 
   // Bookmarks Tracking
   const [bookmarkedIds, setBookmarkedIds] = useState<Set<string>>(new Set());
@@ -337,6 +439,15 @@ export function SidebarTree({
     });
   };
 
+  const selectPracticeKernel = (filename: string) => {
+    setIsPlaygroundMenuOpen(false);
+    onSelectNode({
+      type: 'practice',
+      volumeId: 'practice',
+      practiceKernel: filename,
+    });
+  };
+
   if (isCollapsed) {
     return (
       <div className="w-12 h-full bg-[#0a0d14] border-r border-[#1a2333] flex flex-col items-center py-3 select-none z-20">
@@ -351,11 +462,14 @@ export function SidebarTree({
           <button
             onClick={() => {
               onToggleCollapse?.();
+              setNavMode('curriculum');
               setActiveVolume('vol1');
             }}
             title="Volume 1: C++ Systems"
             className={`p-2 rounded-lg text-xs font-mono transition-all ${
-              activeVolume === 'vol1' ? 'bg-[#162032] text-sky-300 font-bold' : 'text-slate-500 hover:text-slate-300'
+              navMode === 'curriculum' && activeVolume === 'vol1'
+                ? 'bg-[#162032] text-sky-300 font-bold'
+                : 'text-slate-500 hover:text-slate-300'
             }`}
           >
             C++
@@ -363,11 +477,14 @@ export function SidebarTree({
           <button
             onClick={() => {
               onToggleCollapse?.();
+              setNavMode('curriculum');
               setActiveVolume('vol2');
             }}
             title="Volume 2: CUDA"
             className={`p-2 rounded-lg text-xs font-mono transition-all ${
-              activeVolume === 'vol2' ? 'bg-[#162032] text-indigo-300 font-bold' : 'text-slate-500 hover:text-slate-300'
+              navMode === 'curriculum' && activeVolume === 'vol2'
+                ? 'bg-[#162032] text-indigo-300 font-bold'
+                : 'text-slate-500 hover:text-slate-300'
             }`}
           >
             CU
@@ -375,14 +492,35 @@ export function SidebarTree({
           <button
             onClick={() => {
               onToggleCollapse?.();
+              setNavMode('curriculum');
               setActiveVolume('vol3');
             }}
             title="Volume 3: Kernels"
             className={`p-2 rounded-lg text-xs font-mono transition-all ${
-              activeVolume === 'vol3' ? 'bg-[#162032] text-amber-300 font-bold' : 'text-slate-500 hover:text-slate-300'
+              navMode === 'curriculum' && activeVolume === 'vol3'
+                ? 'bg-[#162032] text-amber-300 font-bold'
+                : 'text-slate-500 hover:text-slate-300'
             }`}
           >
             KN
+          </button>
+          <div className="w-5 h-[1px] bg-[#21262d] my-1" />
+          <button
+            onClick={() => {
+              onToggleCollapse?.();
+              setNavMode('practice');
+              if (practiceKernels.length > 0) {
+                selectPracticeKernel(practiceKernels[0].filename);
+              }
+            }}
+            title="Open Practice Lab (kernels/practice)"
+            className={`p-2 rounded-lg text-xs font-mono transition-all ${
+              navMode === 'practice'
+                ? 'bg-teal-500/20 text-teal-300 font-bold border border-teal-500/40'
+                : 'text-slate-500 hover:text-teal-400'
+            }`}
+          >
+            <Code2 className="w-4 h-4" />
           </button>
         </div>
       </div>
@@ -425,22 +563,34 @@ export function SidebarTree({
             <div className="relative" ref={playgroundDropdownRef}>
               <div className="flex items-center rounded border border-[#30363d] bg-[#161b24] overflow-hidden">
                 <button
-                  onClick={() => selectPlayground(currentPlaygroundType)}
-                  title="Open Active Sandbox Playground"
+                  onClick={() => {
+                    if (activeNode.type === 'practice') {
+                      selectPracticeKernel(activeNode.practiceKernel || 'gpu_check.cu');
+                    } else {
+                      selectPlayground(currentPlaygroundType);
+                    }
+                  }}
+                  title="Open Active Sandbox or Practice Kernel"
                   className={`px-2 py-0.5 text-xs flex items-center gap-1.5 transition-all cursor-pointer ${
                     activeNode.type === 'playground'
                       ? 'bg-sky-500/20 text-sky-300 font-medium'
+                      : activeNode.type === 'practice'
+                      ? 'bg-teal-500/20 text-teal-300 font-medium'
                       : 'text-slate-400 hover:text-slate-200 hover:bg-[#1c2230]'
                   }`}
                 >
-                  <Terminal className="w-3 h-3 text-sky-400" />
+                  <Terminal className={`w-3 h-3 ${activeNode.type === 'practice' ? 'text-teal-400' : 'text-sky-400'}`} />
                   <span className="font-mono text-[10px] capitalize">
-                    {activeNode.type === 'playground' ? currentPlaygroundType : 'Playground'}
+                    {activeNode.type === 'playground'
+                      ? currentPlaygroundType
+                      : activeNode.type === 'practice'
+                      ? 'Practice'
+                      : 'Playground'}
                   </span>
                 </button>
                 <button
                   onClick={() => setIsPlaygroundMenuOpen((prev) => !prev)}
-                  title="Choose Playground Type (C++, CUDA, Kernel)"
+                  title="Choose Playground or Open Practice Kernel"
                   className="px-1 py-0.5 text-slate-400 hover:text-slate-200 hover:bg-[#1c2230] border-l border-[#30363d] transition-colors cursor-pointer"
                 >
                   <ChevronDown className="w-2.5 h-2.5" />
@@ -449,7 +599,7 @@ export function SidebarTree({
 
               {/* Dropdown Menu */}
               {isPlaygroundMenuOpen && (
-                <div className="absolute right-0 mt-1 w-56 bg-[#161b24] border border-[#30363d] rounded-lg shadow-xl shadow-black/60 z-50 py-1 overflow-hidden animate-in fade-in zoom-in-95 duration-100">
+                <div className="absolute right-0 mt-1 w-64 bg-[#161b24] border border-[#30363d] rounded-lg shadow-xl shadow-black/60 z-50 py-1 overflow-hidden animate-in fade-in zoom-in-95 duration-100">
                   <div className="px-2.5 py-1 text-[10px] font-semibold text-slate-400 uppercase tracking-wider border-b border-[#21262d]">
                     Select Playground Environment
                   </div>
@@ -498,6 +648,37 @@ export function SidebarTree({
                       <div className="text-[10px] text-slate-500 font-mono">playground_kernel.cu (harness)</div>
                     </div>
                   </button>
+
+                  {practiceKernels.length > 0 && (
+                    <>
+                      <div className="px-2.5 py-1 text-[10px] font-semibold text-teal-400 uppercase tracking-wider border-t border-b border-[#21262d] bg-[#0c1618] flex items-center justify-between">
+                        <span>Open Practice (kernels/practice)</span>
+                        <span className="text-[9px] font-mono text-teal-500">{practiceKernels.length}</span>
+                      </div>
+                      <div className="max-h-52 overflow-y-auto divide-y divide-[#21262d]/40">
+                        {practiceKernels.map((pk) => {
+                          const isCur = activeNode.type === 'practice' && (activeNode.practiceKernel === pk.filename || activeNode.practiceKernel === pk.id);
+                          return (
+                            <button
+                              key={pk.id}
+                              onClick={() => selectPracticeKernel(pk.filename)}
+                              className={`w-full flex items-start gap-2 px-2.5 py-1.5 text-left hover:bg-[#1c2230] transition-colors cursor-pointer ${
+                                isCur ? 'bg-teal-500/15 text-teal-300' : 'text-slate-300'
+                              }`}
+                            >
+                              <span className="text-teal-400 font-mono text-[10px] mt-0.5 px-1 py-0.2 rounded bg-teal-500/10 border border-teal-500/20 shrink-0">
+                                cu
+                              </span>
+                              <div className="min-w-0 flex-1">
+                                <div className="text-xs font-medium truncate">{pk.title}</div>
+                                <div className="text-[9.5px] text-slate-500 font-mono truncate">{pk.filename}</div>
+                              </div>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </>
+                  )}
                 </div>
               )}
             </div>
@@ -515,172 +696,412 @@ export function SidebarTree({
           </div>
         </div>
 
-        {/* Sleek Minimal Progress Tracker (Volume-Specific Chapters & Overall Tests) */}
-        {(() => {
-          const currentVolDone =
-            activeVolume === 'vol1'
-              ? treeData?.stats?.chaptersDone ?? 0
-              : activeVolume === 'vol2'
-              ? treeData?.stats?.cudaTopicsDone ?? 0
-              : treeData?.stats?.kernelTopicsDone ?? 0;
-
-          const currentVolTotal =
-            activeVolume === 'vol1'
-              ? treeData?.stats?.totalChapters ?? 20
-              : activeVolume === 'vol2'
-              ? treeData?.stats?.totalCudaTopics ?? 22
-              : treeData?.stats?.totalKernelTopics ?? 25;
-
-          const currentVolPercent =
-            currentVolTotal > 0 ? Math.round((currentVolDone / currentVolTotal) * 100) : 0;
-
-          return (
-            <div className="mt-2.5 px-0.5">
-              <div className="flex items-center justify-between text-[10px] mb-1">
-                <span className="text-slate-300 font-medium flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
-                  <span>
-                    {activeVolume === 'vol1'
-                      ? 'Volume 1 (C++ Systems)'
-                      : activeVolume === 'vol2'
-                      ? 'Volume 2 (CUDA Systems)'
-                      : 'Volume 3 (GPU Kernels)'}
-                  </span>
-                </span>
-                <span className="font-mono text-slate-200 font-semibold">
-                  {currentVolDone}/{currentVolTotal}{' '}
-                  <span className="text-slate-400 font-normal">({currentVolPercent}%)</span>
-                </span>
-              </div>
-              <div className="w-full h-1 bg-[#10141d] rounded-full overflow-hidden border border-[#21262d]">
-                <div
-                  className="h-full bg-emerald-500 rounded-full transition-all duration-500"
-                  style={{ width: `${Math.max(1, currentVolPercent)}%` }}
-                />
-              </div>
-              <div className="flex items-center justify-between mt-1 text-[9px] text-slate-500 font-mono">
-                <span>
-                  {activeVolume === 'vol1'
-                    ? 'Chapters Mastered'
-                    : activeVolume === 'vol2'
-                    ? 'Topics Mastered'
-                    : 'Kernels Mastered'}
-                </span>
-                <span title="Total individual verified test cases passed across all workbooks">
-                  {treeData?.stats?.testsPassed ?? 0} tests passed total
-                </span>
-              </div>
-            </div>
-          );
-        })()}
-
-        {/* Pinned Course Orientation Guide Button */}
-        <button
-          onClick={() => onSelectNode({ type: 'guide', volumeId: activeVolume })}
-          className={`mt-2 w-full flex items-center justify-between px-2.5 py-1.5 rounded-md text-xs transition-all cursor-pointer ${
-            activeNode.type === 'guide'
-              ? 'bg-[#1f6feb]/20 text-[#58a6ff] border border-[#1f6feb]/40 font-semibold'
-              : 'bg-[#161b24] hover:bg-[#1c2230] text-slate-300 hover:text-white border border-[#21262d]'
-          }`}
-        >
-          <div className="flex items-center gap-2">
-            <Compass className="w-3.5 h-3.5 text-sky-400" />
-            <span className="font-medium text-[11px]">Orientation Guide</span>
-          </div>
-          <span className="text-[10px] text-slate-400 font-mono">How to Read</span>
-        </button>
-
-        {/* Category Tabs — C++ Systems, CUDA, GPU Kernels with distinct borders and prominent active highlight */}
-        {(() => {
-          const volDefs = [
-            { id: 'vol1', label: 'C++ Systems', count: '20 Ch', accent: 'sky' },
-            { id: 'vol2', label: 'CUDA', count: '21 Ch', accent: 'indigo' },
-            { id: 'vol3', label: 'GPU Kernels', count: '28 Kernels', accent: 'amber' },
-          ];
-
-          const accentStyles: Record<string, { active: string; dot: string; indicator: string }> = {
-            sky: {
-              active: 'bg-[#10233b] border-sky-400 text-sky-200 shadow-[0_0_14px_rgba(56,189,248,0.3)]',
-              dot: 'bg-sky-400 shadow-[0_0_8px_rgba(56,189,248,0.9)]',
-              indicator: 'bg-sky-400',
-            },
-            indigo: {
-              active: 'bg-[#1a183b] border-indigo-400 text-indigo-200 shadow-[0_0_14px_rgba(99,102,241,0.3)]',
-              dot: 'bg-indigo-400 shadow-[0_0_8px_rgba(99,102,241,0.9)]',
-              indicator: 'bg-indigo-400',
-            },
-            amber: {
-              active: 'bg-[#2b1f0c] border-amber-400 text-amber-200 shadow-[0_0_14px_rgba(245,158,11,0.3)]',
-              dot: 'bg-amber-400 shadow-[0_0_8px_rgba(245,158,11,0.9)]',
-              indicator: 'bg-amber-400',
-            },
-          };
-
-          return (
-            <div className="sidebar-vol-tabs mt-3 p-1 rounded-xl bg-[#090d16] border border-[#232b3d] grid grid-cols-3 gap-1.5 shadow-inner">
-              {volDefs.map((vol) => {
-                const isActive = activeVolume === vol.id;
-                const styles = accentStyles[vol.accent];
-                return (
-                  <button
-                    key={vol.id}
-                    onClick={() => {
-                      const nextVol = vol.id as 'vol1' | 'vol2' | 'vol3';
-                      setActiveVolume(nextVol);
-                      if (nextVol === 'vol1') {
-                        onSelectNode({ type: 'theory', volumeId: 'vol1', chapterId: openChapterId || '1.1' });
-                      } else if (nextVol === 'vol2') {
-                        onSelectNode({ type: 'theory', volumeId: 'vol2', chapterId: openCudaTopicId || '2.1' });
-                      } else if (nextVol === 'vol3') {
-                        onSelectNode({ type: 'theory', volumeId: 'vol3', chapterId: openKernelTopicId || 'k1.1' });
-                      }
-                    }}
-                    className={`sidebar-vol-btn relative flex flex-col items-center justify-center py-2 px-1 rounded-lg border text-center cursor-pointer transition-all duration-150 select-none ${
-                      isActive
-                        ? `sidebar-vol-btn-active ${styles.active} font-bold`
-                        : 'border-[#192233] bg-[#0e1422]/70 text-slate-400 hover:text-slate-200 hover:bg-[#141d30] hover:border-[#2a3854]'
-                    }`}
-                  >
-                    <div className="flex items-center gap-1.5 mb-0.5">
-                      <span className={`w-2 h-2 rounded-full shrink-0 transition-transform ${isActive ? `${styles.dot} scale-110` : 'bg-slate-600'}`} />
-                      <span className="text-[11px] font-mono font-bold leading-none tracking-tight">{vol.label}</span>
-                    </div>
-                    <span className={`text-[8.5px] font-mono leading-none ${isActive ? 'text-slate-300 font-semibold' : 'text-slate-500'}`}>
-                      {vol.count}
-                    </span>
-                    {isActive && (
-                      <div className={`absolute bottom-0 inset-x-2 h-0.5 rounded-full ${styles.indicator}`} />
-                    )}
-                  </button>
-                );
-              })}
-            </div>
-          );
-        })()}
-
-        {/* Compact Search */}
-        <div className="mt-2 relative">
-          <Search className="w-3 h-3 text-slate-500 absolute left-2 top-1/2 -translate-y-1/2" />
-          <input
-            type="text"
-            placeholder={
-              activeVolume === 'vol3'
-                ? 'Search 7 kernel modules...'
-                : activeVolume === 'vol2'
-                ? 'Search 6 CUDA modules...'
-                : 'Search 5 C++ modules...'
-            }
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-[#161b24] text-xs text-slate-200 placeholder-slate-500 pl-6 pr-2 py-1 rounded border border-[#21262d] focus:outline-none focus:border-sky-500/40 transition-colors"
-          />
+        {/* Top-Level Mode Switcher: Curriculum vs Open Practice Lab */}
+        <div className="mt-2.5 p-1 rounded-xl bg-[#090d16] border border-[#232b3d] grid grid-cols-2 gap-1 shadow-inner">
+          <button
+            onClick={() => setNavMode('curriculum')}
+            className={`flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+              navMode === 'curriculum'
+                ? 'bg-[#10233b] border border-sky-400/80 text-sky-200 shadow-[0_0_12px_rgba(56,189,248,0.25)]'
+                : 'text-slate-400 hover:text-slate-200 hover:bg-[#161b24]'
+            }`}
+          >
+            <BookOpen className="w-3.5 h-3.5 text-sky-400" />
+            <span>Course Tracks</span>
+          </button>
+          <button
+            onClick={() => {
+              setNavMode('practice');
+              if (activeNode.type !== 'practice' && practiceKernels.length > 0) {
+                selectPracticeKernel(practiceKernels[0].filename);
+              }
+            }}
+            className={`flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+              navMode === 'practice'
+                ? 'bg-[#082422] border border-teal-400/80 text-teal-200 shadow-[0_0_12px_rgba(45,212,191,0.25)]'
+                : 'text-slate-400 hover:text-slate-200 hover:bg-[#161b24]'
+            }`}
+          >
+            <Code2 className="w-3.5 h-3.5 text-teal-400" />
+            <span>Practice Lab</span>
+            <span className="text-[10px] font-mono px-1.5 py-0.2 rounded-full bg-teal-500/20 text-teal-300 border border-teal-500/30 font-bold ml-0.5">
+              {practiceKernels.length}
+            </span>
+          </button>
         </div>
+
+        {/* ----------------- CURRICULUM MODE CONTROLS ----------------- */}
+        {navMode === 'curriculum' && (
+          <>
+            {/* Sleek Minimal Progress Tracker (Volume-Specific Chapters & Overall Tests) */}
+            {(() => {
+              const currentVolDone =
+                activeVolume === 'vol1'
+                  ? treeData?.stats?.chaptersDone ?? 0
+                  : activeVolume === 'vol2'
+                  ? treeData?.stats?.cudaTopicsDone ?? 0
+                  : treeData?.stats?.kernelTopicsDone ?? 0;
+
+              const currentVolTotal =
+                activeVolume === 'vol1'
+                  ? treeData?.stats?.totalChapters ?? 20
+                  : activeVolume === 'vol2'
+                  ? treeData?.stats?.totalCudaTopics ?? 22
+                  : treeData?.stats?.totalKernelTopics ?? 25;
+
+              const currentVolPercent =
+                currentVolTotal > 0 ? Math.round((currentVolDone / currentVolTotal) * 100) : 0;
+
+              return (
+                <div className="mt-2.5 px-0.5">
+                  <div className="flex items-center justify-between text-[10px] mb-1">
+                    <span className="text-slate-300 font-medium flex items-center gap-1.5">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                      <span>
+                        {activeVolume === 'vol1'
+                          ? 'Volume 1 (C++ Systems)'
+                          : activeVolume === 'vol2'
+                          ? 'Volume 2 (CUDA Systems)'
+                          : 'Volume 3 (GPU Kernels)'}
+                      </span>
+                    </span>
+                    <span className="font-mono text-slate-200 font-semibold">
+                      {currentVolDone}/{currentVolTotal}{' '}
+                      <span className="text-slate-400 font-normal">({currentVolPercent}%)</span>
+                    </span>
+                  </div>
+                  <div className="w-full h-1 bg-[#10141d] rounded-full overflow-hidden border border-[#21262d]">
+                    <div
+                      className="h-full bg-emerald-500 rounded-full transition-all duration-500"
+                      style={{ width: `${Math.max(1, currentVolPercent)}%` }}
+                    />
+                  </div>
+                  <div className="flex items-center justify-between mt-1 text-[9px] text-slate-500 font-mono">
+                    <span>
+                      {activeVolume === 'vol1'
+                        ? 'Chapters Mastered'
+                        : activeVolume === 'vol2'
+                        ? 'Topics Mastered'
+                        : 'Kernels Mastered'}
+                    </span>
+                    <span title="Total individual verified test cases passed across all workbooks">
+                      {treeData?.stats?.testsPassed ?? 0} tests passed total
+                    </span>
+                  </div>
+                </div>
+              );
+            })()}
+
+            {/* Pinned Course Orientation Guide Button */}
+            <button
+              onClick={() => onSelectNode({ type: 'guide', volumeId: activeVolume })}
+              className={`mt-2 w-full flex items-center justify-between px-2.5 py-1.5 rounded-md text-xs transition-all cursor-pointer ${
+                activeNode.type === 'guide'
+                  ? 'bg-[#1f6feb]/20 text-[#58a6ff] border border-[#1f6feb]/40 font-semibold'
+                  : 'bg-[#161b24] hover:bg-[#1c2230] text-slate-300 hover:text-white border border-[#21262d]'
+              }`}
+            >
+              <div className="flex items-center gap-2">
+                <Compass className="w-3.5 h-3.5 text-sky-400" />
+                <span className="font-medium text-[11px]">Orientation Guide</span>
+              </div>
+              <span className="text-[10px] text-slate-400 font-mono">How to Read</span>
+            </button>
+
+            {/* Category Tabs — C++ Systems, CUDA, GPU Kernels */}
+            {(() => {
+              const volDefs = [
+                { id: 'vol1', label: 'C++ Systems', count: '20 Ch', accent: 'sky' },
+                { id: 'vol2', label: 'CUDA', count: '21 Ch', accent: 'indigo' },
+                { id: 'vol3', label: 'GPU Kernels', count: '28 Kernels', accent: 'amber' },
+              ];
+
+              const accentStyles: Record<string, { active: string; dot: string; indicator: string }> = {
+                sky: {
+                  active: 'bg-[#10233b] border-sky-400 text-sky-200 shadow-[0_0_14px_rgba(56,189,248,0.3)]',
+                  dot: 'bg-sky-400 shadow-[0_0_8px_rgba(56,189,248,0.9)]',
+                  indicator: 'bg-sky-400',
+                },
+                indigo: {
+                  active: 'bg-[#1a183b] border-indigo-400 text-indigo-200 shadow-[0_0_14px_rgba(99,102,241,0.3)]',
+                  dot: 'bg-indigo-400 shadow-[0_0_8px_rgba(99,102,241,0.9)]',
+                  indicator: 'bg-indigo-400',
+                },
+                amber: {
+                  active: 'bg-[#2b1f0c] border-amber-400 text-amber-200 shadow-[0_0_14px_rgba(245,158,11,0.3)]',
+                  dot: 'bg-amber-400 shadow-[0_0_8px_rgba(245,158,11,0.9)]',
+                  indicator: 'bg-amber-400',
+                },
+              };
+
+              return (
+                <div className="sidebar-vol-tabs mt-2.5 p-1 rounded-xl bg-[#090d16] border border-[#232b3d] grid grid-cols-3 gap-1.5 shadow-inner">
+                  {volDefs.map((vol) => {
+                    const isActive = activeVolume === vol.id;
+                    const styles = accentStyles[vol.accent];
+                    return (
+                      <button
+                        key={vol.id}
+                        onClick={() => {
+                          const nextVol = vol.id as 'vol1' | 'vol2' | 'vol3';
+                          setActiveVolume(nextVol);
+                          if (nextVol === 'vol1') {
+                            onSelectNode({ type: 'theory', volumeId: 'vol1', chapterId: openChapterId || '1.1' });
+                          } else if (nextVol === 'vol2') {
+                            onSelectNode({ type: 'theory', volumeId: 'vol2', chapterId: openCudaTopicId || '2.1' });
+                          } else if (nextVol === 'vol3') {
+                            onSelectNode({ type: 'theory', volumeId: 'vol3', chapterId: openKernelTopicId || 'k1.1' });
+                          }
+                        }}
+                        className={`sidebar-vol-btn relative flex flex-col items-center justify-center py-2 px-1 rounded-lg border text-center cursor-pointer transition-all duration-150 select-none ${
+                          isActive
+                            ? `sidebar-vol-btn-active ${styles.active} font-bold`
+                            : 'border-[#192233] bg-[#0e1422]/70 text-slate-400 hover:text-slate-200 hover:bg-[#141d30] hover:border-[#2a3854]'
+                        }`}
+                      >
+                        <div className="flex items-center gap-1.5 mb-0.5">
+                          <span
+                            className={`w-2 h-2 rounded-full shrink-0 transition-transform ${
+                              isActive ? `${styles.dot} scale-110` : 'bg-slate-600'
+                            }`}
+                          />
+                          <span className="text-[11px] font-mono font-bold leading-none tracking-tight">{vol.label}</span>
+                        </div>
+                        <span
+                          className={`text-[8.5px] font-mono leading-none ${
+                            isActive ? 'text-slate-300 font-semibold' : 'text-slate-500'
+                          }`}
+                        >
+                          {vol.count}
+                        </span>
+                        {isActive && (
+                          <div className={`absolute bottom-0 inset-x-2 h-0.5 rounded-full ${styles.indicator}`} />
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              );
+            })()}
+
+            {/* Compact Curriculum Search */}
+            <div className="mt-2 relative">
+              <Search className="w-3 h-3 text-slate-500 absolute left-2 top-1/2 -translate-y-1/2" />
+              <input
+                type="text"
+                placeholder={
+                  activeVolume === 'vol3'
+                    ? 'Search 7 kernel modules...'
+                    : activeVolume === 'vol2'
+                    ? 'Search 6 CUDA modules...'
+                    : 'Search 5 C++ modules...'
+                }
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full bg-[#161b24] text-xs text-slate-200 placeholder-slate-500 pl-6 pr-2 py-1 rounded border border-[#21262d] focus:outline-none focus:border-sky-500/40 transition-colors"
+              />
+            </div>
+          </>
+        )}
+
+        {/* ----------------- PRACTICE LAB MODE CONTROLS ----------------- */}
+        {navMode === 'practice' && (
+          <div className="mt-2.5 p-2 rounded-lg border border-teal-500/30 bg-[#091517] space-y-2">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="text-[11px] font-bold text-teal-300 flex items-center gap-1.5">
+                  <Terminal className="w-3 h-3 text-teal-400" />
+                  <span>Open Practice Lab</span>
+                </div>
+                <div className="text-[9.5px] font-mono text-slate-400">kernels/practice/*.cu</div>
+              </div>
+              <button
+                onClick={() => {
+                  setIsCreatingKernel((prev) => !prev);
+                  setCreateError('');
+                }}
+                className="px-2.5 py-1 rounded-md text-[11px] font-semibold bg-teal-500 hover:bg-teal-400 text-black flex items-center gap-1 shadow-sm transition-all cursor-pointer"
+                title="Write a new custom CUDA practice kernel"
+              >
+                <Plus className="w-3 h-3 stroke-[3]" />
+                <span>New Kernel</span>
+              </button>
+            </div>
+
+            {/* Inline New Kernel Creation Form */}
+            {isCreatingKernel && (
+              <form onSubmit={handleCreateNewKernel} className="p-2 rounded-md bg-[#060e10] border border-teal-500/40 space-y-2">
+                <div className="text-[10.5px] font-medium text-teal-200">New Kernel Filename:</div>
+                <div className="flex items-center gap-1">
+                  <input
+                    type="text"
+                    autoFocus
+                    value={newKernelName}
+                    onChange={(e) => setNewKernelName(e.target.value)}
+                    placeholder="e.g. gemm_tiled or fast_gelu"
+                    className="w-full bg-[#101d20] text-teal-100 placeholder-slate-500 px-2 py-1 rounded border border-teal-500/40 focus:outline-none focus:border-teal-300 font-mono text-[11px]"
+                  />
+                  <span className="text-[10px] text-slate-400 font-mono">.cu</span>
+                </div>
+                <p className="text-[9px] text-slate-400">
+                  Creates a runnable host+device CUDA template ready to edit, save (Cmd+S), and run with nvcc.
+                </p>
+                {createError && (
+                  <div className="text-[10px] text-rose-400 font-medium bg-rose-950/40 border border-rose-800/50 p-1.5 rounded">
+                    {createError}
+                  </div>
+                )}
+                <div className="flex items-center justify-end gap-1.5 pt-0.5">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsCreatingKernel(false);
+                      setCreateError('');
+                    }}
+                    className="px-2 py-0.5 rounded text-[10.5px] text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isCreatingLoading || !newKernelName.trim()}
+                    className="px-2.5 py-0.5 rounded text-[10.5px] font-semibold bg-teal-400 hover:bg-teal-300 text-black disabled:opacity-50 transition-all cursor-pointer"
+                  >
+                    {isCreatingLoading ? 'Creating...' : 'Create & Open'}
+                  </button>
+                </div>
+              </form>
+            )}
+
+            {/* Search / Filter for Practice Kernels */}
+            <div className="relative">
+              <Search className="w-3 h-3 text-teal-500/60 absolute left-2 top-1/2 -translate-y-1/2" />
+              <input
+                type="text"
+                placeholder={`Filter ${practiceKernels.length} practice kernels...`}
+                value={practiceSearchQuery}
+                onChange={(e) => setPracticeSearchQuery(e.target.value)}
+                className="w-full bg-[#060e10] text-teal-100 placeholder-slate-500 pl-6 pr-2 py-1 rounded border border-teal-500/25 focus:outline-none focus:border-teal-400/50 transition-colors text-[11px]"
+              />
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Reactive Navigation Body */}
       <div className="flex-1 overflow-y-auto px-2 py-2 space-y-1.5">
+        {/* ===================== OPEN PRACTICE LAB (FREE-FORM KERNELS) ===================== */}
+        {navMode === 'practice' && (
+          <div className="space-y-1.5">
+            {filteredPracticeKernels.length === 0 ? (
+              <div className="p-4 rounded-lg border border-[#21262d] bg-[#0c1018] text-center space-y-2">
+                <Code2 className="w-6 h-6 text-slate-500 mx-auto" />
+                <div className="text-xs text-slate-300 font-medium">No practice kernels found</div>
+                <div className="text-[10px] text-slate-500">
+                  {practiceSearchQuery ? `No match for "${practiceSearchQuery}"` : 'Your practice lab is empty.'}
+                </div>
+                <button
+                  onClick={() => setIsCreatingKernel(true)}
+                  className="px-2.5 py-1 rounded text-xs font-semibold bg-teal-500 text-black hover:bg-teal-400 transition-colors cursor-pointer"
+                >
+                  Create New Kernel (.cu)
+                </button>
+              </div>
+            ) : (
+              filteredPracticeKernels.map((pk) => {
+                const isSelected =
+                  activeNode.type === 'practice' &&
+                  (activeNode.practiceKernel === pk.filename || activeNode.practiceKernel === pk.id);
+                const isConfirmingDelete = deleteConfirmFile === pk.filename;
+
+                return (
+                  <div
+                    key={pk.id}
+                    onClick={() => selectPracticeKernel(pk.filename)}
+                    className={`group relative p-2.5 rounded-lg border transition-all cursor-pointer ${
+                      isSelected
+                        ? 'bg-teal-500/15 border-teal-500/60 shadow-[0_0_12px_rgba(45,212,191,0.18)]'
+                        : 'bg-[#091517]/80 hover:bg-[#0c1e21] border-teal-500/20 text-slate-300 hover:text-white'
+                    }`}
+                  >
+                    <div className="flex items-start justify-between gap-1.5">
+                      <div className="flex items-start gap-2 min-w-0 flex-1">
+                        <Terminal
+                          className={`w-3.5 h-3.5 mt-0.5 shrink-0 ${
+                            isSelected ? 'text-teal-300' : 'text-teal-400/80 group-hover:text-teal-300'
+                          }`}
+                        />
+                        <div className="min-w-0 flex-1">
+                          <div
+                            className={`text-xs font-semibold truncate ${
+                              isSelected ? 'text-teal-100 font-bold' : 'text-slate-200 group-hover:text-white'
+                            }`}
+                          >
+                            {pk.title}
+                          </div>
+                          {pk.subtitle && (
+                            <div className="text-[10px] text-slate-400 line-clamp-1 mt-0.5">
+                              {pk.subtitle}
+                            </div>
+                          )}
+                          <div className="flex items-center gap-2 mt-1.5">
+                            <span className="text-[9.5px] font-mono text-teal-400/90 bg-[#061214] px-1.5 py-0.5 rounded border border-teal-500/25 truncate">
+                              {pk.filename}
+                            </span>
+                            <span className="text-[9px] font-mono px-1 py-0.2 rounded bg-teal-500/10 text-teal-400 border border-teal-500/20">
+                              nvcc -O3
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Delete action */}
+                      <div className="shrink-0 flex items-center">
+                        {isConfirmingDelete ? (
+                          <div
+                            className="flex items-center gap-1 bg-[#1a0808] border border-rose-500/40 p-1 rounded"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <span className="text-[9px] text-rose-300 font-medium">Delete?</span>
+                            <button
+                              onClick={(e) => handleDeleteKernel(pk.filename, e)}
+                              className="px-1.5 py-0.5 text-[9px] bg-rose-600 hover:bg-rose-500 text-white rounded font-bold cursor-pointer"
+                            >
+                              Yes
+                            </button>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setDeleteConfirmFile(null);
+                              }}
+                              className="px-1 py-0.5 text-[9px] text-slate-400 hover:text-white cursor-pointer"
+                            >
+                              <X className="w-2.5 h-2.5" />
+                            </button>
+                          </div>
+                        ) : (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setDeleteConfirmFile(pk.filename);
+                            }}
+                            title="Delete this practice kernel"
+                            className="opacity-0 group-hover:opacity-100 p-1 text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 rounded transition-all cursor-pointer"
+                          >
+                            <Trash2 className="w-3 h-3" />
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })
+            )}
+          </div>
+        )}
+
         {/* ===================== VOLUME 1: C++ SYSTEMS (5 MODULES) ===================== */}
-        {activeVolume === 'vol1' && (
+        {navMode === 'curriculum' && activeVolume === 'vol1' && (
           <div className="space-y-2">
             {filteredCppModules.map((mod: CppModuleMeta) => {
               const isModOpen = openCppModuleId === mod.id;
@@ -893,7 +1314,7 @@ export function SidebarTree({
         )}
 
         {/* ===================== VOLUME 2: CUDA SYSTEMS (6 MODULES) ===================== */}
-        {activeVolume === 'vol2' && (
+        {navMode === 'curriculum' && activeVolume === 'vol2' && (
           <div className="space-y-2">
             {filteredCudaModules.map((mod: CudaModuleMeta) => {
               const isModOpen = openCudaModuleId === mod.id;
@@ -1106,7 +1527,7 @@ export function SidebarTree({
         )}
 
         {/* ===================== VOLUME 3: PRODUCTION KERNELS (7 MODULES) ===================== */}
-        {activeVolume === 'vol3' && (
+        {navMode === 'curriculum' && activeVolume === 'vol3' && (
           <div className="space-y-2">
             {filteredKernelModules.map((mod: KernelModuleMeta) => {
               const isModOpen = openKernelModuleId === mod.id;

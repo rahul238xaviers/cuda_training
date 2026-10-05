@@ -4,6 +4,7 @@ import {
   scanDynamicCppModules,
   scanDynamicCudaModules,
   scanDynamicKernelModules,
+  scanPracticeKernels,
   METAL_KERNELS,
 } from '@/lib/workspace';
 import { loadCurriculumManifest } from '@/lib/curriculum';
@@ -13,6 +14,7 @@ export async function GET() {
   const cppModules = scanDynamicCppModules();
   const cudaModules = scanDynamicCudaModules();
   const kernelModules = scanDynamicKernelModules();
+  const practiceKernels = scanPracticeKernels();
   const manifest = loadCurriculumManifest();
 
   let totalTestsAcrossCourse = 0;
@@ -119,5 +121,6 @@ export async function GET() {
       modules: kernelModules,
       kernels: METAL_KERNELS,
     },
+    practiceKernels,
   });
 }

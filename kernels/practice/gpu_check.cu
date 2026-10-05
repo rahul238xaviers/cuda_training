@@ -2,7 +2,7 @@
 #include <cuda_runtime.h>
 #include <cuda_runtime_api.h>
 
-// Compile: nvcc -O2 -arch=sm_75 src/cuda/gpu_check.cu -o output/gpu_check
+// Compile: nvcc -O2 -arch=sm_75 kernels/practice/gpu_check.cu -o output/gpu_check
 
 #define GB(x) ((double)(x) / (1024.0 * 1024.0 * 1024.0))
 

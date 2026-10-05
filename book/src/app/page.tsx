@@ -107,6 +107,7 @@ export default function BookPlatform() {
       if (node.kernelId) params.set('kernelId', String(node.kernelId));
       if (node.volumeId) params.set('volumeId', node.volumeId);
       if (node.playgroundType) params.set('playgroundType', node.playgroundType);
+      if (node.practiceKernel) params.set('practiceKernel', node.practiceKernel);
 
       const res = await fetch(`/api/node?${params.toString()}`);
       const data = await res.json();
@@ -118,6 +119,9 @@ export default function BookPlatform() {
         const ext = data.ext || 'cpp';
         const compiler = ext === 'cu' ? 'nvcc -O3 -std=c++17 --extended-lambda' : 'clang++ -std=c++20 -O3';
         setTerminalOutput(`Ready to compile ${node.tier}_workbook.${ext} with ${compiler}.`);
+      } else if (node.type === 'practice') {
+        setActiveCode(data.code || '');
+        setTerminalOutput(`Ready to compile kernels/practice/${data.filePath || node.practiceKernel} with nvcc -O3 -std=c++17 --extended-lambda.`);
       } else if (node.type === 'playground') {
         setActiveCode(data.code || '');
         const compiler =
@@ -172,7 +176,9 @@ export default function BookPlatform() {
           code,
         };
 
-        if (activeNode.type === 'playground') {
+        if (activeNode.type === 'practice') {
+          payload.practiceKernel = activeNode.practiceKernel;
+        } else if (activeNode.type === 'playground') {
           payload.playgroundType = activeNode.playgroundType || 'cpp';
         } else if (activeNode.type === 'workbook') {
           payload.chapterId = activeNode.chapterId;
@@ -261,7 +267,7 @@ export default function BookPlatform() {
   const handleRun = async () => {
     await handleSave();
 
-    const isCuda = nodeData?.isCuda || nodeData?.ext === 'cu' || activeNode.playgroundType === 'cuda' || activeNode.playgroundType === 'kernel';
+    const isCuda = nodeData?.isCuda || nodeData?.ext === 'cu' || activeNode.type === 'practice' || activeNode.playgroundType === 'cuda' || activeNode.playgroundType === 'kernel';
     const compiler = isCuda ? 'nvcc -O3 -std=c++17 --extended-lambda' : 'clang++ -std=c++20 -O3';
     setTerminalOutput(`📦 Preparing isolated sandbox...\nCompiling with ${compiler}...\nExecuting binary with 10s watchdog limit...`);
     setDurationMs(undefined);
@@ -273,7 +279,9 @@ export default function BookPlatform() {
         code: activeCode,
       };
 
-      if (activeNode.type === 'playground') {
+      if (activeNode.type === 'practice') {
+        payload.practiceKernel = activeNode.practiceKernel;
+      } else if (activeNode.type === 'playground') {
         payload.playgroundType = activeNode.playgroundType || 'cpp';
       } else if (activeNode.type === 'workbook') {
         payload.chapterId = activeNode.chapterId;
@@ -466,11 +474,13 @@ export default function BookPlatform() {
                 />
               )}
 
-              {/* Live Workbook or Playground Lab View */}
-              {(activeNode.type === 'workbook' || activeNode.type === 'playground') && (
+              {/* Live Workbook, Playground, or Open Practice Lab View */}
+              {(activeNode.type === 'workbook' || activeNode.type === 'playground' || activeNode.type === 'practice') && (
                 <LabEditorView
                   filePath={
-                    activeNode.type === 'playground'
+                    activeNode.type === 'practice'
+                      ? `kernels/practice/${nodeData?.filePath || activeNode.practiceKernel || 'gpu_check.cu'}`
+                      : activeNode.type === 'playground'
                       ? nodeData?.filePath ||
                         (activeNode.playgroundType === 'cuda'
                           ? 'playground.cu'

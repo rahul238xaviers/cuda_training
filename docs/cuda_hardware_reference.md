@@ -2,7 +2,7 @@
 
 **Purpose**: one-page refresher on the chip, its memory hierarchy, and the
 numbers that drive every design decision. All device numbers are MEASURED from
-`src/cuda/gpu_check.cu` on this machine. Latency figures are typical
+`kernels/practice/gpu_check.cu` on this machine. Latency figures are typical
 Turing-era approximations (tens of cycles, rounded) — use them as order-of-magnitude,
 not spec-sheet exact.
 

@@ -17,24 +17,25 @@ A self-contained, exercise-driven curriculum and interactive digital lab enginee
    - **Beginner**: Guided exercises focusing on core APIs and mental models.
    - **Intermediate**: Optimization techniques, boundary conditions, and cache behavior.
    - **Champion**: Production-grade implementations, warp shuffles, and memory-bandwidth saturation.
-3. **28 Production GPU Kernels (`src/kernels/`)**: FlashAttention-2, SwiGLU, RMSNorm, RoPE, AdamW, GEMM projections, and MoE Top-K gating.
-4. **Containerized Environment (`Dockerfile` & `docker-compose.yml`)**: NVIDIA CUDA 12.4 + Clang + Node.js 20 LTS for zero-configuration, reproducible development.
+3. **28 Production GPU Kernels (`src/gpu_kernels/`)**: FlashAttention-2, SwiGLU, RMSNorm, RoPE, AdamW, GEMM projections, and MoE Top-K gating.
+4. **Open Practice Kernels Lab (`kernels/practice/`)**: 9 standalone CUDA practice kernels for free-form experimentation, profiling, and learning.
+5. **Containerized Environment (`Dockerfile` & `docker-compose.yml`)**: NVIDIA CUDA 12.4 + Clang + Node.js 20 LTS for zero-configuration, reproducible development.
 
 ---
 
 ## 📖 Curriculum Architecture
 
-The curriculum is structured across three primary tracks:
+The curriculum is structured across three primary volumes plus an open practice lab:
 
 ```text
-├── Volume 1: C++ Low-Level Systems Foundations (src/module1/)
+├── Volume 1: C++ Low-Level Systems Foundations (src/cpp_systems/)
 │   ├── Part 1: Memory Layout & Value Semantics (1.1 - 1.5)
 │   ├── Part 2: Resource Ownership, RAII & Allocators (1.6 - 1.8)
 │   ├── Part 3: Virtual Memory & Cache Hierarchy (1.9 - 1.12)
 │   ├── Part 4: Hardware SIMD & Bit Manipulation (1.13 - 1.15)
 │   └── Part 5: Concurrency, NUMA & High-Throughput I/O (1.16 - 1.20)
 │
-├── Volume 2: CUDA Architecture & Execution Model (src/module2/ to src/module7/)
+├── Volume 2: CUDA Architecture & Execution Model (src/cuda_systems/)
 │   ├── Module 2: Host-Device Bridge & Modern C++ (2.1 - 2.5)
 │   ├── Module 3: CUDA Threading Hierarchy & Hardware Execution (3.1 - 3.4)
 │   ├── Module 4: Memory Hierarchy, Coalescing & SRAM Tiling (4.1 - 4.2)
@@ -42,14 +43,19 @@ The curriculum is structured across three primary tracks:
 │   ├── Module 6: Low-Precision & Tensor Cores (6.1 - 6.2)
 │   └── Module 7: Production LLM Inference & Training Primitives (7.1 - 7.6)
 │
-└── Volume 3: Production GPU Kernels Suite (src/kernels/)
-    ├── Kernel Module 1: Dense Linear (GEMV, Tiled GEMM, WMMA, Split-K)
-    ├── Kernel Module 2: Sparse & MoE (Top-K Gating, Fused MoE, CSR SpMV, 2:4 Sparsity)
-    ├── Kernel Module 3: Attention (FlashAttention-2 Fwd/Bwd, PagedAttention, Sliding Window)
-    ├── Kernel Module 4: Normalizations (RMSNorm, LayerNorm, Fused Add-Norm)
-    ├── Kernel Module 5: Audio (STFT, Mel-Filterbank, Griffin-Lim)
-    ├── Kernel Module 6: Vision & Video (Patches, RoPE-2D, Bicubic Downsample)
-    └── Kernel Module 7: Quantization & Optimizers (FP8 Gemm, INT4 W4A16, AdamW, Lion)
+├── Volume 3: Production GPU Kernels Suite (src/gpu_kernels/)
+│   ├── Kernel Module 1: Dense Linear (GEMV, Tiled GEMM, WMMA, Split-K)
+│   ├── Kernel Module 2: Sparse & MoE (Top-K Gating, Fused MoE, CSR SpMV, 2:4 Sparsity)
+│   ├── Kernel Module 3: Attention (FlashAttention-2 Fwd/Bwd, PagedAttention, Sliding Window)
+│   ├── Kernel Module 4: Normalizations (RMSNorm, LayerNorm, Fused Add-Norm)
+│   ├── Kernel Module 5: Audio (STFT, Mel-Filterbank, Griffin-Lim)
+│   ├── Kernel Module 6: Vision & Video (Patches, RoPE-2D, Bicubic Downsample)
+│   └── Kernel Module 7: Quantization & Optimizers (FP8 Gemm, INT4 W4A16, AdamW, Lion)
+│
+└── Open Practice Lab (kernels/practice/)
+    ├── gpu_check.cu, grid_stride_loop.cu, matrixAddKernel.cu
+    ├── reduce_block.cu, reduce_two_stage.cu, register_pressure_kernel.cu
+    └── tile_reverse.cu, vector_add.cu, vector_dot_reduction.cu
 ```
 
 ---
@@ -170,7 +176,7 @@ To compile and test workbooks inside the running container:
 docker exec -it cuda_systems_lab bash
 
 # Inside the container, compile any workbook with nvcc or clang:
-nvcc -O3 -std=c++17 -arch=sm_80 src/module3/3.1_threads_registers/exercise/beginner_workbook.cu -o output/test && ./output/test
+nvcc -O3 -std=c++17 -arch=sm_80 src/cuda_systems/module3/3.1_threads_registers/exercise/beginner_workbook.cu -o output/test && ./output/test
 
 # Run automated batch evaluation:
 bash src/compile_and_run_cuda.sh all
@@ -258,7 +264,7 @@ Key Features:
 
 Every topic in `src/` follows a standardized structure:
 ```text
-src/moduleX/<topic_name>/
+src/<track_folder>/<topic_name>/
 ├── theory.md               # Hardware mental models, formulas, and CUDA kernel APIs
 ├── exercise/               # Workbooks with // TODO gaps and integrated unit tests
 │   ├── beginner_workbook.cu (or .cpp)
@@ -273,10 +279,10 @@ src/moduleX/<topic_name>/
 4. **Compile & Verify**:
    ```bash
    # Compile and test C++ workbook:
-   clang++ -std=c++20 -O3 src/module1/1.1_basic_offsets/exercise/beginner_workbook.cpp -o output/test && ./output/test
+   clang++ -std=c++20 -O3 src/cpp_systems/1.1_basic_offsets/exercise/beginner_workbook.cpp -o output/test && ./output/test
 
    # Compile and test CUDA workbook:
-   nvcc -O3 -std=c++17 -arch=sm_80 src/module3/3.1_threads_registers/exercise/beginner_workbook.cu -o output/test && ./output/test
+   nvcc -O3 -std=c++17 -arch=sm_80 src/cuda_systems/module3/3.1_threads_registers/exercise/beginner_workbook.cu -o output/test && ./output/test
    ```
 5. **Scorecard**: Workbooks feature built-in test suites verifying edge cases, memory bounds, and correctness:
    ```text

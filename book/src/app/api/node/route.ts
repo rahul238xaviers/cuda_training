@@ -6,6 +6,7 @@ import {
   getTopicLocation,
   countTestsInWorkbook,
   getPlaygroundInfo,
+  getPracticeKernelInfo,
   PlaygroundType,
   METAL_KERNELS,
 } from '@/lib/workspace';
@@ -22,8 +23,32 @@ export async function GET(request: NextRequest) {
   const kernelId = searchParams.get('kernelId');
   const volumeId = searchParams.get('volumeId') || undefined;
   const playgroundType = (searchParams.get('playgroundType') || searchParams.get('subType') || 'cpp') as PlaygroundType;
+  const practiceKernel = searchParams.get('practiceKernel') || searchParams.get('file') || searchParams.get('filename') || 'gpu_check.cu';
 
-  // 1. Multi-Playground Support (C++, CUDA, Kernel)
+  // 1. Open Practice Kernels Support (kernels/practice/*.cu)
+  if (type === 'practice') {
+    const info = getPracticeKernelInfo(practiceKernel);
+    if (!info) {
+      return NextResponse.json({ error: `Practice kernel ${practiceKernel} not found` }, { status: 404 });
+    }
+    const code = fs.existsSync(info.filePath) ? fs.readFileSync(info.filePath, 'utf-8') : '';
+    return NextResponse.json({
+      type: 'practice',
+      practiceKernel: info.filename,
+      id: info.id,
+      title: info.title,
+      subtitle: info.subtitle,
+      filePath: info.filename,
+      language: info.language,
+      ext: info.ext,
+      code,
+      relPath: path.relative(WORKSPACE_ROOT, info.filePath),
+      isCuda: true,
+      isKernel: false,
+    });
+  }
+
+  // 2. Multi-Playground Support (C++, CUDA, Kernel)
   if (type === 'playground') {
     const pgInfo = getPlaygroundInfo(playgroundType);
     let code = '';
@@ -53,7 +78,7 @@ export async function GET(request: NextRequest) {
     });
   }
 
-  // 2. Legacy Metal Kernel blueprint specs (if specifically requested by numeric id)
+  // 3. Legacy Metal Kernel blueprint specs (if specifically requested by numeric id)
   if (type === 'kernel' && kernelId && !chapterId.startsWith('k')) {
     const idNum = parseInt(kernelId || '1', 10);
     const kernelMeta = METAL_KERNELS.find((k) => k.id === idNum) || METAL_KERNELS[0];
