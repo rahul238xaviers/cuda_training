@@ -113,36 +113,40 @@ while (active_len > 1) {
 In systems and GPU kernel code, you will frequently see `s >>= 1` rather than `s /= 2`. Shifting bits directly is a fundamental 1-cycle ALU operation.
 
 To never confuse left shift and right shift, use the **Bench Analogy**:
+Imagine an 8-seat bench where binary bits sit with the most significant bit on the left and the least significant bit on the right:
 
-Imagine a fixed-seat bench where numbers are placed with the biggest values on the left and smallest on the right:
-```text
-Place Values: [128] [64] [32] [16] [8] [4] [2] [1]
-Number (8):     0    0    0    0    1   0   0   0
-```
+| Bench Seat | Bit 7 | Bit 6 | Bit 5 | Bit 4 | Bit 3 | Bit 2 | Bit 1 | Bit 0 | Decimal Value |
+| :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+| **Place Value** | `128` | `64` | `32` | `16` | `8` | `4` | `2` | `1` | — |
+| **Base Number (8)** | `0` | `0` | `0` | `0` | `1` | `0` | `0` | `0` | **8** |
+| **Right Shift: `8 >> 1`** | `0` | `0` | `0` | `0` | `0` | `1` | `0` | `0` | **4** (Halved) |
+| **Left Shift: `8 << 1`** | `0` | `0` | `0` | `1` | `0` | `0` | `0` | `0` | **16** (Doubled) |
 
 The arrowheads (`<<` and `>>`) literally point to the direction you push the people on the bench:
 
-1. **Right Shift: `>>` (Divide by Powers of 2)**
-   * Points to the **right**: `>>>`
-   * Push everyone to the right by `k` seats:
-   * A newcomer `0` sits down on the empty seats on the left for each shift.
-   * The `k` people on the far right **fall off the bench** into the void.
-   * **Universal Formula**: `x >> k = x / (2^k)` (integer division, dropping the remainder)
-     * `x >> 1 = x / (2^1) = x / 2`
-     * `x >> 2 = x / (2^2) = x / 4`
-     * `x >> 3 = x / (2^3) = x / 8`
-   * Example: `32 >> 2 = 32 / 4 = 8`.
+#### 1. Right Shift: `>>` (Divide by Powers of 2)
+* Points to the **right**: `>>>`
+* Push everyone to the right by `k` seats.
+* A newcomer `0` fills in the empty seats on the left.
+* The `k` people pushed off the right edge **fall off the bench** into the void (dropped integer remainder).
 
-2. **Left Shift: `<<` (Multiply by Powers of 2)**
-   * Points to the **left**: `<<<`
-   * Push everyone to the left by `k` seats:
-   * A newcomer `0` sits down on the empty seats on the right for each shift.
-   * The `k` people on the far left **fall off the bench** into the void.
-   * **Universal Formula**: `x << k = x * (2^k)`
-     * `x << 1 = x * (2^1) = x * 2`
-     * `x << 2 = x * (2^2) = x * 4`
-     * `x << 3 = x * (2^3) = x * 8`
-   * Example: `5 << 3 = 5 * 8 = 40`.
+```formula
+x >> k = x / (2^k)
+32 >> 1 = 16
+32 >> 2 = 8
+```
+
+#### 2. Left Shift: `<<` (Multiply by Powers of 2)
+* Points to the **left**: `<<<`
+* Push everyone to the left by `k` seats.
+* A newcomer `0` fills in the empty seats on the right.
+* The `k` people pushed off the left edge fall into the void (overflow).
+
+```formula
+x << k = x * (2^k)
+5 << 1 = 10
+5 << 3 = 40
+```
 
 ```cpp
 // Power-of-2 Tree reduction loop: Halving s from N/2 down to 1:

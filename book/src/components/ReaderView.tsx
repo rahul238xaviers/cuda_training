@@ -85,17 +85,10 @@ export function ReaderView({ title, content, chapterId = '1.1', type, onNavigate
         const lines = text.split('\n');
         const highlightedLines = lines
           .map((line) => {
-            let safe = line.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-            // Comments in parentheses
-            safe = safe.replace(/(\([^)]+\)|\/\/.+$)/g, '<span class="schematic-token-comment">$1</span>');
-            // Brackets e.g. [128]
-            safe = safe.replace(/(\[[0-9a-zA-Z_]+\])/g, '<span class="schematic-token-bracket">$1</span>');
-            // Numbers and floats
-            safe = safe.replace(/(?<![\w#&])(0x[0-9a-fA-F]+|\d+(?:,\d+)*(?:\.\d+)?f?)(?![\w;])/g, '<span class="schematic-token-number">$1</span>');
-            // Label / identifier at start before = or :
-            safe = safe.replace(/^(\s*)([A-Za-z_][A-Za-z0-9_\s]*?)(\s*[:=])/g, '$1<span class="schematic-token-label">$2</span>$3');
-            // Operators
-            safe = safe.replace(/([=+\-*/^]+)/g, '<span class="schematic-token-op">$1</span>');
+            const safe = line
+              .replace(/&/g, '&amp;')
+              .replace(/</g, '&lt;')
+              .replace(/>/g, '&gt;');
             return `<div class="schematic-line font-mono text-xs leading-relaxed whitespace-pre">${safe || '&nbsp;'}</div>`;
           })
           .join('');
