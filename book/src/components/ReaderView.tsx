@@ -82,8 +82,25 @@ export function ReaderView({ title, content, chapterId = '1.1', type, onNavigate
 
       // Case 2: Plain Monospace Text or Memory Timeline (No line numbers)
       if (!cleanLang || cleanLang === 'text') {
-        const safeText = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-        return `<div class="schematic-card my-6 rounded-xl border border-[#2d3748] bg-[#0b0f19] shadow-lg overflow-hidden select-text"><div class="schematic-card-header flex items-center justify-between px-4 py-2 bg-[#121824] border-b border-[#1f2937] text-xs select-none"><div class="flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-indigo-400"></span><span class="schematic-card-title text-[11px] font-mono text-indigo-300 font-semibold tracking-wider uppercase">System Architecture & Schematic</span></div><span class="schematic-card-subtitle text-[10px] text-slate-400 font-mono">Hardware Reference</span></div><div class="schematic-card-body p-4 overflow-x-auto"><div class="font-mono text-xs leading-relaxed text-slate-200 whitespace-pre">${safeText}</div></div></div>`;
+        const lines = text.split('\n');
+        const highlightedLines = lines
+          .map((line) => {
+            let safe = line.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            // Comments in parentheses
+            safe = safe.replace(/(\([^)]+\)|\/\/.+$)/g, '<span class="schematic-token-comment">$1</span>');
+            // Brackets e.g. [128]
+            safe = safe.replace(/(\[[0-9a-zA-Z_]+\])/g, '<span class="schematic-token-bracket">$1</span>');
+            // Numbers and floats
+            safe = safe.replace(/(?<![\w#&])(0x[0-9a-fA-F]+|\d+(?:,\d+)*(?:\.\d+)?f?)(?![\w;])/g, '<span class="schematic-token-number">$1</span>');
+            // Label / identifier at start before = or :
+            safe = safe.replace(/^(\s*)([A-Za-z_][A-Za-z0-9_\s]*?)(\s*[:=])/g, '$1<span class="schematic-token-label">$2</span>$3');
+            // Operators
+            safe = safe.replace(/([=+\-*/^]+)/g, '<span class="schematic-token-op">$1</span>');
+            return `<div class="schematic-line font-mono text-xs leading-relaxed whitespace-pre">${safe || '&nbsp;'}</div>`;
+          })
+          .join('');
+
+        return `<div class="schematic-card my-6 rounded-xl border border-[#2d3748] bg-[#0b0f19] shadow-lg overflow-hidden select-text"><div class="schematic-card-header flex items-center justify-between px-3.5 py-1.5 bg-[#121824] border-b border-[#1f2937] text-xs select-none"><div class="flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-indigo-400"></span><span class="schematic-card-title text-[11px] font-mono text-indigo-300 font-semibold tracking-wider uppercase">System Architecture & Schematic</span></div><button class="copy-btn px-2.5 py-1 rounded text-[11px] font-medium text-slate-400 hover:text-slate-100 bg-[#1a212e] hover:bg-[#232c3d] transition-all cursor-pointer flex items-center gap-1 border border-[#30363d]" data-code="${encodeURIComponent(text)}">Copy</button></div><div class="schematic-card-body p-4 overflow-x-auto">${highlightedLines}</div></div>`;
       }
 
       // Case 3: Executable Programming Code (IDE-grade with line-number gutter)

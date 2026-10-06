@@ -1088,6 +1088,856 @@ export function StridedAccessDiagram({ data }: { data: any }) {
   );
 }
 
+// ============================================================================
+// Tree Reduction Diagram — Chapter 1.3: Hierarchical halving tree in memory
+// ============================================================================
+export function TreeReductionDiagram({ data }: { data: any }) {
+  const [activeTab, setActiveTab] = useState<'pass1' | 'pass2' | 'pass3' | 'odd'>('pass1');
+  const title = data?.title || 'CUDA In-Place Tree Reduction';
+  const subtitle = data?.subtitle || 'Halving stride s = N/2 down to 1. Upper half folds into lower half with zero extra memory.';
+
+  // Cell positions for N = 8
+  const cellW = 72;
+  const cellH = 48;
+  const gutter = 16;
+  const startX = 36;
+  const startY = 110;
+
+  // Render 8 cells for power-of-2 passes
+  const renderCells = (step: 'pass1' | 'pass2' | 'pass3') => {
+    const stride = step === 'pass1' ? 4 : step === 'pass2' ? 2 : 1;
+    const destCount = stride;
+
+    return (
+      <g>
+        {/* Memory Cells 0..7 */}
+        {[...Array(8)].map((_, i) => {
+          const x = startX + i * (cellW + gutter);
+          const isDest = i < destCount;
+          const isSrc = i >= stride && i < stride + destCount;
+          const isInactive = !isDest && !isSrc;
+
+          const fillColor = isDest ? 'var(--diag-dest-fill, #07271a)' : isSrc ? 'var(--diag-src-fill, #24143a)' : 'var(--diag-inactive-fill, #0c1017)';
+          const strokeColor = isDest ? 'var(--diag-dest-stroke, #10b981)' : isSrc ? 'var(--diag-src-stroke, #a855f7)' : 'var(--diag-inactive-stroke, #273142)';
+          const textColor = isDest ? 'var(--diag-dest-text, #34d399)' : isSrc ? 'var(--diag-src-text, #c084fc)' : 'var(--diag-inactive-text, #4b5563)';
+
+          // Values inside cells depending on pass
+          let valLabel = `x[${i}]`;
+          if (step === 'pass1') {
+            if (i === 0) valLabel = 'x0+x4';
+            else if (i === 1) valLabel = 'x1+x5';
+            else if (i === 2) valLabel = 'x2+x6';
+            else if (i === 3) valLabel = 'x3+x7';
+          } else if (step === 'pass2') {
+            if (i === 0) valLabel = 'x0..x6';
+            else if (i === 1) valLabel = 'x1..x7';
+          } else if (step === 'pass3') {
+            if (i === 0) valLabel = 'SUM TOTAL';
+          }
+
+          return (
+            <g key={`cell-${i}`}>
+              <rect
+                x={x}
+                y={startY}
+                width={cellW}
+                height={cellH}
+                rx="8"
+                fill={fillColor}
+                stroke={strokeColor}
+                strokeWidth={isDest || isSrc ? '2' : '1'}
+              />
+              <text
+                x={x + cellW / 2}
+                y={startY + 18}
+                textAnchor="middle"
+                fill={isInactive ? '#4b5563' : '#94a3b8'}
+                fontSize="10"
+                fontFamily="ui-monospace, monospace"
+                fontWeight="bold"
+              >
+                data[{i}]
+              </text>
+              <text
+                x={x + cellW / 2}
+                y={startY + 36}
+                textAnchor="middle"
+                fill={textColor}
+                fontSize={step === 'pass3' && i === 0 ? '10' : '11'}
+                fontFamily="ui-monospace, monospace"
+                fontWeight="bold"
+              >
+                {valLabel}
+              </text>
+            </g>
+          );
+        })}
+
+        {/* Curved folding arrows from source to destination */}
+        {[...Array(destCount)].map((_, i) => {
+          const srcIdx = i + stride;
+          const xDest = startX + i * (cellW + gutter) + cellW / 2;
+          const xSrc = startX + srcIdx * (cellW + gutter) + cellW / 2;
+          const arcTop = startY - 28 - (stride === 4 ? 24 : stride === 2 ? 14 : 6);
+
+          return (
+            <g key={`arrow-${i}`}>
+              <path
+                d={`M ${xSrc} ${startY} Q ${(xSrc + xDest) / 2} ${arcTop} ${xDest} ${startY - 4}`}
+                fill="none"
+                stroke="#a855f7"
+                strokeWidth="2"
+                strokeDasharray="4 3"
+                markerEnd="url(#arrowPurpleHead)"
+              />
+              <rect
+                x={(xSrc + xDest) / 2 - 24}
+                y={arcTop - 12}
+                width="48"
+                height="16"
+                rx="4"
+                fill="#160e29"
+                stroke="#a855f7"
+                strokeWidth="1"
+              />
+              <text
+                x={(xSrc + xDest) / 2}
+                y={arcTop}
+                textAnchor="middle"
+                fill="#d8b4fe"
+                fontSize="9"
+                fontFamily="ui-monospace, monospace"
+                fontWeight="bold"
+              >
+                + s={stride}
+              </text>
+            </g>
+          );
+        })}
+      </g>
+    );
+  };
+
+  // Render N = 5 odd length fold
+  const renderOddFold = () => {
+    return (
+      <g>
+        {/* Memory Cells 0..4 */}
+        {[...Array(5)].map((_, i) => {
+          const x = startX + i * (cellW + gutter + 20);
+          const isDest = i < 2;
+          const isSrc = i >= 2 && i < 4;
+          const isOddTail = i === 4;
+
+          const fillColor = isDest ? 'var(--diag-dest-fill, #07271a)' : isSrc ? 'var(--diag-src-fill, #24143a)' : 'var(--diag-tail-fill, #2b1b04)';
+          const strokeColor = isDest ? 'var(--diag-dest-stroke, #10b981)' : isSrc ? 'var(--diag-src-stroke, #a855f7)' : 'var(--diag-tail-stroke, #f59e0b)';
+          const textColor = isDest ? 'var(--diag-dest-text, #34d399)' : isSrc ? 'var(--diag-src-text, #c084fc)' : 'var(--diag-tail-text, #fbbf24)';
+
+          let valLabel = i === 0 ? 'x0+x2+x4' : i === 1 ? 'x1+x3' : `x[${i}]`;
+
+          return (
+            <g key={`odd-cell-${i}`}>
+              <rect
+                x={x}
+                y={startY}
+                width={cellW + 10}
+                height={cellH}
+                rx="8"
+                fill={fillColor}
+                stroke={strokeColor}
+                strokeWidth="2"
+              />
+              <text
+                x={x + (cellW + 10) / 2}
+                y={startY + 18}
+                textAnchor="middle"
+                fill="#94a3b8"
+                fontSize="10"
+                fontFamily="ui-monospace, monospace"
+                fontWeight="bold"
+              >
+                data[{i}] {isOddTail ? '(ODD TAIL)' : ''}
+              </text>
+              <text
+                x={x + (cellW + 10) / 2}
+                y={startY + 36}
+                textAnchor="middle"
+                fill={textColor}
+                fontSize="10"
+                fontFamily="ui-monospace, monospace"
+                fontWeight="bold"
+              >
+                {valLabel}
+              </text>
+            </g>
+          );
+        })}
+
+        {/* Regular pairs: 2->0 and 3->1 */}
+        {[0, 1].map((i) => {
+          const srcIdx = i + 2;
+          const xDest = startX + i * (cellW + gutter + 20) + (cellW + 10) / 2;
+          const xSrc = startX + srcIdx * (cellW + gutter + 20) + (cellW + 10) / 2;
+          const arcTop = startY - 34;
+
+          return (
+            <path
+              key={`odd-pair-${i}`}
+              d={`M ${xSrc} ${startY} Q ${(xSrc + xDest) / 2} ${arcTop} ${xDest} ${startY - 4}`}
+              fill="none"
+              stroke="#a855f7"
+              strokeWidth="2"
+              strokeDasharray="4 3"
+              markerEnd="url(#arrowPurpleHead)"
+            />
+          );
+        })}
+
+        {/* Big Amber Arc for Odd Tail [4] -> [0] */}
+        {(() => {
+          const xDest = startX + (cellW + 10) / 2;
+          const xTail = startX + 4 * (cellW + gutter + 20) + (cellW + 10) / 2;
+          const arcTop = startY - 60;
+
+          return (
+            <g>
+              <path
+                d={`M ${xTail} ${startY} Q ${(xTail + xDest) / 2} ${arcTop} ${xDest} ${startY - 4}`}
+                fill="none"
+                stroke="#f59e0b"
+                strokeWidth="2.5"
+                markerEnd="url(#arrowAmberHead)"
+              />
+              <rect
+                x={(xTail + xDest) / 2 - 60}
+                y={arcTop - 14}
+                width="120"
+                height="18"
+                rx="6"
+                fill="#241403"
+                stroke="#f59e0b"
+                strokeWidth="1"
+              />
+              <text
+                x={(xTail + xDest) / 2}
+                y={arcTop}
+                textAnchor="middle"
+                fill="#fcd34d"
+                fontSize="9"
+                fontFamily="ui-monospace, monospace"
+                fontWeight="bold"
+              >
+                Odd tail folded into [0]
+              </text>
+            </g>
+          );
+        })()}
+      </g>
+    );
+  };
+
+  return (
+    <div className="my-8 rounded-2xl border border-[#30363d] bg-[#0c1017] shadow-2xl overflow-hidden select-none">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between px-5 py-3.5 bg-[#141923] border-b border-[#21262d] gap-2">
+        <div className="flex items-center gap-2.5">
+          <span className="p-1.5 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+            <Layers className="w-4 h-4" />
+          </span>
+          <div>
+            <h4 className="text-xs font-bold text-slate-100 tracking-wide uppercase font-mono">{title}</h4>
+            <p className="text-[11px] text-slate-400 font-sans mt-0.5">{subtitle}</p>
+          </div>
+        </div>
+
+        {/* Interactive Step Switcher */}
+        <div className="flex items-center gap-1 bg-[#090d14] p-1 rounded-lg border border-[#21262d]">
+          <button
+            onClick={() => setActiveTab('pass1')}
+            className={`px-2.5 py-1 rounded text-[11px] font-mono transition-all cursor-pointer ${
+              activeTab === 'pass1'
+                ? 'bg-purple-500/20 text-purple-300 font-bold border border-purple-500/40 shadow-sm'
+                : 'text-slate-400 hover:text-slate-200'
+            }`}
+          >
+            Pass 1 (s=4)
+          </button>
+          <button
+            onClick={() => setActiveTab('pass2')}
+            className={`px-2.5 py-1 rounded text-[11px] font-mono transition-all cursor-pointer ${
+              activeTab === 'pass2'
+                ? 'bg-purple-500/20 text-purple-300 font-bold border border-purple-500/40 shadow-sm'
+                : 'text-slate-400 hover:text-slate-200'
+            }`}
+          >
+            Pass 2 (s=2)
+          </button>
+          <button
+            onClick={() => setActiveTab('pass3')}
+            className={`px-2.5 py-1 rounded text-[11px] font-mono transition-all cursor-pointer ${
+              activeTab === 'pass3'
+                ? 'bg-emerald-500/20 text-emerald-300 font-bold border border-emerald-500/40 shadow-sm'
+                : 'text-slate-400 hover:text-slate-200'
+            }`}
+          >
+            Pass 3 (s=1)
+          </button>
+          <button
+            onClick={() => setActiveTab('odd')}
+            className={`px-2.5 py-1 rounded text-[11px] font-mono transition-all cursor-pointer ${
+              activeTab === 'odd'
+                ? 'bg-amber-500/20 text-amber-300 font-bold border border-amber-500/40 shadow-sm'
+                : 'text-slate-400 hover:text-slate-200'
+            }`}
+          >
+            Odd Length (N=5)
+          </button>
+        </div>
+      </div>
+
+      <div className="p-6 bg-[#090d14] overflow-x-auto">
+        <svg viewBox="0 0 760 210" className="w-full min-w-[680px]" aria-label="Tree reduction diagram">
+          <defs>
+            <marker id="arrowPurpleHead" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+              <path d="M0,0 L0,6 L8,3 z" fill="#a855f7" />
+            </marker>
+            <marker id="arrowAmberHead" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+              <path d="M0,0 L0,6 L8,3 z" fill="#f59e0b" />
+            </marker>
+          </defs>
+
+          {/* Stride Status Headline */}
+          <text x="36" y="28" fill="var(--diag-headline, #cbd5e1)" fontSize="11" fontWeight="bold" fontFamily="ui-monospace, monospace" letterSpacing="1">
+            {activeTab === 'pass1' && 'PASS 1 (stride = 4): 4 Threads add data[i + 4] into data[i]'}
+            {activeTab === 'pass2' && 'PASS 2 (stride = 2): 2 Threads add data[i + 2] into data[i]'}
+            {activeTab === 'pass3' && 'PASS 3 (stride = 1): Thread 0 adds data[1] into data[0] -> FINAL SUM'}
+            {activeTab === 'odd' && 'ODD LENGTH (N = 5): Half = 2 pairs 0<->2, 1<->3; Unpaired tail [4] folds into [0]'}
+          </text>
+
+          {/* Active Content */}
+          {activeTab === 'odd' ? renderOddFold() : renderCells(activeTab)}
+
+          {/* Legend Footer */}
+          <g transform="translate(36, 185)">
+            <rect x="0" y="0" width="12" height="12" rx="3" fill="var(--diag-dest-fill, #07271a)" stroke="var(--diag-dest-stroke, #10b981)" />
+            <text x="18" y="10" fill="var(--diag-dest-legend, #34d399)" fontSize="10" fontFamily="ui-monospace, monospace" fontWeight="bold">Destination (Accumulator)</text>
+
+            <rect x="180" y="0" width="12" height="12" rx="3" fill="var(--diag-src-fill, #24143a)" stroke="var(--diag-src-stroke, #a855f7)" />
+            <text x="198" y="10" fill="var(--diag-src-legend, #c084fc)" fontSize="10" fontFamily="ui-monospace, monospace" fontWeight="bold">Source (Folded In)</text>
+
+            <rect x="330" y="0" width="12" height="12" rx="3" fill="var(--diag-inactive-fill, #0c1017)" stroke="var(--diag-inactive-stroke, #273142)" />
+            <text x="348" y="10" fill="var(--diag-inactive-legend, #64748b)" fontSize="10" fontFamily="ui-monospace, monospace">Inactive / Sleeping</text>
+
+            <rect x="490" y="0" width="12" height="12" rx="3" fill="var(--diag-tail-fill, #2b1b04)" stroke="var(--diag-tail-stroke, #f59e0b)" />
+            <text x="508" y="10" fill="var(--diag-tail-legend, #fbbf24)" fontSize="10" fontFamily="ui-monospace, monospace" fontWeight="bold">Odd Tail Element</text>
+          </g>
+        </svg>
+      </div>
+    </div>
+  );
+}
+
+// ============================================================================
+// Two-Pointer Partition Diagram — Chapter 1.3: Top-P Threshold Partitioning
+// ============================================================================
+export function TwoPointerPartitionDiagram({ data }: { data: any }) {
+  const [step, setStep] = useState<0 | 1 | 2>(0);
+  const title = data?.title || 'In-Place Two-Pointer Threshold Partitioning';
+  const subtitle = data?.subtitle || 'Zero memory allocation: left & right pointers scan from ends and swap out-of-order logits.';
+
+  // Sample data states
+  const states = [
+    {
+      label: 'Step 0: Initial Scan (Left stops at -1.5, Right stops at 5.0)',
+      arr: [3.2, -1.5, 4.1, 0.8, 2.5, -0.2, 5.0, 1.1],
+      left: 1,
+      right: 6,
+      swapping: false,
+    },
+    {
+      label: 'Step 1: First Swap (data[1] <-> data[6])',
+      arr: [3.2, 5.0, 4.1, 0.8, 2.5, -0.2, -1.5, 1.1],
+      left: 3,
+      right: 4,
+      swapping: true,
+      swapLeft: 1,
+      swapRight: 6,
+    },
+    {
+      label: 'Step 2: Second Swap (data[3] <-> data[4]) -> Partition Complete!',
+      arr: [3.2, 5.0, 4.1, 2.5, 0.8, -0.2, -1.5, 1.1],
+      left: 4,
+      right: 3,
+      swapping: false,
+      completed: true,
+    },
+  ];
+
+  const current = states[step];
+  const cellW = 74;
+  const cellH = 46;
+  const gutter = 14;
+  const startX = 36;
+  const startY = 85;
+
+  return (
+    <div className="my-8 rounded-2xl border border-[#30363d] bg-[#0c1017] shadow-2xl overflow-hidden select-none">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between px-5 py-3.5 bg-[#141923] border-b border-[#21262d] gap-2">
+        <div className="flex items-center gap-2.5">
+          <span className="p-1.5 rounded-lg bg-sky-500/10 text-sky-400 border border-sky-500/20">
+            <Layers className="w-4 h-4" />
+          </span>
+          <div>
+            <h4 className="text-xs font-bold text-slate-100 tracking-wide uppercase font-mono">{title}</h4>
+            <p className="text-[11px] text-slate-400 font-sans mt-0.5">{subtitle}</p>
+          </div>
+        </div>
+
+        {/* Step Buttons */}
+        <div className="flex items-center gap-1 bg-[#090d14] p-1 rounded-lg border border-[#21262d]">
+          <button
+            onClick={() => setStep(0)}
+            className={`px-2.5 py-1 rounded text-[11px] font-mono transition-all cursor-pointer ${
+              step === 0 ? 'bg-sky-500/20 text-sky-300 font-bold border border-sky-500/40' : 'text-slate-400 hover:text-slate-200'
+            }`}
+          >
+            Step 0 (Scan)
+          </button>
+          <button
+            onClick={() => setStep(1)}
+            className={`px-2.5 py-1 rounded text-[11px] font-mono transition-all cursor-pointer ${
+              step === 1 ? 'bg-indigo-500/20 text-indigo-300 font-bold border border-indigo-500/40' : 'text-slate-400 hover:text-slate-200'
+            }`}
+          >
+            Step 1 (Swap)
+          </button>
+          <button
+            onClick={() => setStep(2)}
+            className={`px-2.5 py-1 rounded text-[11px] font-mono transition-all cursor-pointer ${
+              step === 2 ? 'bg-emerald-500/20 text-emerald-300 font-bold border border-emerald-500/40' : 'text-slate-400 hover:text-slate-200'
+            }`}
+          >
+            Step 2 (Final)
+          </button>
+        </div>
+      </div>
+
+      <div className="p-6 bg-[#090d14] overflow-x-auto">
+        <svg viewBox="0 0 760 210" className="w-full min-w-[680px]" aria-label="Two pointer partition diagram">
+          <text x="36" y="28" fill="#94a3b8" fontSize="11" fontWeight="bold" fontFamily="ui-monospace, monospace" letterSpacing="1">
+            {current.label} | Pivot = 2.0
+          </text>
+
+          {/* Partition Dividing Line when completed */}
+          {step === 2 && (
+            <g>
+              <line
+                x1={startX + 4 * (cellW + gutter) - gutter / 2}
+                y1="60"
+                x2={startX + 4 * (cellW + gutter) - gutter / 2}
+                y2="175"
+                stroke="#10b981"
+                strokeWidth="2.5"
+                strokeDasharray="4 2"
+              />
+              <rect
+                x={startX + 4 * (cellW + gutter) - 55}
+                y="55"
+                width="110"
+                height="18"
+                rx="5"
+                fill="#07271a"
+                stroke="#10b981"
+                strokeWidth="1"
+              />
+              <text
+                x={startX + 4 * (cellW + gutter)}
+                y="68"
+                textAnchor="middle"
+                fill="#34d399"
+                fontSize="9"
+                fontFamily="ui-monospace, monospace"
+                fontWeight="bold"
+              >
+                DIVIDER: num_above=4
+              </text>
+            </g>
+          )}
+
+          {/* Array Elements */}
+          {current.arr.map((val, i) => {
+            const x = startX + i * (cellW + gutter);
+            const isAbove = val >= 2.0;
+            const isLeft = i === current.left;
+            const isRight = i === current.right;
+
+            const fillColor = isAbove ? '#0c231a' : '#1e141a';
+            const strokeColor = isAbove ? '#10b981' : '#f43f5e';
+            const textColor = isAbove ? '#6ee7b7' : '#fda4af';
+
+            return (
+              <g key={`part-cell-${i}`}>
+                <rect
+                  x={x}
+                  y={startY}
+                  width={cellW}
+                  height={cellH}
+                  rx="8"
+                  fill={fillColor}
+                  stroke={strokeColor}
+                  strokeWidth="1.5"
+                />
+                <text
+                  x={x + cellW / 2}
+                  y={startY + 18}
+                  textAnchor="middle"
+                  fill="#94a3b8"
+                  fontSize="10"
+                  fontFamily="ui-monospace, monospace"
+                  fontWeight="bold"
+                >
+                  [{i}]
+                </text>
+                <text
+                  x={x + cellW / 2}
+                  y={startY + 35}
+                  textAnchor="middle"
+                  fill={textColor}
+                  fontSize="12"
+                  fontFamily="ui-monospace, monospace"
+                  fontWeight="bold"
+                >
+                  {val.toFixed(1)}
+                </text>
+
+                {/* Left pointer indicator */}
+                {isLeft && step < 2 && (
+                  <g>
+                    <path d={`M ${x + cellW / 2} ${startY + cellH + 6} L ${x + cellW / 2 - 5} ${startY + cellH + 16} L ${x + cellW / 2 + 5} ${startY + cellH + 16} Z`} fill="#38bdf8" />
+                    <text x={x + cellW / 2} y={startY + cellH + 28} textAnchor="middle" fill="#38bdf8" fontSize="10" fontFamily="ui-monospace, monospace" fontWeight="bold">
+                      left
+                    </text>
+                  </g>
+                )}
+
+                {/* Right pointer indicator */}
+                {isRight && step < 2 && (
+                  <g>
+                    <path d={`M ${x + cellW / 2} ${startY + cellH + 6} L ${x + cellW / 2 - 5} ${startY + cellH + 16} L ${x + cellW / 2 + 5} ${startY + cellH + 16} Z`} fill="#f59e0b" />
+                    <text x={x + cellW / 2} y={startY + cellH + 28} textAnchor="middle" fill="#f59e0b" fontSize="10" fontFamily="ui-monospace, monospace" fontWeight="bold">
+                      right
+                    </text>
+                  </g>
+                )}
+              </g>
+            );
+          })}
+
+          {/* Sub-Array labels at step 2 */}
+          {step === 2 && (
+            <g transform="translate(36, 185)">
+              <text x="140" y="0" textAnchor="middle" fill="#34d399" fontSize="11" fontFamily="ui-monospace, monospace" fontWeight="bold">
+                Front Region: All logits &gt;= 2.0 (Indices 0..3)
+              </text>
+              <text x="500" y="0" textAnchor="middle" fill="#fb7185" fontSize="11" fontFamily="ui-monospace, monospace" fontWeight="bold">
+                Back Region: All logits &lt; 2.0 (Indices 4..7)
+              </text>
+            </g>
+          )}
+        </svg>
+      </div>
+    </div>
+  );
+}
+
+// ============================================================================
+// Ring AllReduce Diagram — Chapter 1.3: Distributed Ring-AllReduce Shift
+// ============================================================================
+export function RingAllReduceDiagram({ data }: { data: any }) {
+  const [step, setStep] = useState<0 | 1 | 2>(0);
+  const title = data?.title || 'Distributed Ring-AllReduce (NCCL / Megatron-LM)';
+  const subtitle = data?.subtitle || '4 GPUs arranged in a ring exchanging chunks across (P - 1) Reduce-Scatter steps.';
+
+  // Node coordinates for 4 GPUs in a diamond/ring
+  const gpus = [
+    { id: 0, x: 380, y: 55, name: 'GPU 0' },
+    { id: 1, x: 570, y: 140, name: 'GPU 1' },
+    { id: 2, x: 380, y: 225, name: 'GPU 2' },
+    { id: 3, x: 190, y: 140, name: 'GPU 3' },
+  ];
+
+  return (
+    <div className="my-8 rounded-2xl border border-[#30363d] bg-[#0c1017] shadow-2xl overflow-hidden select-none">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between px-5 py-3.5 bg-[#141923] border-b border-[#21262d] gap-2">
+        <div className="flex items-center gap-2.5">
+          <span className="p-1.5 rounded-lg bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
+            <Layers className="w-4 h-4" />
+          </span>
+          <div>
+            <h4 className="text-xs font-bold text-slate-100 tracking-wide uppercase font-mono">{title}</h4>
+            <p className="text-[11px] text-slate-400 font-sans mt-0.5">{subtitle}</p>
+          </div>
+        </div>
+
+        {/* Step Buttons */}
+        <div className="flex items-center gap-1 bg-[#090d14] p-1 rounded-lg border border-[#21262d]">
+          <button
+            onClick={() => setStep(0)}
+            className={`px-2.5 py-1 rounded text-[11px] font-mono transition-all cursor-pointer ${
+              step === 0 ? 'bg-indigo-500/20 text-indigo-300 font-bold border border-indigo-500/40' : 'text-slate-400 hover:text-slate-200'
+            }`}
+          >
+            Step 0: Send c=r
+          </button>
+          <button
+            onClick={() => setStep(1)}
+            className={`px-2.5 py-1 rounded text-[11px] font-mono transition-all cursor-pointer ${
+              step === 1 ? 'bg-indigo-500/20 text-indigo-300 font-bold border border-indigo-500/40' : 'text-slate-400 hover:text-slate-200'
+            }`}
+          >
+            Step 1: Send c=r-1
+          </button>
+          <button
+            onClick={() => setStep(2)}
+            className={`px-2.5 py-1 rounded text-[11px] font-mono transition-all cursor-pointer ${
+              step === 2 ? 'bg-emerald-500/20 text-emerald-300 font-bold border border-emerald-500/40' : 'text-slate-400 hover:text-slate-200'
+            }`}
+          >
+            Step 2: Fully Reduced
+          </button>
+        </div>
+      </div>
+
+      <div className="p-6 bg-[#090d14] overflow-x-auto">
+        <svg viewBox="0 0 760 300" className="w-full min-w-[680px]" aria-label="Ring AllReduce diagram">
+          <defs>
+            <marker id="ringArrowHead" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+              <path d="M0,0 L0,6 L8,3 z" fill="#6366f1" />
+            </marker>
+          </defs>
+
+          {/* Ring Transfer Arcs */}
+          <path d="M 440 60 Q 550 70 560 120" fill="none" stroke="#6366f1" strokeWidth="2.5" markerEnd="url(#ringArrowHead)" />
+          <path d="M 570 180 Q 540 230 440 235" fill="none" stroke="#6366f1" strokeWidth="2.5" markerEnd="url(#ringArrowHead)" />
+          <path d="M 320 235 Q 220 230 200 180" fill="none" stroke="#6366f1" strokeWidth="2.5" markerEnd="url(#ringArrowHead)" />
+          <path d="M 200 120 Q 230 70 320 60" fill="none" stroke="#6366f1" strokeWidth="2.5" markerEnd="url(#ringArrowHead)" />
+
+          {/* Center Info Badge */}
+          <rect x="290" y="125" width="180" height="42" rx="8" fill="#141926" stroke="#312e81" strokeWidth="1" />
+          <text x="380" y="142" textAnchor="middle" fill="#a5b4fc" fontSize="10" fontFamily="ui-monospace, monospace" fontWeight="bold">
+            Clockwise Ring Network
+          </text>
+          <text x="380" y="157" textAnchor="middle" fill="#818cf8" fontSize="9" fontFamily="ui-monospace, monospace">
+            Send Chunk -&gt; Rank (r + 1) % 4
+          </text>
+
+          {/* 4 GPU Nodes */}
+          {gpus.map((gpu) => (
+            <g key={`gpu-${gpu.id}`}>
+              <rect
+                x={gpu.x - 70}
+                y={gpu.y - 28}
+                width="140"
+                height="56"
+                rx="10"
+                fill="#0d131f"
+                stroke={step === 2 ? '#10b981' : '#4f46e5'}
+                strokeWidth="2"
+              />
+              <text
+                x={gpu.x}
+                y={gpu.y - 10}
+                textAnchor="middle"
+                fill="#f8fafc"
+                fontSize="11"
+                fontFamily="ui-monospace, monospace"
+                fontWeight="bold"
+              >
+                {gpu.name}
+              </text>
+
+              {/* 4 Chunks inside GPU */}
+              {[0, 1, 2, 3].map((c) => {
+                const cx = gpu.x - 52 + c * 26;
+                const cy = gpu.y + 4;
+                const isFullyReduced = step === 2 && c === (gpu.id + 1) % 4;
+
+                return (
+                  <rect
+                    key={`gpu-${gpu.id}-c-${c}`}
+                    x={cx}
+                    y={cy}
+                    width="22"
+                    height="16"
+                    rx="3"
+                    fill={isFullyReduced ? '#064e3b' : '#1e1b4b'}
+                    stroke={isFullyReduced ? '#10b981' : '#6366f1'}
+                    strokeWidth="1"
+                  />
+                );
+              })}
+            </g>
+          ))}
+        </svg>
+      </div>
+    </div>
+  );
+}
+
+// ============================================================================
+// Two-Pass Grid-Strided Vector Reduction Diagram — Chapter 1.3
+// ============================================================================
+export function TwoPassGridReductionDiagram({ data }: { data: any }) {
+  const title = data?.title || 'Two-Pass Grid-Strided Vector Reduction (The Mark Harris Pattern)';
+  const subtitle = data?.subtitle || 'Saturating 900+ GB/s Memory Bandwidth: Pass 1 reduces blocks into partial sums, Pass 2 yields the final scalar.';
+
+  return (
+    <div className="my-8 rounded-2xl border border-[#30363d] bg-[#0c1017] shadow-2xl overflow-hidden select-none">
+      <div className="flex items-center justify-between px-5 py-3.5 bg-[#141923] border-b border-[#21262d]">
+        <div className="flex items-center gap-2.5">
+          <span className="p-1.5 rounded-lg bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">
+            <Layers className="w-4 h-4" />
+          </span>
+          <div>
+            <h4 className="text-xs font-bold text-slate-100 tracking-wide uppercase font-mono">{title}</h4>
+            <p className="text-[11px] text-slate-400 font-sans mt-0.5">{subtitle}</p>
+          </div>
+        </div>
+        <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 font-semibold">
+          TWO-PASS PIPELINE
+        </span>
+      </div>
+
+      <div className="p-6 bg-[#090d14] overflow-x-auto">
+        <svg viewBox="0 0 760 250" className="w-full min-w-[680px]" aria-label="Two-pass grid reduction diagram">
+          <defs>
+            <marker id="arrowCyanHead" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+              <path d="M0,0 L0,6 L8,3 z" fill="#06b6d4" />
+            </marker>
+            <marker id="arrowEmeraldHead" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+              <path d="M0,0 L0,6 L8,3 z" fill="#10b981" />
+            </marker>
+          </defs>
+
+          {/* Level 1: Global Input Array */}
+          <text x="36" y="20" fill="#94a3b8" fontSize="10" fontWeight="bold" fontFamily="ui-monospace, monospace" letterSpacing="1">
+            LEVEL 1: GLOBAL INPUT TENSOR IN HIGH-BANDWIDTH MEMORY (N = 262,144 FLOATS = 1 MB)
+          </text>
+
+          {[
+            { label: 'Block 0 [256 floats]', x: 36, w: 125 },
+            { label: 'Block 1 [256 floats]', x: 171, w: 125 },
+            { label: 'Block 2 [256 floats]', x: 306, w: 125 },
+            { label: '...', x: 441, w: 60, isEllipsis: true },
+            { label: 'Block 1023 [256 floats]', x: 511, w: 145 },
+          ].map((b, i) => (
+            <g key={`l1-blk-${i}`}>
+              <rect
+                x={b.x}
+                y="30"
+                width={b.w}
+                height="36"
+                rx="6"
+                fill={b.isEllipsis ? '#0c1017' : '#0e1c2a'}
+                stroke={b.isEllipsis ? '#263043' : '#0ea5e9'}
+                strokeWidth="1.5"
+              />
+              <text
+                x={b.x + b.w / 2}
+                y="52"
+                textAnchor="middle"
+                fill={b.isEllipsis ? '#64748b' : '#7dd3fc'}
+                fontSize="10"
+                fontFamily="ui-monospace, monospace"
+                fontWeight="bold"
+              >
+                {b.label}
+              </text>
+            </g>
+          ))}
+
+          {/* Pass 1 Reduction Arrows */}
+          {[98, 233, 368, 583].map((cx, i) => (
+            <path
+              key={`arrow-p1-${i}`}
+              d={`M ${cx} 66 L ${cx} 96`}
+              stroke="#06b6d4"
+              strokeWidth="1.8"
+              strokeDasharray="3 2"
+              markerEnd="url(#arrowCyanHead)"
+            />
+          ))}
+
+          {/* Pass 1 Phase Annotation Badge */}
+          <rect x="664" y="66" width="86" height="20" rx="4" fill="#08202d" stroke="#06b6d4" strokeWidth="1" />
+          <text x="707" y="80" textAnchor="middle" fill="#67e8f9" fontSize="8" fontFamily="ui-monospace, monospace" fontWeight="bold">
+            PASS 1: BLK TREE
+          </text>
+
+          {/* Level 2: Partial Sums Buffer */}
+          <text x="36" y="112" fill="#94a3b8" fontSize="10" fontWeight="bold" fontFamily="ui-monospace, monospace" letterSpacing="1">
+            LEVEL 2: PARTIAL SUMS BUFFER (1,024 PARTIAL SUMS = 4 KB)
+          </text>
+
+          {[
+            { label: 'partial[0]', x: 36, w: 125 },
+            { label: 'partial[1]', x: 171, w: 125 },
+            { label: 'partial[2]', x: 306, w: 125 },
+            { label: '...', x: 441, w: 60, isEllipsis: true },
+            { label: 'partial[1023]', x: 511, w: 145 },
+          ].map((b, i) => (
+            <g key={`l2-part-${i}`}>
+              <rect
+                x={b.x}
+                y="122"
+                width={b.w}
+                height="34"
+                rx="6"
+                fill={b.isEllipsis ? '#0c1017' : '#072418'}
+                stroke={b.isEllipsis ? '#263043' : '#10b981'}
+                strokeWidth="1.5"
+              />
+              <text
+                x={b.x + b.w / 2}
+                y="143"
+                textAnchor="middle"
+                fill={b.isEllipsis ? '#64748b' : '#6ee7b7'}
+                fontSize="10"
+                fontFamily="ui-monospace, monospace"
+                fontWeight="bold"
+              >
+                {b.label}
+              </text>
+            </g>
+          ))}
+
+          {/* Pass 2 Converging Arrows */}
+          <path d="M 98 156 Q 250 190 310 192" fill="none" stroke="#10b981" strokeWidth="1.8" markerEnd="url(#arrowEmeraldHead)" />
+          <path d="M 233 156 Q 280 185 310 192" fill="none" stroke="#10b981" strokeWidth="1.8" markerEnd="url(#arrowEmeraldHead)" />
+          <path d="M 368 156 Q 370 180 370 188" fill="none" stroke="#10b981" strokeWidth="1.8" markerEnd="url(#arrowEmeraldHead)" />
+          <path d="M 583 156 Q 490 190 430 192" fill="none" stroke="#10b981" strokeWidth="1.8" markerEnd="url(#arrowEmeraldHead)" />
+
+          {/* Level 3: Final Output Scalar */}
+          <rect x="290" y="194" width="200" height="40" rx="8" fill="#042014" stroke="#10b981" strokeWidth="2.5" />
+          <text x="390" y="212" textAnchor="middle" fill="#86efac" fontSize="10" fontFamily="ui-monospace, monospace" fontWeight="bold">
+            FINAL GLOBAL SUM
+          </text>
+          <text x="390" y="226" textAnchor="middle" fill="#4ade80" fontSize="10" fontFamily="ui-monospace, monospace">
+            total = sum(partial[0..1023])
+          </text>
+
+          {/* Hardware Badges */}
+          <g transform="translate(530, 202)">
+            <rect x="0" y="0" width="170" height="24" rx="4" fill="#0d1829" stroke="#38bdf8" strokeWidth="1" />
+            <text x="85" y="15" textAnchor="middle" fill="#38bdf8" fontSize="9" fontFamily="ui-monospace, monospace" fontWeight="bold">
+              Peak Coalesced Bandwidth
+            </text>
+          </g>
+        </svg>
+      </div>
+    </div>
+  );
+}
+
 export function GenericDiagramRenderer({ type, payload }: { type: string; payload: string }) {
   let parsed: any = {};
   try {
@@ -1100,6 +1950,26 @@ export function GenericDiagramRenderer({ type, payload }: { type: string; payloa
   }
 
   const cleanType = type.toLowerCase().replace(/_/g, '-');
+
+  // Two-pass reduction / grid-stride reduction (Chapter 1.3)
+  if (cleanType.includes('two-pass') || cleanType.includes('grid-stride') || cleanType.includes('two-pass-reduction')) {
+    return <TwoPassGridReductionDiagram data={parsed} />;
+  }
+
+  // Tree reduction (Chapter 1.3)
+  if (cleanType.includes('tree-reduction') || cleanType.includes('reduction')) {
+    return <TreeReductionDiagram data={parsed} />;
+  }
+
+  // Two-pointer threshold partitioning (Chapter 1.3)
+  if (cleanType.includes('two-pointer') || cleanType.includes('partition')) {
+    return <TwoPointerPartitionDiagram data={parsed} />;
+  }
+
+  // Ring AllReduce (Chapter 1.3)
+  if (cleanType.includes('ring') || cleanType.includes('allreduce')) {
+    return <RingAllReduceDiagram data={parsed} />;
+  }
 
   if (cleanType.includes('pitched') || cleanType.includes('pitch') || cleanType.includes('2d-pitch')) {
     return <PitchedMemoryDiagram title={parsed.title} subtitle={parsed.subtitle} />;
@@ -1128,7 +1998,6 @@ export function GenericDiagramRenderer({ type, payload }: { type: string; payloa
   if (cleanType === 'pointer-addressing' || cleanType.includes('ladder') || cleanType.includes('byte-ladder')) {
     return <PointerAddressingDiagram data={parsed} />;
   }
-
 
   if (cleanType.includes('cache') || cleanType.includes('align') || cleanType.includes('straddle')) {
     return <CacheLineDiagram title={parsed.title} subtitle={parsed.subtitle} />;

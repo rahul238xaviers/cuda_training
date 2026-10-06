@@ -131,7 +131,9 @@
           "title": "Module 1: Dense Linear & GEMM Kernels",
           "displayTitle": "Dense Linear & GEMM Kernels",
           "tagline": "GEMV, 2D Block-Tiled GEMM, Tensor Core WMMA & Split-K GEMM",
-          "category": "Dense Linear"
+          "category": "Dense Linear",
+          "track": "text",
+          "lifecycle": "Pre-Training & Inference"
         },
         {
           "num": 2,
@@ -139,7 +141,9 @@
           "title": "Module 2: Sparse & Mixture-of-Experts (MoE) Kernels",
           "displayTitle": "Sparse & Mixture-of-Experts (MoE)",
           "tagline": "Top-K Gating, MoE SwiGLU GEMM, CSR SpMV & 2:4 Structured Sparsity",
-          "category": "Sparse & MoE"
+          "category": "Sparse & MoE",
+          "track": "text",
+          "lifecycle": "Inference Serving & MoE"
         },
         {
           "num": 3,
@@ -147,7 +151,9 @@
           "title": "Module 3: Attention & Sequence Transformations",
           "displayTitle": "Attention & Sequence Transformations",
           "tagline": "FlashAttention-2, FlashDecoding, RoPE Embeddings & SSM Parallel Scan",
-          "category": "Attention"
+          "category": "Attention",
+          "track": "text",
+          "lifecycle": "Pre-Training & Inference Serving"
         },
         {
           "num": 4,
@@ -155,7 +161,9 @@
           "title": "Module 4: Fused Normalizations & Activations",
           "displayTitle": "Fused Normalizations & Activations",
           "tagline": "Fused RMSNorm, LayerNorm Residual Add, SwiGLU & Online Softmax",
-          "category": "Normalizations"
+          "category": "Normalizations",
+          "track": "text",
+          "lifecycle": "Pre-Training & Post-Training"
         },
         {
           "num": 5,
@@ -163,7 +171,9 @@
           "title": "Module 5: Multimodal Audio Processing Kernels",
           "displayTitle": "Multimodal Audio Processing",
           "tagline": "STFT / Mel Spectrogram Filterbank, 1D Dilated Conv & Fused CTC Decode",
-          "category": "Audio"
+          "category": "Audio",
+          "track": "audio",
+          "lifecycle": "Preprocessing & Streaming Inference"
         },
         {
           "num": 6,
@@ -171,7 +181,9 @@
           "title": "Module 6: Multimodal Vision & Video Kernels",
           "displayTitle": "Multimodal Vision & Video",
           "tagline": "ViT 2D Patchify, 3D Spatio-Temporal Window Attention & Bilinear Grid Sample",
-          "category": "Vision & Video"
+          "category": "Vision & Video",
+          "track": "vision",
+          "lifecycle": "Preprocessing & Diffusion Inference"
         },
         {
           "num": 7,
@@ -179,7 +191,9 @@
           "title": "Module 7: Low-Bit Quantization & Training Optimizers",
           "displayTitle": "Quantization & Training Optimizers",
           "tagline": "INT4/FP8 Dequant GEMV, Fused AdamW Step & Gradient L2 Norm Clipping",
-          "category": "Quantization & Optimizers"
+          "category": "Quantization & Optimizers",
+          "track": "text",
+          "lifecycle": "Post-Training & Pre-Training"
         }
       ]
     }

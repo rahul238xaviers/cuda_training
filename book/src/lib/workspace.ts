@@ -699,6 +699,8 @@ export interface KernelModuleMeta {
   title: string;
   displayTitle: string;
   tagline: string;
+  track?: 'text' | 'audio' | 'vision';
+  lifecycle?: string;
   topics: KernelTopicMeta[];
   totalTests: number;
   passedTests: number;
@@ -876,6 +878,8 @@ export function scanDynamicKernelModules(): KernelModuleMeta[] {
       title: info.title,
       displayTitle: info.displayTitle,
       tagline: info.tagline,
+      track: mDef.track as 'text' | 'audio' | 'vision' | undefined,
+      lifecycle: mDef.lifecycle,
       topics,
       totalTests: modTotalTests,
       passedTests: modPassedTests,

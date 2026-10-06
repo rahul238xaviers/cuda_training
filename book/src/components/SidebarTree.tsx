@@ -144,6 +144,7 @@ export function SidebarTree({
   // Volume 3 Accordions: Module & Topic
   const [openKernelModuleId, setOpenKernelModuleId] = useState<string>('1');
   const [openKernelTopicId, setOpenKernelTopicId] = useState<string>('k1.1');
+  const [kernelTrack, setKernelTrack] = useState<'all' | 'text' | 'audio' | 'vision'>('all');
 
   // Multi-Playground Menu Dropdown
   const [isPlaygroundMenuOpen, setIsPlaygroundMenuOpen] = useState(false);
@@ -379,17 +380,29 @@ export function SidebarTree({
       .filter(Boolean) as CudaModuleMeta[];
   }, [cudaModules, searchQuery]);
 
-  // Filter Volume 3 Kernel Modules
+  // Filter Volume 3 Kernel Modules by Domain Track and Search Query
   const filteredKernelModules = useMemo(() => {
-    if (!searchQuery.trim()) return kernelModules;
+    let mods = kernelModules;
+    if (kernelTrack !== 'all') {
+      mods = mods.filter((mod) => {
+        if (mod.track) return mod.track === kernelTrack;
+        if (kernelTrack === 'text') return [1, 2, 3, 4, 7].includes(mod.displayNum);
+        if (kernelTrack === 'audio') return mod.displayNum === 5;
+        if (kernelTrack === 'vision') return mod.displayNum === 6;
+        return true;
+      });
+    }
+
+    if (!searchQuery.trim()) return mods;
     const q = searchQuery.toLowerCase();
-    return kernelModules
+    return mods
       .map((mod) => {
         const matchesModule =
           mod.title.toLowerCase().includes(q) ||
           mod.displayTitle.toLowerCase().includes(q) ||
           `m${mod.displayNum}`.includes(q) ||
-          mod.tagline?.toLowerCase().includes(q);
+          mod.tagline?.toLowerCase().includes(q) ||
+          (mod.lifecycle && mod.lifecycle.toLowerCase().includes(q));
         const matchedTopics = mod.topics.filter(
           (t) =>
             t.title.toLowerCase().includes(q) ||
@@ -402,7 +415,7 @@ export function SidebarTree({
         return null;
       })
       .filter(Boolean) as KernelModuleMeta[];
-  }, [kernelModules, searchQuery]);
+  }, [kernelModules, searchQuery, kernelTrack]);
 
   const toggleCppModule = (modId: string) => {
     setOpenCppModuleId((prev) => (prev === modId ? '' : modId));
@@ -884,6 +897,56 @@ export function SidebarTree({
               );
             })()}
 
+            {/* Volume 3 Modality & Lifecycle Track Selector */}
+            {activeVolume === 'vol3' && (
+              <div className="mt-2.5 p-1 rounded-xl bg-[#090d16] border border-[#232b3d] grid grid-cols-4 gap-1 shadow-inner">
+                <button
+                  onClick={() => setKernelTrack('all')}
+                  className={`py-1 px-1 rounded-lg text-[10px] font-semibold transition-all cursor-pointer text-center ${
+                    kernelTrack === 'all'
+                      ? 'bg-[#2b1f0c] border border-amber-400 text-amber-200 shadow-[0_0_10px_rgba(245,158,11,0.25)] font-bold'
+                      : 'text-slate-400 hover:text-slate-200 hover:bg-[#161b24]'
+                  }`}
+                  title="View all 7 kernel modules (22 production kernels)"
+                >
+                  All (7)
+                </button>
+                <button
+                  onClick={() => setKernelTrack('text')}
+                  className={`py-1 px-1 rounded-lg text-[10px] font-semibold transition-all cursor-pointer text-center ${
+                    kernelTrack === 'text'
+                      ? 'bg-[#10233b] border border-sky-400 text-sky-200 shadow-[0_0_10px_rgba(56,189,248,0.25)] font-bold'
+                      : 'text-slate-400 hover:text-slate-200 hover:bg-[#161b24]'
+                  }`}
+                  title="Track A: Text & Frontier LLMs (Pre-Training, LoRA, PagedAttention)"
+                >
+                  💬 Text
+                </button>
+                <button
+                  onClick={() => setKernelTrack('audio')}
+                  className={`py-1 px-1 rounded-lg text-[10px] font-semibold transition-all cursor-pointer text-center ${
+                    kernelTrack === 'audio'
+                      ? 'bg-[#082422] border border-teal-400 text-teal-200 shadow-[0_0_10px_rgba(45,212,191,0.25)] font-bold'
+                      : 'text-slate-400 hover:text-slate-200 hover:bg-[#161b24]'
+                  }`}
+                  title="Track B: Audio & Speech AI (STFT Mel-Spectrogram, Streaming Conformer, CTC)"
+                >
+                  🎙️ Audio
+                </button>
+                <button
+                  onClick={() => setKernelTrack('vision')}
+                  className={`py-1 px-1 rounded-lg text-[10px] font-semibold transition-all cursor-pointer text-center ${
+                    kernelTrack === 'vision'
+                      ? 'bg-[#220e2e] border border-fuchsia-400 text-fuchsia-200 shadow-[0_0_10px_rgba(232,121,249,0.25)] font-bold'
+                      : 'text-slate-400 hover:text-slate-200 hover:bg-[#161b24]'
+                  }`}
+                  title="Track C: Vision, Diffusion & Video (3D Video Patchify, VAE Latent Decoder)"
+                >
+                  👁️ Vision
+                </button>
+              </div>
+            )}
+
             {/* Compact Curriculum Search */}
             <div className="mt-2 relative">
               <Search className="w-3 h-3 text-slate-500 absolute left-2 top-1/2 -translate-y-1/2" />
@@ -891,7 +954,13 @@ export function SidebarTree({
                 type="text"
                 placeholder={
                   activeVolume === 'vol3'
-                    ? 'Search 7 kernel modules...'
+                    ? kernelTrack === 'text'
+                      ? 'Search 5 Text LLM modules...'
+                      : kernelTrack === 'audio'
+                      ? 'Search Audio & Speech modules...'
+                      : kernelTrack === 'vision'
+                      ? 'Search Vision & Video modules...'
+                      : 'Search 7 kernel modules...'
                     : activeVolume === 'vol2'
                     ? 'Search 6 CUDA modules...'
                     : 'Search 5 C++ modules...'
@@ -1264,7 +1333,7 @@ export function SidebarTree({
                                             tier,
                                           })
                                         }
-                                        className={`topic-sublink w-full flex items-center justify-between px-2 py-1 rounded text-[11px] text-left transition-all ${
+                                        className={`sidebar-tier-btn topic-sublink w-full flex items-center justify-between px-2 py-1 rounded text-[11px] text-left transition-all ${
                                           activeNode.type === 'workbook' &&
                                           activeNode.chapterId === ch.id &&
                                           activeNode.tier === tier
@@ -1289,7 +1358,7 @@ export function SidebarTree({
                                             </span>
                                           )}
                                         </div>
-                                        <span className="text-[9.5px] font-mono text-slate-500">
+                                        <span className="sidebar-exercise-tracker text-[9.5px] font-mono text-slate-500">
                                           {ch.tiers[tier].status === 'passed'
                                             ? 'Passed'
                                             : (ch.tiers[tier].testsPassed ?? 0) > 0
@@ -1477,7 +1546,7 @@ export function SidebarTree({
                                             tier,
                                           })
                                         }
-                                        className={`topic-sublink w-full flex items-center justify-between px-2 py-1 rounded text-[11px] text-left transition-all ${
+                                        className={`sidebar-tier-btn topic-sublink w-full flex items-center justify-between px-2 py-1 rounded text-[11px] text-left transition-all ${
                                           activeNode.type === 'workbook' &&
                                           activeNode.chapterId === topic.id &&
                                           activeNode.tier === tier
@@ -1502,7 +1571,7 @@ export function SidebarTree({
                                             </span>
                                           )}
                                         </div>
-                                        <span className="text-[9.5px] font-mono text-slate-500">
+                                        <span className="sidebar-exercise-tracker text-[9.5px] font-mono text-slate-500">
                                           {topic.tiers[tier].status === 'passed'
                                             ? 'Passed'
                                             : (topic.tiers[tier].testsPassed ?? 0) > 0
@@ -1529,6 +1598,31 @@ export function SidebarTree({
         {/* ===================== VOLUME 3: PRODUCTION KERNELS (7 MODULES) ===================== */}
         {navMode === 'curriculum' && activeVolume === 'vol3' && (
           <div className="space-y-2">
+            {/* Domain Track Info Banner */}
+            {kernelTrack !== 'all' && (
+              <div className="p-2 rounded-lg border border-amber-500/25 bg-[#151006] text-[10.5px]">
+                <div className="font-semibold text-amber-300 flex items-center justify-between">
+                  <span>
+                    {kernelTrack === 'text'
+                      ? '💬 Text & Frontier LLMs Track'
+                      : kernelTrack === 'audio'
+                      ? '🎙️ Audio & Speech AI Track'
+                      : '👁️ Vision & Video Diffusion Track'}
+                  </span>
+                  <span className="text-[9px] font-mono text-amber-400/80 bg-amber-500/15 px-1.5 py-0.5 rounded border border-amber-500/30">
+                    {filteredKernelModules.length} Modules
+                  </span>
+                </div>
+                <div className="text-[9.5px] text-slate-400 mt-0.5">
+                  {kernelTrack === 'text'
+                    ? 'Pre-Training Gradients, LoRA Delta-GEMM & PagedAttention KV-Cache'
+                    : kernelTrack === 'audio'
+                    ? 'Streaming 2D STFT Mel-Spectrogram, 1D Convolutions & CTC Decode'
+                    : '3D Spatio-Temporal Video Patch Engine & VAE Latent Image Decoders'}
+                </div>
+              </div>
+            )}
+
             {filteredKernelModules.map((mod: KernelModuleMeta) => {
               const isModOpen = openKernelModuleId === mod.id;
               const statusInfo = getModuleStatus(mod.topics, mod.completed, mod.passedTests);
@@ -1548,6 +1642,11 @@ export function SidebarTree({
                       <span className={`truncate text-xs ${style.title}`} title={mod.displayTitle}>
                         {mod.displayTitle}
                       </span>
+                      {mod.lifecycle && (
+                        <span className="hidden sm:inline-block text-[8.5px] font-mono px-1.5 py-0.2 rounded bg-amber-500/10 text-amber-300/80 border border-amber-500/20 shrink-0">
+                          {mod.lifecycle.split('&')[0].trim()}
+                        </span>
+                      )}
                     </div>
 
                     <div className="flex items-center gap-1.5 shrink-0">
@@ -1690,7 +1789,7 @@ export function SidebarTree({
                                             tier,
                                           })
                                         }
-                                        className={`topic-sublink w-full flex items-center justify-between px-2 py-1 rounded text-[11px] text-left transition-all ${
+                                        className={`sidebar-tier-btn topic-sublink w-full flex items-center justify-between px-2 py-1 rounded text-[11px] text-left transition-all ${
                                           activeNode.type === 'workbook' &&
                                           activeNode.chapterId === topic.id &&
                                           activeNode.tier === tier
@@ -1715,7 +1814,7 @@ export function SidebarTree({
                                             </span>
                                           )}
                                         </div>
-                                        <span className="text-[9.5px] font-mono text-slate-500">
+                                        <span className="sidebar-exercise-tracker text-[9.5px] font-mono text-slate-500">
                                           {topic.tiers[tier].status === 'passed'
                                             ? 'Passed'
                                             : (topic.tiers[tier].testsPassed ?? 0) > 0

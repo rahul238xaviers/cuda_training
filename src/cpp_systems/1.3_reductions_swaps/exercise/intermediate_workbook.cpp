@@ -39,17 +39,19 @@ int main() {
     int total = 0;
 
     // -------------------------------------------------------------------------
-    // PROBLEM 1: 256-Element Power-of-2 Tree Reduction
+    // PROBLEM 1: Non-Power-of-2 In-Place Tree Reduction (Odd-Length Tensor Folding)
     //
-    // Context: In CUDA thread-block reductions (e.g. 256 threads per block), threads
-    //          collaborate across log2(256) = 8 steps to sum 256 values:
-    //          stride = 128, 64, 32, 16, 8, 4, 2, 1.
+    // Context: Real deep learning sequence lengths (e.g. N=125 tokens) are rarely
+    //          exact powers of 2. In parallel tree reduction, halving an odd length
+    //          (e.g. 125 / 2 = 62) leaves the odd tail element un-paired!
     //
-    // Task: Given array `data` of size N=256:
-    //       Perform in-place tree reduction to store total sum in data[0].
+    // Task: Given array `data` of odd size N=125:
+    //       Perform in-place tree reduction folding halves while ensuring odd tail
+    //       elements are folded into the reduction (e.g. into data[0] on each odd step)
+    //       until the total sum resides in data[0].
     // -------------------------------------------------------------------------
     {
-        const int N = 256;
+        const int N = 125;
         std::vector<float> data(N);
         float expected_sum = 0.0f;
         for (int i = 0; i < N; ++i) {
@@ -57,13 +59,16 @@ int main() {
             expected_sum += data[i];
         }
 
-        // TODO: In-place tree reduction over 8 halving steps.
+        // TODO: In-place tree reduction with odd-length boundary folding.
+        // On each halving step: pair indices i with i + half.
+        // If current length is odd, fold the un-paired tail element into data[0].
+        // Continue until active length is reduced to 1.
         // --- YOUR CODE STARTS HERE ---
 
         // --- YOUR CODE ENDS HERE ---
 
         bool p1_passed = (std::abs(data[0] - expected_sum) < 1e-2f);
-        reportStatus("Problem 1: 256-Element Tree Reduction", p1_passed);
+        reportStatus("Problem 1: Non-Power-of-2 Tree Reduction (N=125)", p1_passed);
         if (p1_passed) passed++;
         total++;
     }

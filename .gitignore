@@ -82,5 +82,5 @@ user_progress.json
 *.bak
 *.db
 .user_data/
-book/data/
-data/
+data/*
+!data/**/.gitkeep

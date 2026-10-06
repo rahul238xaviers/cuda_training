@@ -17,6 +17,27 @@
     --success: #238636;
     --warning: #d29922;
     --danger: #da3633;
+
+    /* Diagram Colors (Dark Silicon Canvas Default) */
+    --diag-bg: #090d14;
+    --diag-dest-fill: #07271a;
+    --diag-dest-stroke: #10b981;
+    --diag-dest-text: #34d399;
+    --diag-dest-legend: #34d399;
+    --diag-src-fill: #24143a;
+    --diag-src-stroke: #a855f7;
+    --diag-src-text: #c084fc;
+    --diag-src-legend: #c084fc;
+    --diag-tail-fill: #2b1b04;
+    --diag-tail-stroke: #f59e0b;
+    --diag-tail-text: #fbbf24;
+    --diag-tail-legend: #fbbf24;
+    --diag-inactive-fill: #0c1017;
+    --diag-inactive-stroke: #273142;
+    --diag-inactive-text: #4b5563;
+    --diag-inactive-legend: #64748b;
+    --diag-label: #94a3b8;
+    --diag-headline: #cbd5e1;
   }
 
   body {
@@ -157,6 +178,156 @@
   color: #8b949e;
   font-style: italic;
   margin: 1.2rem 0;
+}
+
+/* =========================================================================
+   BASE STYLES FOR TEACHER DRAWER & BUTTONS (DEFAULT DARK THEME)
+   ========================================================================= */
+.teacher-drawer-aside {
+  background-color: #131720;
+  border-left: 1px solid #21262d;
+}
+.teacher-drawer-header {
+  background-color: #161b24;
+  border-bottom: 1px solid #21262d;
+}
+.teacher-drawer-title {
+  color: #f1f5f9;
+}
+.teacher-drawer-subtitle {
+  color: #94a3b8;
+}
+.teacher-header-btn {
+  color: #94a3b8;
+  background-color: transparent;
+  transition: all 0.15s ease;
+}
+.teacher-header-btn:hover {
+  background-color: #21262d;
+  color: #f1f5f9;
+}
+.teacher-context-strip {
+  background-color: #0d1117;
+  border-bottom: 1px solid #21262d;
+  color: #94a3b8;
+}
+.teacher-message-history {
+  background-color: #131720;
+}
+.teacher-assistant-bubble {
+  background-color: #121827;
+  border: 1px solid #1e293b;
+  color: #e2e8f0;
+}
+.teacher-user-bubble {
+  background-color: #0284c7;
+  color: #ffffff;
+}
+.teacher-chips-bar {
+  background-color: #0e131d;
+  border-top: 1px solid #21262d;
+}
+.teacher-chip-btn {
+  background-color: #161d2b;
+  border: 1px solid #253043;
+  color: #cbd5e1;
+  transition: all 0.15s ease;
+}
+.teacher-chip-btn:hover {
+  background-color: #1e273a;
+  border-color: rgba(56, 189, 248, 0.5);
+  color: #38bdf8;
+}
+.teacher-drawer-footer {
+  background-color: #131720;
+  border-top: 1px solid #21262d;
+}
+.teacher-textarea {
+  background-color: #0d1117;
+  border: 1px solid #30363d;
+  color: #f1f5f9;
+}
+.teacher-textarea::placeholder {
+  color: #64748b;
+}
+.teacher-send-btn {
+  background-color: #0284c7;
+  color: #ffffff;
+  transition: all 0.15s ease;
+}
+.teacher-send-btn:hover {
+  background-color: #0369a1;
+}
+
+/* Default Theme Teacher Drawer Controls & Resizing */
+.teacher-resize-handle {
+  transition: background-color 0.15s ease;
+}
+.teacher-resize-indicator {
+  background-color: #64748b;
+}
+.teacher-resize-handle:hover .teacher-resize-indicator,
+.teacher-resize-handle.active .teacher-resize-indicator {
+  background-color: #38bdf8;
+}
+
+.teacher-session-btn {
+  background-color: #1a2232;
+  border: 1px solid #28354b;
+  color: #f1f5f9;
+}
+.teacher-session-btn:hover {
+  background-color: #222d42;
+  border-color: #3b82f6;
+}
+.teacher-session-dropdown {
+  background-color: #141b27;
+  border: 1px solid #28354b;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
+}
+.teacher-session-item:hover {
+  background-color: #1e283a;
+}
+.teacher-session-new-btn {
+  background-color: #0284c7;
+  color: #ffffff;
+}
+.teacher-session-new-btn:hover {
+  background-color: #0369a1;
+}
+
+.teacher-context-inspector {
+  background-color: #0d121c;
+  border-color: #21262d;
+}
+.teacher-context-box {
+  background-color: #121824;
+  border: 1px solid #1e2738;
+}
+.teacher-context-toggle-btn {
+  background-color: #161d2b;
+  border: 1px solid #253043;
+  color: #cbd5e1;
+}
+.teacher-context-toggle-btn:hover {
+  background-color: #1e273a;
+  border-color: #818cf8;
+  color: #c7d2fe;
+}
+.teacher-steps-card {
+  background-color: #0c121d;
+  border: 1px solid #1e293b;
+}
+
+.apply-code-btn {
+  background-color: rgba(16, 185, 129, 0.15);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  color: #6ee7b7;
+}
+.apply-code-btn:hover {
+  background-color: rgba(16, 185, 129, 0.25);
+  border-color: #10b981;
+  color: #a7f3d0;
 }
 
 /* =========================================================================
@@ -679,6 +850,230 @@ html[data-theme="cuda-night"] .reader-action-btn:hover {
   background-color: #0f2416 !important;
   border-color: #1e452c !important;
   color: #e8f7ee !important;
+}
+
+/* CUDA Night Ask Teacher Drawer */
+html[data-theme="cuda-night"] .teacher-drawer-aside {
+  background-color: #040906 !important;
+  border-left: 1px solid #143d22 !important;
+  box-shadow: -8px 0 30px rgba(0, 255, 136, 0.06) !important;
+}
+
+html[data-theme="cuda-night"] .teacher-drawer-header {
+  background-color: #08140c !important;
+  border-bottom: 1px solid #143d22 !important;
+}
+
+html[data-theme="cuda-night"] .teacher-drawer-title {
+  color: #e8f7ee !important;
+}
+
+html[data-theme="cuda-night"] .teacher-drawer-subtitle {
+  color: #80ffa2 !important;
+}
+
+html[data-theme="cuda-night"] .teacher-header-btn {
+  color: #80ffa2 !important;
+  background-color: transparent !important;
+}
+
+html[data-theme="cuda-night"] .teacher-header-btn:hover {
+  background-color: #0d2818 !important;
+  color: #00ff88 !important;
+}
+
+html[data-theme="cuda-night"] .teacher-context-strip {
+  background-color: #061009 !important;
+  border-bottom: 1px solid #143d22 !important;
+  color: #80ffa2 !important;
+}
+
+html[data-theme="cuda-night"] .teacher-chips-bar {
+  background-color: #06120a !important;
+  border-top: 1px solid #143d22 !important;
+}
+
+html[data-theme="cuda-night"] .teacher-chip-btn {
+  background-color: #091a0e !important;
+  border: 1px solid #143d22 !important;
+  color: #b4e3c8 !important;
+}
+
+html[data-theme="cuda-night"] .teacher-chip-btn:hover {
+  background-color: #0f2c18 !important;
+  border-color: #00ff8880 !important;
+  color: #00ff88 !important;
+}
+
+html[data-theme="cuda-night"] .teacher-message-history {
+  background-color: #040906 !important;
+}
+
+html[data-theme="cuda-night"] .teacher-assistant-bubble {
+  background-color: #07150c !important;
+  border: 1px solid #143d22 !important;
+  color: #e8f7ee !important;
+}
+
+html[data-theme="cuda-night"] .teacher-assistant-bubble p {
+  color: #e8f7ee !important;
+}
+
+html[data-theme="cuda-night"] .teacher-assistant-bubble pre {
+  background-color: #050d07 !important;
+  border: 1px solid #143d22 !important;
+}
+
+html[data-theme="cuda-night"] .teacher-assistant-bubble pre code {
+  color: #00ff88 !important;
+}
+
+html[data-theme="cuda-night"] .teacher-user-bubble {
+  background-color: #0e381b !important;
+  border: 1px solid #00ff8850 !important;
+  color: #e8f7ee !important;
+}
+
+html[data-theme="cuda-night"] .teacher-drawer-footer {
+  background-color: #08140c !important;
+  border-top: 1px solid #143d22 !important;
+}
+
+html[data-theme="cuda-night"] .teacher-textarea {
+  background-color: #050e08 !important;
+  border: 1px solid #143d22 !important;
+  color: #e8f7ee !important;
+}
+
+html[data-theme="cuda-night"] .teacher-textarea::placeholder {
+  color: #4d825f !important;
+}
+
+html[data-theme="cuda-night"] .teacher-send-btn {
+  background-color: #00ff88 !important;
+  color: #040906 !important;
+  font-weight: 700 !important;
+}
+
+html[data-theme="cuda-night"] .teacher-send-btn:hover {
+  background-color: #33ff9f !important;
+}
+
+/* CUDA Night Teacher Drawer Controls & Resizing */
+html[data-theme="cuda-night"] .teacher-resize-handle:hover,
+html[data-theme="cuda-night"] .teacher-resize-handle.active {
+  background-color: rgba(0, 255, 136, 0.25) !important;
+}
+html[data-theme="cuda-night"] .teacher-resize-indicator {
+  background-color: #2e6b47 !important;
+}
+html[data-theme="cuda-night"] .teacher-resize-handle:hover .teacher-resize-indicator,
+html[data-theme="cuda-night"] .teacher-resize-handle.active .teacher-resize-indicator {
+  background-color: #00ff88 !important;
+}
+html[data-theme="cuda-night"] .teacher-session-btn {
+  background-color: #08120a !important;
+  border-color: #143d22 !important;
+  color: #c6fadc !important;
+}
+html[data-theme="cuda-night"] .teacher-session-btn:hover {
+  background-color: #0e2415 !important;
+  border-color: #00ff88 !important;
+}
+html[data-theme="cuda-night"] .teacher-session-dropdown {
+  background-color: #050d07 !important;
+  border-color: #143d22 !important;
+}
+html[data-theme="cuda-night"] .teacher-session-item:hover {
+  background-color: #0b1e11 !important;
+}
+html[data-theme="cuda-night"] .teacher-session-new-btn {
+  background-color: #00ff88 !important;
+  color: #040906 !important;
+}
+html[data-theme="cuda-night"] .teacher-session-new-btn:hover {
+  background-color: #33ff9f !important;
+}
+html[data-theme="cuda-night"] .teacher-context-inspector {
+  background-color: #040805 !important;
+  border-color: #143d22 !important;
+}
+html[data-theme="cuda-night"] .teacher-context-box {
+  background-color: #08120a !important;
+  border-color: #143d22 !important;
+}
+html[data-theme="cuda-night"] .teacher-context-toggle-btn {
+  background-color: #08120a !important;
+  border-color: #143d22 !important;
+  color: #a3e6be !important;
+}
+html[data-theme="cuda-night"] .teacher-context-toggle-btn:hover {
+  background-color: #0e2415 !important;
+  border-color: #00ff88 !important;
+  color: #e8f7ee !important;
+}
+html[data-theme="cuda-night"] .teacher-steps-card {
+  background-color: #050d07 !important;
+  border-color: #143d22 !important;
+}
+html[data-theme="cuda-night"] .apply-code-btn {
+  background-color: rgba(0, 255, 136, 0.15) !important;
+  border-color: rgba(0, 255, 136, 0.4) !important;
+  color: #00ff88 !important;
+}
+html[data-theme="cuda-night"] .apply-code-btn:hover {
+  background-color: rgba(0, 255, 136, 0.25) !important;
+  border-color: #00ff88 !important;
+  color: #bbfcdc !important;
+}
+
+/* CUDA Night Terminal Dock */
+html[data-theme="cuda-night"] .terminal-dock-pane {
+  background-color: #040805 !important;
+  border-top: 1px solid #143d22 !important;
+}
+
+html[data-theme="cuda-night"] .terminal-dock-header {
+  background-color: #08140c !important;
+  border-bottom: 1px solid #143d22 !important;
+}
+
+html[data-theme="cuda-night"] .terminal-dock-tab {
+  color: #80ffa2 !important;
+}
+
+html[data-theme="cuda-night"] .terminal-dock-tab:hover {
+  background-color: #0d2818 !important;
+  color: #00ff88 !important;
+}
+
+html[data-theme="cuda-night"] .terminal-dock-tab-active {
+  background-color: #0e2b17 !important;
+  color: #00ff88 !important;
+  border: 1px solid #00ff8880 !important;
+  box-shadow: 0 0 10px rgba(0, 255, 136, 0.15) !important;
+}
+
+/* CUDA Night Sidebar Exercise Tracker */
+html[data-theme="cuda-night"] .sidebar-tier-btn {
+  color: #b4e3c8 !important;
+}
+
+html[data-theme="cuda-night"] .sidebar-tier-btn:hover {
+  background-color: #0d1e13 !important;
+  color: #e8f7ee !important;
+}
+
+html[data-theme="cuda-night"] .sidebar-tier-btn.topic-sublink-active {
+  background-color: #122919 !important;
+  color: #00ff88 !important;
+  font-weight: 600 !important;
+  border: 1px solid #00ff8840 !important;
+}
+
+html[data-theme="cuda-night"] .sidebar-exercise-tracker {
+  color: #76b900 !important;
+  font-weight: 600 !important;
 }
 
 /* =========================================================================
@@ -1453,6 +1848,360 @@ html[data-theme="next-light"] .reader-action-btn:hover {
   background-color: #f3f4f6 !important;
   border-color: #d1d5db !important;
   color: #111827 !important;
+}
+
+/* ==========================================================================
+   SCHEMATIC MONOSPACE TOKEN HIGHLIGHTING (BOTH DARK & LIGHT)
+   ========================================================================== */
+.schematic-token-comment {
+  color: #94a3b8;
+  font-style: italic;
+}
+.schematic-token-bracket {
+  color: #fbbf24;
+  font-weight: 600;
+}
+.schematic-token-number {
+  color: #34d399;
+  font-weight: 600;
+}
+.schematic-token-label {
+  color: #38bdf8;
+  font-weight: bold;
+}
+.schematic-token-op {
+  color: #c084fc;
+  font-weight: bold;
+}
+
+/* ==========================================================================
+   NEXT.JS LIGHT THEME COMPREHENSIVE OVERRIDES
+   ========================================================================== */
+html[data-theme="next-light"] {
+  --diag-bg: #f8fafc;
+  --diag-dest-fill: #ecfdf5;
+  --diag-dest-stroke: #059669;
+  --diag-dest-text: #065f46;
+  --diag-dest-legend: #047857;
+  --diag-src-fill: #faf5ff;
+  --diag-src-stroke: #9333ea;
+  --diag-src-text: #6b21a8;
+  --diag-src-legend: #581c87;
+  --diag-tail-fill: #fffbeb;
+  --diag-tail-stroke: #d97706;
+  --diag-tail-text: #92400e;
+  --diag-tail-legend: #78350f;
+  --diag-inactive-fill: #f1f5f9;
+  --diag-inactive-stroke: #cbd5e1;
+  --diag-inactive-text: #64748b;
+  --diag-inactive-legend: #64748b;
+  --diag-label: #334155;
+  --diag-headline: #0f172a;
+}
+
+/* Next-Light Schematic Card Tokens */
+html[data-theme="next-light"] .schematic-token-comment {
+  color: #64748b !important;
+  font-style: italic !important;
+}
+html[data-theme="next-light"] .schematic-token-bracket {
+  color: #d97706 !important;
+  font-weight: 600 !important;
+}
+html[data-theme="next-light"] .schematic-token-number {
+  color: #059669 !important;
+  font-weight: 600 !important;
+}
+html[data-theme="next-light"] .schematic-token-label {
+  color: #0284c7 !important;
+  font-weight: bold !important;
+}
+html[data-theme="next-light"] .schematic-token-op {
+  color: #7c3aed !important;
+  font-weight: bold !important;
+}
+
+/* Copy Button on Code Blocks & Schematic Cards */
+html[data-theme="next-light"] .copy-btn {
+  background-color: #f1f5f9 !important;
+  color: #334155 !important;
+  border: 1px solid #cbd5e1 !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05) !important;
+}
+html[data-theme="next-light"] .copy-btn:hover {
+  background-color: #e2e8f0 !important;
+  color: #0f172a !important;
+  border-color: #94a3b8 !important;
+}
+
+/* Code Block Wrapper & Header */
+html[data-theme="next-light"] .code-block-wrapper {
+  background-color: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04) !important;
+}
+html[data-theme="next-light"] .code-block-header {
+  background-color: #f8fafc !important;
+  border-bottom: 1px solid #e2e8f0 !important;
+}
+html[data-theme="next-light"] .code-block-header span {
+  color: #334155 !important;
+}
+html[data-theme="next-light"] .line-gutter {
+  color: #94a3b8 !important;
+  border-right-color: #e2e8f0 !important;
+}
+html[data-theme="next-light"] .line-code {
+  color: #0f172a !important;
+}
+html[data-theme="next-light"] .code-line:hover {
+  background-color: #f8fafc !important;
+}
+
+/* Syntax Highlighting for Next-Light */
+html[data-theme="next-light"] .hljs-keyword,
+html[data-theme="next-light"] .hljs-built_in,
+html[data-theme="next-light"] .hljs-type {
+  color: #7c3aed !important;
+  font-weight: 600 !important;
+}
+html[data-theme="next-light"] .hljs-string,
+html[data-theme="next-light"] .hljs-regexp {
+  color: #059669 !important;
+}
+html[data-theme="next-light"] .hljs-number,
+html[data-theme="next-light"] .hljs-literal {
+  color: #d97706 !important;
+}
+html[data-theme="next-light"] .hljs-comment {
+  color: #64748b !important;
+  font-style: italic !important;
+}
+html[data-theme="next-light"] .hljs-function,
+html[data-theme="next-light"] .hljs-title {
+  color: #0284c7 !important;
+  font-weight: 600 !important;
+}
+html[data-theme="next-light"] .hljs-variable,
+html[data-theme="next-light"] .hljs-params {
+  color: #0f172a !important;
+}
+
+/* Terminal Dock Header, Tabs, & Body */
+html[data-theme="next-light"] .terminal-dock-pane {
+  background-color: #f8fafc !important;
+  border-top: 1px solid #e2e8f0 !important;
+}
+html[data-theme="next-light"] .terminal-dock-header {
+  background-color: #f1f5f9 !important;
+  border-bottom: 1px solid #cbd5e1 !important;
+}
+html[data-theme="next-light"] .terminal-dock-tab {
+  color: #475569 !important;
+}
+html[data-theme="next-light"] .terminal-dock-tab:hover {
+  background-color: #e2e8f0 !important;
+  color: #0f172a !important;
+}
+html[data-theme="next-light"] .terminal-dock-tab-active {
+  background-color: #ffffff !important;
+  color: #0284c7 !important;
+  border: 1px solid #cbd5e1 !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08) !important;
+}
+
+/* Ask Teacher Drawer */
+html[data-theme="next-light"] .teacher-drawer-aside {
+  background-color: #ffffff !important;
+  border-left: 1px solid #e2e8f0 !important;
+  box-shadow: -8px 0 30px rgba(0, 0, 0, 0.08) !important;
+}
+html[data-theme="next-light"] .teacher-drawer-header {
+  background-color: #f8fafc !important;
+  border-bottom: 1px solid #e2e8f0 !important;
+}
+html[data-theme="next-light"] .teacher-drawer-title {
+  color: #0f172a !important;
+}
+html[data-theme="next-light"] .teacher-drawer-subtitle {
+  color: #64748b !important;
+}
+html[data-theme="next-light"] .teacher-header-btn {
+  color: #475569 !important;
+  background-color: transparent !important;
+}
+html[data-theme="next-light"] .teacher-header-btn:hover {
+  background-color: #f1f5f9 !important;
+  color: #0f172a !important;
+}
+html[data-theme="next-light"] .teacher-context-strip {
+  background-color: #f1f5f9 !important;
+  border-bottom: 1px solid #e2e8f0 !important;
+  color: #475569 !important;
+}
+html[data-theme="next-light"] .teacher-message-history {
+  background-color: #f8fafc !important;
+}
+html[data-theme="next-light"] .teacher-assistant-bubble {
+  background-color: #ffffff !important;
+  color: #1e293b !important;
+  border: 1px solid #e2e8f0 !important;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04) !important;
+}
+html[data-theme="next-light"] .teacher-assistant-bubble p {
+  color: #1e293b !important;
+}
+html[data-theme="next-light"] .teacher-assistant-bubble pre {
+  background-color: #f1f5f9 !important;
+  border: 1px solid #cbd5e1 !important;
+}
+html[data-theme="next-light"] .teacher-assistant-bubble pre code {
+  color: #0f172a !important;
+}
+html[data-theme="next-light"] .teacher-user-bubble {
+  background-color: #0284c7 !important;
+  color: #ffffff !important;
+}
+html[data-theme="next-light"] .teacher-chips-bar {
+  background-color: #f8fafc !important;
+  border-top: 1px solid #e2e8f0 !important;
+}
+html[data-theme="next-light"] .teacher-chip-btn {
+  background-color: #ffffff !important;
+  border: 1px solid #cbd5e1 !important;
+  color: #334155 !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04) !important;
+}
+html[data-theme="next-light"] .teacher-chip-btn:hover {
+  background-color: #f1f5f9 !important;
+  border-color: #0284c7 !important;
+  color: #0284c7 !important;
+}
+html[data-theme="next-light"] .teacher-drawer-footer {
+  background-color: #ffffff !important;
+  border-top: 1px solid #e2e8f0 !important;
+}
+html[data-theme="next-light"] .teacher-textarea {
+  background-color: #f8fafc !important;
+  color: #0f172a !important;
+  border: 1px solid #cbd5e1 !important;
+}
+html[data-theme="next-light"] .teacher-textarea::placeholder {
+  color: #94a3b8 !important;
+}
+html[data-theme="next-light"] .teacher-send-btn {
+  background-color: #0284c7 !important;
+  color: #ffffff !important;
+}
+html[data-theme="next-light"] .teacher-send-btn:hover {
+  background-color: #0369a1 !important;
+}
+
+/* Next Light Teacher Drawer Controls & Resizing */
+html[data-theme="next-light"] .teacher-resize-handle:hover,
+html[data-theme="next-light"] .teacher-resize-handle.active {
+  background-color: rgba(2, 132, 199, 0.2) !important;
+}
+html[data-theme="next-light"] .teacher-resize-indicator {
+  background-color: #94a3b8 !important;
+}
+html[data-theme="next-light"] .teacher-resize-handle:hover .teacher-resize-indicator,
+html[data-theme="next-light"] .teacher-resize-handle.active .teacher-resize-indicator {
+  background-color: #0284c7 !important;
+}
+html[data-theme="next-light"] .teacher-session-btn {
+  background-color: #f8fafc !important;
+  border-color: #cbd5e1 !important;
+  color: #0f172a !important;
+}
+html[data-theme="next-light"] .teacher-session-btn:hover {
+  background-color: #f1f5f9 !important;
+  border-color: #0284c7 !important;
+}
+html[data-theme="next-light"] .teacher-session-dropdown {
+  background-color: #ffffff !important;
+  border-color: #cbd5e1 !important;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1) !important;
+}
+html[data-theme="next-light"] .teacher-session-item:hover {
+  background-color: #f1f5f9 !important;
+}
+html[data-theme="next-light"] .teacher-session-new-btn {
+  background-color: #0284c7 !important;
+  color: #ffffff !important;
+}
+html[data-theme="next-light"] .teacher-session-new-btn:hover {
+  background-color: #0369a1 !important;
+}
+html[data-theme="next-light"] .teacher-context-inspector {
+  background-color: #f8fafc !important;
+  border-color: #e2e8f0 !important;
+}
+html[data-theme="next-light"] .teacher-context-box {
+  background-color: #ffffff !important;
+  border-color: #e2e8f0 !important;
+}
+html[data-theme="next-light"] .teacher-context-toggle-btn {
+  background-color: #ffffff !important;
+  border-color: #cbd5e1 !important;
+  color: #334155 !important;
+}
+html[data-theme="next-light"] .teacher-context-toggle-btn:hover {
+  background-color: #f1f5f9 !important;
+  border-color: #6366f1 !important;
+  color: #4f46e5 !important;
+}
+html[data-theme="next-light"] .teacher-steps-card {
+  background-color: #f8fafc !important;
+  border-color: #e2e8f0 !important;
+}
+html[data-theme="next-light"] .apply-code-btn {
+  background-color: #ecfdf5 !important;
+  border: 1px solid #a7f3d0 !important;
+  color: #047857 !important;
+}
+html[data-theme="next-light"] .apply-code-btn:hover {
+  background-color: #d1fae5 !important;
+  border-color: #059669 !important;
+  color: #065f46 !important;
+}
+
+/* Sidebar Exercise Tracker (0/3) & Menu Buttons */
+html[data-theme="next-light"] .sidebar-tier-btn {
+  color: #334155 !important;
+}
+html[data-theme="next-light"] .sidebar-tier-btn:hover {
+  background-color: #f1f5f9 !important;
+  color: #0f172a !important;
+}
+html[data-theme="next-light"] .sidebar-tier-btn.topic-sublink-active {
+  background-color: #e0f2fe !important;
+  color: #0369a1 !important;
+  font-weight: 600 !important;
+}
+html[data-theme="next-light"] .sidebar-exercise-tracker {
+  color: #475569 !important;
+  font-weight: 600 !important;
+}
+html[data-theme="next-light"] .sidebar-vol-tabs {
+  background-color: #f1f5f9 !important;
+  border-color: #e2e8f0 !important;
+}
+html[data-theme="next-light"] .sidebar-vol-btn {
+  background-color: #ffffff !important;
+  color: #475569 !important;
+  border-color: #e2e8f0 !important;
+}
+html[data-theme="next-light"] .sidebar-vol-btn:hover {
+  background-color: #f8fafc !important;
+  color: #0f172a !important;
+  border-color: #cbd5e1 !important;
+}
+html[data-theme="next-light"] .sidebar-vol-btn-active {
+  background-color: #e0f2fe !important;
+  color: #0369a1 !important;
+  border-color: #7dd3fc !important;
+  box-shadow: 0 1px 4px rgba(3, 105, 161, 0.15) !important;
 }
 
 

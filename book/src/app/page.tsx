@@ -155,9 +155,32 @@ export default function BookPlatform() {
     fetchNodeContent(activeNode, target);
   }, [activeNode, fetchNodeContent, target]);
 
-  const handleTargetChange = (newTarget: 'solution' | 'exercise') => {
+  const handleTargetChange = async (newTarget: 'solution' | 'exercise') => {
+    if (newTarget === target) return;
+
+    // 1. If currently on 'solution' with unsaved work, auto-save before leaving!
+    if (target === 'solution' && saveStatus === 'unsaved') {
+      await handleSave(activeCode);
+    }
+
+    // 2. If switching to starter, show confirmation & reassurance prompt
+    if (newTarget === 'exercise') {
+      const ok = window.confirm(
+        "Switch to Starter view?\n\n" +
+        "Your solution is safely saved on disk.\n" +
+        "The starter template is read-only for reference.\n\n" +
+        "Click OK to view Starter (switch back to 'Solution' anytime to edit & run)."
+      );
+      if (!ok) return;
+    }
+
     setTarget(newTarget);
     if (nodeData && activeNode.type === 'workbook') {
+      if (target === 'solution') {
+        nodeData.solutionCode = activeCode;
+      } else {
+        nodeData.exerciseCode = activeCode;
+      }
       const code = newTarget === 'solution' ? nodeData.solutionCode : nodeData.exerciseCode;
       setActiveCode(code || '');
       setSaveStatus('saved');
@@ -497,6 +520,7 @@ export default function BookPlatform() {
                   runStatus={runStatus}
                   durationMs={durationMs}
                   exitCode={exitCode}
+                  readOnly={target === 'exercise' && activeNode.type === 'workbook'}
                   problems={nodeData?.problems}
                   testsCount={nodeData?.testsCount}
                   testsPassed={nodeData?.testsPassed}
@@ -518,7 +542,15 @@ export default function BookPlatform() {
         isOpen={isTeacherOpen}
         onClose={() => setIsTeacherOpen(false)}
         chapterId={activeNode.chapterId}
-        context={activeCode.substring(0, 300)}
+        activeNode={activeNode}
+        activeCode={activeCode}
+        runOutput={terminalOutput}
+        runStatus={runStatus}
+        nodeData={nodeData}
+        onApplyCode={(newCode) => {
+          handleCodeChange(newCode);
+          setTerminalOutput((prev) => `${prev}\n[Teacher]: Code successfully applied to editor buffer.`);
+        }}
       />
     </div>
   );

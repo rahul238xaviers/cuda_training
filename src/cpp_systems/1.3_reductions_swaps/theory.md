@@ -63,18 +63,16 @@ float accumulate_sum_ilp4(const float* data, size_t n) {
 ### Technique 2: Tree-Based In-Place Reduction (CUDA Halving Loop)
 When multiple processing cores or SIMD lanes cooperate on an array of size `N`, they do not traverse sequentially. Instead, they perform a **tree reduction** by folding the upper half of the array into the lower half:
 
-```text
-Pass 1 (s = 32): arr[0..31]  += arr[32..63]  --> 32 sums remain
-Pass 2 (s = 16): arr[0..15]  += arr[16..31]  --> 16 sums remain
-Pass 3 (s = 8):  arr[0..7]   += arr[8..15]   --> 8 sums remain
-Pass 4 (s = 4):  arr[0..3]   += arr[4..7]    --> 4 sums remain
-Pass 5 (s = 2):  arr[0..1]   += arr[2..3]    --> 2 sums remain
-Pass 6 (s = 1):  arr[0]      += arr[1]       --> arr[0] holds the final total sum!
+```diagram:tree-reduction
+{
+  "title": "CUDA In-Place Tree Reduction & Boundary Folding",
+  "subtitle": "Interactive Halving Stride: s = 4, 2, 1 and Odd-Length N = 5 Boundary Fold"
+}
 ```
+
 Total passes: `log2(N)` (for `N = 64`, exactly 6 passes instead of 64 sequential additions).
 
 #### Where Does the Stride Index `s` Start? (`s = N / 2`)
-A common beginner question is: *Why start at `s = 32` instead of `s = 64`?*
 * The array size is `N = 64`, meaning valid memory indices are `arr[0]` through `arr[63]`.
 * In each step, index `i` is paired with index `i + s`: `arr[i] += arr[i + s]`.
 * If you started at `s = 64`: at the very first element `i = 0`, you would access `arr[0 + 64]` which is `arr[64]`. This is **out of bounds** and causes a segmentation fault!
@@ -82,6 +80,32 @@ A common beginner question is: *Why start at `s = 32` instead of `s = 64`?*
   * `i = 0` pairs with `arr[0 + 32] = arr[32]`.
   * `i = 31` pairs with `arr[31 + 32] = arr[63]` (the very last valid element).
   * Every single element from `0` to `63` is accounted for with zero out-of-bounds reads.
+
+---
+
+### Technique 2B: Non-Power-of-2 & Odd-Length Boundary Folding
+In real deep learning inference and training, sequence lengths and batch dimensions are rarely neat powers of 2 (e.g. sequence lengths like 125, 73, or 384).
+
+If an active length is odd (e.g. `curr_len = 5`), a standard bit-shift `5 / 2 = 2` only pairs indices `0` with `2` and `1` with `3`. The last element at index `4` has no partner and would be **silently lost**!
+
+Use the **Odd Length (N = 5)** tab in the interactive diagram above to see how the odd tail at `data[4]` is folded into `data[0]` during each halving pass.
+
+```cpp
+// General Non-Power-of-2 Tree Reduction with Boundary Folding:
+int active_len = N;
+while (active_len > 1) {
+    int half = active_len / 2;
+    for (int i = 0; i < half; ++i) {
+        data[i] += data[i + half];
+    }
+    if (active_len % 2 != 0) {
+        // Fold un-paired odd tail element into data[0]:
+        data[0] += data[active_len - 1];
+    }
+    active_len = half;
+}
+// data[0] now holds the mathematically exact sum for ANY positive integer N!
+```
 
 ---
 
@@ -121,7 +145,7 @@ The arrowheads (`<<` and `>>`) literally point to the direction you push the peo
    * Example: `5 << 3 = 5 * 8 = 40`.
 
 ```cpp
-// Tree reduction loop: Halving s from N/2 down to 1:
+// Power-of-2 Tree reduction loop: Halving s from N/2 down to 1:
 for (int s = N / 2; s > 0; s >>= 1) {
     for (int i = 0; i < s; ++i) {
         arr[i] += arr[i + s];
@@ -151,9 +175,9 @@ Rather than copying the physical data, you swap the pointer variables themselves
 ```diagram:pointer-swap
 {
   "title": "O(1) Zero-Copy Pointer Swap",
-  "subtitle": "Swapping two 64-bit pointer variables in registers redirects data targets without copying a single byte.",
-  "bufA": "Buffer A — float[1024] (4 KB)",
-  "bufB": "Buffer B — float[1024] (4 KB)",
+  "subtitle": "Swapping two 64-bit register variables redirects entire data buffers without copying physical memory.",
+  "bufA": "float[1024] (4 KB)",
+  "bufB": "float[1024] (4 KB)",
   "addrA": "0x1000",
   "addrB": "0x5000"
 }
@@ -171,19 +195,88 @@ void ping_pong_swap(float*& buffer_a, float*& buffer_b) {
 ### Hardware Context: Asynchronous Pipeline Double-Buffering
 In high-throughput training servers, the GPU compute engine and the host-to-device PCIe DMA transfer engine operate as **two completely independent hardware units**:
 
-```text
-Batch Timeline:
-[ PCIe fills transfer_buf ] <--- Running in Parallel ---> [ GPU computes on compute_buf ]
-                                        |
-                          [ Sync Barrier: Both Finish ]
-                                        |
-                    [ Pointer Swap: std::swap(compute_buf, transfer_buf) ]
+```diagram:double-buffering
+{
+  "title": "Double-Buffered Asynchronous Pipeline",
+  "subtitle": "PCIe Host-to-Device transfer runs in parallel with GPU Tensor Core compute"
+}
 ```
 
-1. **Step 1**: The PCIe engine streams Batch `t + 1` into `transfer_buf` via asynchronous DMA.
-2. **Step 2**: Simultaneously, the GPU Tensor Cores process Batch `t` from `compute_buf`.
-3. **Step 3**: At the synchronization barrier, `std::swap(compute_buf, transfer_buf)` runs in 1 clock cycle.
-4. **Result**: PCIe transfer latency is **100% hidden** behind GPU execution.
+---
+
+## 2B. In-Place Two-Pointer Partitioning (LLM Sampler Primitives)
+
+In generative LLM decoders (such as vLLM, TensorRT-LLM, or llama.cpp), sampling algorithms like **Top-P (nucleus sampling)** and **Threshold Filtering** select candidate tokens before computing probabilities. Understanding *why* this operation exists requires tracing the physical journey of a token through hardware.
+
+### The 4 Stages of Auto-Regressive Token Generation
+
+| Stage | Subsystem | Input Data | Output Data | Physical Representation |
+| :--- | :--- | :--- | :--- | :--- |
+| **Stage 1: Encode** | Tokenizer (CPU/Host) | String: `"The cat sat"` | Token IDs: `[464, 3797, 3343]` | Dense 32-bit integer array |
+| **Stage 2: Compute** | Transformer SMs & LM Head | Token IDs | Logits vector: `float[V]` | `V = 32,000` to `128,000` raw floats |
+| **Stage 3: Sample** | Threshold / Partition Layer | Raw floats `logits[V]` | Single winning Token ID (e.g. `5321`) | In-place partition (`0` extra bytes allocated) |
+| **Stage 4: Decode** | Tokenizer (CPU/Host) | Token ID `5321` | String: `" on"` | Single dictionary lookup |
+
+> [!IMPORTANT]
+> **Token ID vs. Logit Score in Memory**:
+> In the logits vector, the **array index** is the integer Token ID, while the **array value** is the unnormalized floating-point score!
+> For example: `logits[5321] = 5.3f` means vocabulary token `5321` earned an unnormalized score of `5.3`.
+
+### The Physical Bottleneck: Why Hardware Cares
+
+1. **Auto-Regressive Generation is 100% Memory Bandwidth Bound**:
+   Unlike compute-heavy prefill batches, generating tokens one-by-one operates at a batch size of 1 per sequence. The GPU compute cores (ALUs) spend over 80% of execution cycles waiting for memory transactions to arrive from DRAM into L1/L2 caches.
+
+2. **99.9% of Logits are Useless Noise**:
+   In a vocabulary of 32,000 to 128,000 tokens, almost all words have negative scores (e.g. `-14.2`) and zero grammatical relevance. Only a tiny subset (e.g. 15 to 50 words) exceed a sensible quality threshold like `PIVOT = 2.0`.
+
+3. **Why Full Sorting is Catastrophic**:
+   ```formula
+   Complexity(std::sort) = O(V * log2(V)) = 32,000 * 15 ≈ 480,000 operations
+   ```
+   Sorting 32,000 elements requires nearly half a million comparisons and branch evaluations. Worse, it continuously shuffles elements across cache lines, causing severe cache thrashing just to sort negative numbers that are immediately discarded.
+
+4. **Why Allocating a Second Buffer Evicts Model Weights**:
+   Allocating an auxiliary vector (`std::vector<float> filtered`) inside the token generation loop:
+   * Triggers heap allocator locks on CPU or device allocator overhead on GPU.
+   * Allocates new lines in L1/L2 cache, **evicting the active KV-cache and model weights**, forcing expensive re-fetches from high-bandwidth memory (HBM).
+   * Doubles memory traffic by reading from the original buffer and writing to the auxiliary buffer.
+
+### The Systems Solution: In-Place Two-Pointer Partitioning
+
+```formula
+Complexity(Partition) = O(V) = 32,000 operations (Zero Allocations)
+```
+
+By partitioning the original logits array in-place:
+* **Zero memory allocation**: Reorganizes the buffer directly in L1 cache lines with 0 extra bytes allocated.
+* **Linear throughput `O(V)`**: Sweeps from both ends simultaneously, touching each element once.
+* **Targeted compute**: Once all valid scores are packed into indices `0` through `num_above - 1`, subsequent Softmax and random sampling operate *strictly* on this small front slice, completely ignoring the remaining tail.
+
+```diagram:two-pointer-partition
+{
+  "title": "In-Place Two-Pointer Threshold Partitioning (Top-P Logit Separation)",
+  "subtitle": "Interactive Step-by-Step Pointers & Swapping across Pivot = 2.0"
+}
+```
+
+```cpp
+// In-place two-pointer partition:
+int left = 0;
+int right = N - 1;
+while (left <= right) {
+    if (logits[left] >= PIVOT) {
+        left++;
+    } else if (logits[right] < PIVOT) {
+        right--;
+    } else {
+        std::swap(logits[left], logits[right]);
+        left++;
+        right--;
+    }
+}
+int num_above = left; // Exactly counts elements >= PIVOT!
+```
 
 ---
 
@@ -216,6 +309,34 @@ For a thread block of 1024 threads (32 warps):
 2. Thread 0 of each warp writes its warp sum into a tiny 32-element shared memory buffer: `__shared__ float warp_sums[32]`.
 3. The first warp (Threads 0..31) loads `warp_sums` into registers and executes one final `warpReduceSum`.
 4. The entire 1024-thread block is reduced in just **10 register cycles** with zero DRAM traffic!
+
+### Hierarchy Level 3: Multi-Pass Grid-Strided Reduction (The Mark Harris Pattern)
+When reducing large global arrays (e.g. 1 MB to 1 GB tensors), a single thread block cannot hold all elements. Real production systems use a **Two-Pass Kernel Architecture**:
+
+```diagram:two-pass-reduction
+{
+  "title": "Two-Pass Grid-Strided Vector Reduction (The Mark Harris Pattern)",
+  "subtitle": "Saturating 900+ GB/s Memory Bandwidth: Pass 1 reduces blocks into partial sums, Pass 2 yields the final scalar."
+}
+```
+
+1. **Pass 1 (Block-Level)**: Each block of size `B = 256` threads loads and tree-reduces `256` elements, writing one scalar into global `partial_sums[block_id]`.
+2. **Pass 2 (Grid-Level)**: A lightweight second kernel launches to reduce the `partial_sums` array into the final scalar total.
+3. **Bandwidth Saturation**: This structure saturates peak GPU memory bandwidth (e.g. 900+ GB/s on A100/H100) because every DRAM access is coalesced.
+
+---
+
+### Hierarchy Level 4: Distributed Ring-AllReduce (NCCL / Megatron-LM)
+In large multi-GPU LLM training (e.g. 8x H100 nodes), weights and gradients span across multiple GPUs. Instead of sending all data to a single master GPU (which causes severe network bottlenecks), distributed frameworks use **Ring-AllReduce**.
+
+The `P` GPUs are arranged in a logical ring. Over `(P - 1)` steps of **Reduce-Scatter**, each GPU sends one chunk to its clockwise neighbor while accumulating chunks received from its counter-clockwise neighbor:
+
+```diagram:ring-allreduce
+{
+  "title": "Distributed Ring-AllReduce (NCCL / Megatron-LM)",
+  "subtitle": "4 GPUs arranged in a ring exchanging chunks across (P - 1) Reduce-Scatter steps"
+}
+```
 
 ---
 

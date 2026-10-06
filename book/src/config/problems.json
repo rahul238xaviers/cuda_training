@@ -122,6 +122,59 @@
           "label": "Problem 5: Cache-Blocked 2D Matrix Transpose (TILE=32)"
         }
       ]
+    },
+    "1.3": {
+      "beginner": [
+        {
+          "problem_num": 1,
+          "title": "In-Place Pairwise Tree Reduction Sum",
+          "label": "Problem 1: In-Place Pairwise Tree Reduction Sum"
+        },
+        {
+          "problem_num": 2,
+          "title": "Row-Wise Tensor Extrema Reduction (Min/Max)",
+          "label": "Problem 2: Row-Wise Tensor Extrema Reduction (Min/Max)"
+        },
+        {
+          "problem_num": 3,
+          "title": "In-Place Memory Halves Swap (fftshift)",
+          "label": "Problem 3: In-Place Memory Halves Swap (fftshift)"
+        }
+      ],
+      "intermediate": [
+        {
+          "problem_num": 1,
+          "title": "Non-Power-of-2 Tree Reduction (N=125)",
+          "label": "Problem 1: Non-Power-of-2 Tree Reduction (N=125)"
+        },
+        {
+          "problem_num": 2,
+          "title": "In-Place Two-Pointer Threshold Partitioning",
+          "label": "Problem 2: In-Place Two-Pointer Threshold Partitioning"
+        },
+        {
+          "problem_num": 3,
+          "title": "Batched L2-Norm Vector Reduction",
+          "label": "Problem 3: Batched L2-Norm Vector Reduction"
+        }
+      ],
+      "champion": [
+        {
+          "problem_num": 1,
+          "title": "Two-Pass Block-Chunked Vector Reduction",
+          "label": "Problem 1: Two-Pass Block-Chunked Vector Reduction"
+        },
+        {
+          "problem_num": 2,
+          "title": "In-Place Top-K QuickSelect Partitioning",
+          "label": "Problem 2: In-Place Top-K QuickSelect Partitioning"
+        },
+        {
+          "problem_num": 3,
+          "title": "Distributed Ring-AllReduce Memory Shift Simulation",
+          "label": "Problem 3: Distributed Ring-AllReduce Memory Shift Simulation"
+        }
+      ]
     }
   }
 }

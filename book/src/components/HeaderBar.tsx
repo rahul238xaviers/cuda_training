@@ -214,7 +214,7 @@ export function HeaderBar({
           <div className="flex items-center gap-2">
             <button
               onClick={() => onTargetChange('solution')}
-              title="View Reference Solution"
+              title="Edit and run your working solution code"
               className={`header-target-btn h-8 px-3 rounded-lg text-xs font-medium flex items-center gap-1.5 transition-all cursor-pointer ${
                 target === 'solution'
                   ? 'header-target-btn-active-solution shadow-sm'
@@ -222,11 +222,11 @@ export function HeaderBar({
               }`}
             >
               <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
-              <span>Solution (Reference)</span>
+              <span>Solution</span>
             </button>
             <button
               onClick={() => onTargetChange('exercise')}
-              title="Switch to Exercise Starter"
+              title="View original starter template (Read-Only reference)"
               className={`header-target-btn h-8 px-3 rounded-lg text-xs font-medium flex items-center gap-1.5 transition-all cursor-pointer ${
                 target === 'exercise'
                   ? 'header-target-btn-active-exercise shadow-sm'
@@ -234,7 +234,7 @@ export function HeaderBar({
               }`}
             >
               <Pencil className="w-3.5 h-3.5 text-sky-500" />
-              <span>Exercise (Starter)</span>
+              <span>Starter</span>
             </button>
           </div>
         )}

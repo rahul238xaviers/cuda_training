@@ -3,10 +3,12 @@ import { spawnSync } from 'child_process';
 import fs from 'fs';
 import path from 'path';
 import { WORKSPACE_ROOT } from '@/lib/workspace';
+import { TEACHER_CLI_CONFIG } from '@/config/teacher/constants';
+import { buildTeacherPrompt } from '@/lib/teacher/contextBuilder';
 
 export async function POST(request: NextRequest) {
   try {
-    const { prompt, context } = await request.json();
+    const { prompt, conversationId, context } = await request.json();
     const homeDir = process.env.HOME || process.env.USERPROFILE || '';
     const agyPath = homeDir ? path.join(homeDir, '.local', 'bin', 'agy') : 'agy';
 
@@ -17,14 +19,19 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    const fullPrompt = context
-      ? `You are an expert C++ memory systems and CUDA teacher pair programming with a student. Keep answers grounded, zero LaTeX, clean ASCII diagrams, and step-by-step intuition. Speak naturally and encouragingly as a human engineer; never recite internal rules or say 'I adhere to principles'.\n\nContext:\n${context}\n\nStudent Question: ${prompt}`
-      : `You are an expert C++ memory systems and CUDA teacher pair programming with a student. Keep answers grounded, zero LaTeX, clean ASCII diagrams, and step-by-step intuition. Speak naturally and encouragingly as a human engineer; never recite internal rules or say 'I adhere to principles'.\n\nStudent Question: ${prompt}`;
+    // Assemble comprehensive prompt using modular contextBuilder & AGENTS.md rules
+    const { fullPrompt, debugContext } = buildTeacherPrompt(prompt, context);
 
-    const child = spawnSync(agyPath, ['--print', fullPrompt], {
+    const args = ['--print', fullPrompt, '--output-format', TEACHER_CLI_CONFIG.OUTPUT_FORMAT];
+    if (conversationId && typeof conversationId === 'string' && conversationId.trim().length > 0) {
+      args.push('--conversation', conversationId.trim());
+    }
+
+    const child = spawnSync(agyPath, args, {
       cwd: WORKSPACE_ROOT,
       encoding: 'utf-8',
-      timeout: 45000,
+      timeout: TEACHER_CLI_CONFIG.TIMEOUT_MS,
+      maxBuffer: TEACHER_CLI_CONFIG.MAX_BUFFER_BYTES,
     });
 
     if (child.status !== 0) {
@@ -34,14 +41,29 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    return NextResponse.json({
-      success: true,
-      response: child.stdout,
-    });
+    try {
+      const parsed = JSON.parse(child.stdout);
+      return NextResponse.json({
+        success: true,
+        response: parsed.response || child.stdout,
+        conversationId: parsed.conversation_id || conversationId || null,
+        debugContext,
+      });
+    } catch {
+      return NextResponse.json({
+        success: true,
+        response: child.stdout,
+        conversationId: conversationId || null,
+        debugContext,
+      });
+    }
   } catch (err: any) {
-    return NextResponse.json({
-      success: false,
-      response: err.message || 'Internal server error while contacting Antigravity',
-    }, { status: 500 });
+    return NextResponse.json(
+      {
+        success: false,
+        response: err.message || 'Internal server error while contacting Antigravity',
+      },
+      { status: 500 }
+    );
   }
 }

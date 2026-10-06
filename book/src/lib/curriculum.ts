@@ -8,6 +8,8 @@ export interface CurriculumManifestModule {
   displayTitle: string;
   tagline: string;
   category?: string;
+  track?: 'text' | 'audio' | 'vision' | string;
+  lifecycle?: string;
   startCh?: number;
   endCh?: number;
 }

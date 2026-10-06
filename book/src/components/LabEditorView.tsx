@@ -19,6 +19,7 @@ import {
   ChevronDown,
   ChevronUp,
   SlidersHorizontal,
+  Lock,
 } from 'lucide-react';
 import { getStoredTheme, AppTheme } from '@/lib/theme';
 
@@ -39,6 +40,7 @@ interface LabEditorViewProps {
   runStatus: 'idle' | 'running' | 'success' | 'error';
   durationMs?: number;
   exitCode?: number | null;
+  readOnly?: boolean;
   problems?: Array<{
     id: string;
     problemNum: number;
@@ -82,6 +84,7 @@ export function LabEditorView({
   runStatus,
   durationMs,
   exitCode,
+  readOnly = false,
   problems,
   testsCount,
   testsPassed,
@@ -604,6 +607,19 @@ export function LabEditorView({
           </div>
         )}
 
+        {/* Read-Only Notice Banner for Starter Template */}
+        {readOnly && (
+          <div className="bg-sky-950/60 border-b border-sky-500/40 px-4 py-2 flex items-center justify-between text-xs text-sky-200 select-none shadow-inner">
+            <div className="flex items-center gap-2 font-medium">
+              <Lock className="w-3.5 h-3.5 text-sky-400" />
+              <span>Starter (Read-Only)</span>
+            </div>
+            <span className="text-[11px] text-sky-300 font-mono">
+              Switch to &apos;Solution&apos; in header to edit & run
+            </span>
+          </div>
+        )}
+
         {/* Monaco Editor Container */}
         <div
           style={{ pointerEvents: isDraggingDock ? 'none' : 'auto' }}
@@ -613,7 +629,7 @@ export function LabEditorView({
             height="100%"
             language="cpp"
             value={code}
-            onChange={(val) => onChange(val || '')}
+            onChange={(val) => !readOnly && onChange(val || '')}
             onMount={handleEditorDidMount}
             loading={
               <div className="flex items-center justify-center h-full text-slate-400 gap-2 font-mono text-xs">
@@ -622,6 +638,8 @@ export function LabEditorView({
               </div>
             }
             options={{
+              readOnly: Boolean(readOnly),
+              domReadOnly: Boolean(readOnly),
               fontSize: 13,
               fontFamily: "'Fira Code', 'JetBrains Mono', Menlo, Monaco, Consolas, monospace",
               fontLigatures: true,
@@ -635,7 +653,7 @@ export function LabEditorView({
               renderLineHighlight: 'all',
               bracketPairColorization: { enabled: true },
               smoothScrolling: true,
-              cursorBlinking: 'smooth',
+              cursorBlinking: readOnly ? 'solid' : 'smooth',
             }}
           />
         </div>
@@ -645,7 +663,7 @@ export function LabEditorView({
       {isDockOpen ? (
         <div
           style={{ height: dockHeight }}
-          className="bg-[#05070c] flex flex-col border-t border-[#1e293b] relative transition-[height] duration-75"
+          className="terminal-dock-pane bg-[#05070c] flex flex-col border-t border-[#1e293b] relative transition-[height] duration-75"
         >
           {/* Draggable Row Resize Handle */}
           <div
@@ -658,14 +676,14 @@ export function LabEditorView({
           </div>
 
           {/* Tab Header */}
-          <div className="h-8 px-4 bg-[#0b0f17] border-b border-[#1e293b] flex items-center justify-between select-none">
+          <div className="terminal-dock-header h-8 px-4 bg-[#0b0f17] border-b border-[#1e293b] flex items-center justify-between select-none">
             <div className="flex items-center gap-1">
               {/* Terminal Tab */}
               <button
                 onClick={() => setActiveBottomTab('terminal')}
-                className={`px-3 py-1 rounded text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer ${
+                className={`terminal-dock-tab px-3 py-1 rounded text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer ${
                   activeBottomTab === 'terminal'
-                    ? 'bg-[#162032] text-sky-300 border border-[#1e293b]'
+                    ? 'terminal-dock-tab-active bg-[#162032] text-sky-300 border border-[#1e293b]'
                     : 'text-slate-400 hover:text-slate-200'
                 }`}
               >
@@ -676,9 +694,9 @@ export function LabEditorView({
               {/* Problems & Lint Diagnostics Tab */}
               <button
                 onClick={() => setActiveBottomTab('problems')}
-                className={`px-3 py-1 rounded text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer ${
+                className={`terminal-dock-tab px-3 py-1 rounded text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer ${
                   activeBottomTab === 'problems'
-                    ? 'bg-[#162032] text-slate-100 border border-[#1e293b]'
+                    ? 'terminal-dock-tab-active bg-[#162032] text-slate-100 border border-[#1e293b]'
                     : 'text-slate-400 hover:text-slate-200'
                 }`}
               >
