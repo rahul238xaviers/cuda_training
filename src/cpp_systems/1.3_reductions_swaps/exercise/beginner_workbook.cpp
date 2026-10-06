@@ -43,12 +43,17 @@ int main() {
     //
     // Context: In GPU shared memory reductions, threads perform pairwise additions
     //          with halving strides: s = N / 2, N / 4, ..., 1.
-    //          arr[i] += arr[i + s].
     //          After log2(N) steps, arr[0] contains the total sum of all elements.
     //
-    // Task: Given array `arr` of size N=64:
-    //       Implement the halving loop for stride s = 32 down to 1:
-    //         For each i in [0, s): arr[i] += arr[i + s]
+    // Given:
+    //   - Array `arr` of size N = 64 floats.
+    //
+    // Goal:
+    //   - Reduce `arr` in-place using halving strides until `arr[0]` contains
+    //     the total sum of all 64 elements.
+    //
+    // Reference:
+    //   - See Section 1 (Technique 2: Tree-Based In-Place Reduction) of theory.md.
     // -------------------------------------------------------------------------
     {
         const int N = 64;
@@ -59,8 +64,7 @@ int main() {
             expected_sum += arr[i];
         }
 
-        // TODO: In-place tree reduction: outer loop s = N/2 down to 1 (s >>= 1),
-        // inner loop i from 0 to s - 1: arr[i] += arr[i + s].
+        // TODO: Perform in-place tree reduction so arr[0] holds the total sum.
         // --- YOUR CODE STARTS HERE ---
 
         // --- YOUR CODE ENDS HERE ---
@@ -77,8 +81,15 @@ int main() {
     // Context: In bounding box calculations and activation clipping, finding the
     //          min and max value per row is a common reduction primitive.
     //
-    // Task: Given matrix `mat` [ROWS=8, COLS=16]:
-    //       Compute `min_vals[r]` and `max_vals[r]` for each row using pointer traversal.
+    // Given:
+    //   - Matrix `mat` [ROWS=8, COLS=16].
+    //   - Output vectors `min_vals` (size 8) and `max_vals` (size 8).
+    //
+    // Goal:
+    //   - Compute `min_vals[r]` and `max_vals[r]` for each row using pointer traversal.
+    //
+    // Reference:
+    //   - See Section 1 (Sequential Reduction Mechanics) of theory.md.
     // -------------------------------------------------------------------------
     {
         const int ROWS = 8, COLS = 16;
@@ -92,7 +103,7 @@ int main() {
         std::vector<float> min_vals(ROWS, 0.0f);
         std::vector<float> max_vals(ROWS, 0.0f);
 
-        // TODO: Compute min_vals[r] and max_vals[r] for every row r.
+        // TODO: Compute the min and max value for each row r into min_vals[r] and max_vals[r].
         // --- YOUR CODE STARTS HERE ---
 
         // --- YOUR CODE ENDS HERE ---
@@ -119,9 +130,15 @@ int main() {
     // Context: In FFT (Fast Fourier Transform) frequency shift (`fftshift`), the
     //          first half of the spectrum is swapped with the second half in-place.
     //
-    // Task: Given array `spectrum` of size 2*HALF_N (HALF_N=32, total 64 floats):
-    //       Swap `spectrum[i]` with `spectrum[i + HALF_N]` for all i in [0, HALF_N).
-    //       Do NOT allocate a temporary array!
+    // Given:
+    //   - Array `spectrum` of size 2*HALF_N (HALF_N=32, total 64 floats).
+    //
+    // Goal:
+    //   - Swap `spectrum[i]` with `spectrum[i + HALF_N]` for all i in [0, HALF_N).
+    //   - Zero auxiliary memory allocations allowed.
+    //
+    // Reference:
+    //   - See Section 2 (In-Place Swapping: Pointer Swap vs. Memory Copy) of theory.md.
     // -------------------------------------------------------------------------
     {
         const int HALF_N = 32;
@@ -130,7 +147,7 @@ int main() {
         for (int i = 0; i < TOTAL; ++i) spectrum[i] = static_cast<float>(i * 10);
         std::vector<float> original = spectrum;
 
-        // TODO: In-place swap element i with element i + HALF_N.
+        // TODO: Swap elements of the first half with the second half in-place.
         // --- YOUR CODE STARTS HERE ---
 
         // --- YOUR CODE ENDS HERE ---

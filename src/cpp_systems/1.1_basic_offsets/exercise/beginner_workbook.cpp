@@ -44,10 +44,19 @@ int main() {
     // Context: In GPU kernel indexing, threads often traverse data with non-unit
     //          strides (e.g. strided reductions or channel-skipping).
     //
-    // Task: Given a float array `data` of size N=1024, start from `ptr = data + offset`
-    //       (where offset = 4) and advance by `stride = 8` until reaching the end of the array.
-    //       Sum all visited elements into `accumulated_sum` and record the total
-    //       number of steps taken in `steps_taken`.
+    // Given:
+    //   - Array `data` of size N = 1024 floats.
+    //   - Initial pointer `ptr = data.data() + offset` (offset = 4).
+    //   - Upper boundary `end_ptr = data.data() + N`.
+    //   - Traversal stride: `stride = 8`.
+    //
+    // Goal:
+    //   - Traverse the array by advancing `ptr` in increments of `stride`.
+    //   - Accumulate visited elements into `accumulated_sum`.
+    //   - Count the total steps taken in `steps_taken`.
+    //
+    // Reference:
+    //   - See Section 3 (Pointer Arithmetic & Scaling Laws) of theory.md.
     // -------------------------------------------------------------------------
     {
         const int N = 1024;
@@ -64,8 +73,7 @@ int main() {
         const float* ptr = data.data() + offset;
         const float* end_ptr = data.data() + N;
 
-        // TODO: Advance ptr by stride in a while loop until ptr >= end_ptr.
-        // Add *ptr to accumulated_sum and increment steps_taken.
+        // TODO: Traverse data with strided pointer stepping and accumulate visited elements.
         // --- YOUR CODE STARTS HERE ---
 
         // --- YOUR CODE ENDS HERE ---
@@ -90,13 +98,20 @@ int main() {
     //          and raw tensors in a contiguous binary byte blob.
     //          A parser reads header fields by incrementing raw `const uint8_t*` pointers.
     //
-    // Task: Given a raw byte buffer `blob`:
+    // Given:
+    //   - Raw byte buffer `blob` containing header metadata and tensor payload:
     //       Byte 0..3:   uint32_t magic number (0x54454E53, "TENS")
     //       Byte 4..7:   uint32_t num_elements (128)
     //       Byte 8..15:  uint64_t tensor_id (9876543210ULL)
-    //       Byte 16..:   Array of 128 float elements (each 4 bytes)
-    //       Extract `out_magic`, `out_num_elements`, `out_tensor_id`, and point
-    //       `out_tensor_data` to the start of the float array using pointer arithmetic.
+    //       Byte 16..:   Array of 128 float elements (4 bytes each)
+    //   - Base pointer `raw_ptr` pointing to the start of `blob`.
+    //
+    // Goal:
+    //   - Read header metadata into `out_magic`, `out_num_elements`, and `out_tensor_id`.
+    //   - Resolve pointer `out_tensor_data` to the start of the float tensor payload.
+    //
+    // Reference:
+    //   - See Section 1 (Virtual Address Space & Addressing) and Section 3 (Pointer Arithmetic & Scaling Laws) of theory.md.
     // -------------------------------------------------------------------------
     {
         const uint32_t magic = 0x54454E53;
@@ -122,8 +137,7 @@ int main() {
 
         const uint8_t* raw_ptr = blob.data();
 
-        // TODO: Read out_magic, out_num_elements, out_tensor_id, and assign out_tensor_data
-        // by advancing raw_ptr and casting appropriately.
+        // TODO: Deserialize header fields and resolve the float tensor pointer using byte offsets.
         // --- YOUR CODE STARTS HERE ---
 
         // --- YOUR CODE ENDS HERE ---
@@ -145,9 +159,16 @@ int main() {
     // Context: Flipping spatial dimensions (e.g. horizontal flip in data augmentation
     //          or backward pass convolution filter rotations) is done in-place.
     //
-    // Task: Given array `arr` of size N=100, reverse the elements in-place using
-    //       two pointers: `left` pointing to the start, and `right` pointing to the end.
-    //       Do NOT allocate any intermediate array!
+    // Given:
+    //   - Array `arr` of size N = 100 floats.
+    //   - Two pointers: `left` pointing to arr[0], and `right` pointing to arr[N - 1].
+    //
+    // Goal:
+    //   - Reverse `arr` in-place using two-pointer convergence.
+    //   - Zero auxiliary memory allocations allowed.
+    //
+    // Reference:
+    //   - See Section 10 (Master Revision Cheat Sheet: Two-Pointer Reversal) of theory.md.
     // -------------------------------------------------------------------------
     {
         const int N = 100;
@@ -158,7 +179,7 @@ int main() {
         float* left = arr.data();
         float* right = arr.data() + N - 1;
 
-        // TODO: While left < right, swap *left and *right, and advance both pointers.
+        // TODO: Reverse the array in-place using two-pointer convergence.
         // --- YOUR CODE STARTS HERE ---
 
         // --- YOUR CODE ENDS HERE ---
@@ -182,10 +203,17 @@ int main() {
     // Context: Continuous batching schedulers in inference engines (vLLM, TensorRT-LLM)
     //          use circular ring buffers to queue incoming generation requests.
     //
-    // Task: Given a ring buffer of capacity CAPACITY=16:
-    //       Insert 25 elements (0 to 24) one by one.
-    //       Maintain a pointer `head` into `ring_buffer`.
-    //       When `head` reaches `ring_buffer + CAPACITY`, wrap it back to `ring_buffer`.
+    // Given:
+    //   - Ring buffer `ring_buffer` of capacity CAPACITY = 16.
+    //   - Base pointer `base_ptr = ring_buffer.data()`, and write pointer `head = base_ptr`.
+    //   - Total insertions: TOTAL_INSERTS = 25 (elements 0 through 24).
+    //
+    // Goal:
+    //   - Write elements 0 through 24 sequentially into `*head`.
+    //   - Wrap `head` back to `base_ptr` whenever it reaches `base_ptr + CAPACITY`.
+    //
+    // Reference:
+    //   - See Section 10 (Master Revision Cheat Sheet: Circular Ring Buffer) of theory.md.
     // -------------------------------------------------------------------------
     {
         const int CAPACITY = 16;
@@ -195,9 +223,7 @@ int main() {
 
         const int TOTAL_INSERTS = 25;
 
-        // TODO: In a loop from i = 0 to TOTAL_INSERTS - 1:
-        // Write i into *head, then advance head.
-        // If head == base_ptr + CAPACITY, wrap head back to base_ptr.
+        // TODO: Stream elements into the ring buffer, wrapping head back to base when reaching capacity.
         // --- YOUR CODE STARTS HERE ---
 
         // --- YOUR CODE ENDS HERE ---

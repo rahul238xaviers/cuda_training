@@ -72,21 +72,22 @@ int main() {
   //          saving the checkpoint, we compress the 2D dense matrix into
   //          three compact 1D CSR arrays: row_ptr, col_indices, and values.
   //
-  // Task: Scan `dense_matrix` row-by-row. Squeeze out all 0.0f elements and
-  //       populate `row_ptr`, `col_indices`, and `values`.
+  // Given:
+  //   - Dense matrix `dense_matrix` of shape M = 4, N = 4 (16 floats).
+  //   - Output CSR arrays: `row_ptr`, `col_indices`, and `values`.
+  //
+  // Goal:
+  //   - Compress non-zero elements into `values`, record column indices in `col_indices`,
+  //     and build the row offset array `row_ptr`.
+  //
+  // Reference:
+  //   - See Section 3 (Pointer Indirection: The Two Mental Models) of theory.md.
   // -------------------------------------------------------------------------
   std::vector<int> row_ptr;
   std::vector<int> col_indices;
   std::vector<float> values;
   {
-    // TODO: Compress dense_matrix into row_ptr, col_indices, and values:
-    //   1. Push 0 into row_ptr as the initial start offset.
-    //   2. Loop through row 'r' from 0 to M - 1.
-    //   3. Loop through col 'c' from 0 to N - 1.
-    //   4. If dense_matrix[r * N + c] != 0.0f:
-    //        - append value to values
-    //        - append column 'c' to col_indices
-    //   5. At the end of each row, append values.size() to row_ptr.
+    // TODO: Compress the dense matrix into CSR format (row_ptr, col_indices, values).
     // --- YOUR CODE STARTS HERE ---
 
     // --- YOUR CODE ENDS HERE ---
@@ -110,17 +111,21 @@ int main() {
   // Context: To inspect pruned layers, debug sparsity, or execute dense GEMM,
   //          we decompress the 3 CSR arrays back into a full 2D dense tensor.
   //
-  // Task: Unpack `row_ptr`, `col_indices`, and `values` into `reconstructed`.
+  // Given:
+  //   - Compressed CSR format: `row_ptr`, `col_indices`, and `values`.
+  //   - Matrix dimensions: M = 4, N = 4.
+  //   - Output dense matrix buffer `reconstructed` (size M * N).
+  //
+  // Goal:
+  //   - Decompress the CSR representation back into full 2D dense layout in `reconstructed`.
+  //
+  // Reference:
+  //   - See Section 3 (Pointer Indirection: The Two Mental Models) of theory.md.
   // -------------------------------------------------------------------------
   {
     std::vector<float> reconstructed(M * N, 0.0f);
 
-    // TODO: Decompress CSR into reconstructed:
-    //   1. Loop over row 'r' from 0 to M - 1.
-    //   2. Look up row start: start = row_ptr[r], end = row_ptr[r + 1].
-    //   3. Loop 'k' from start to end - 1.
-    //   4. Extract column: c = col_indices[k].
-    //   5. Assign: reconstructed[r * N + c] = values[k];
+    // TODO: Decompress CSR representation back into full 2D dense matrix format.
     // --- YOUR CODE STARTS HERE ---
 
     // --- YOUR CODE ENDS HERE ---
@@ -138,17 +143,22 @@ int main() {
   //          y = Matrix * x directly from the compressed CSR format without
   //          multiplying any zero elements.
   //
-  // Task: Compute y[r] using CSR indirection traversal.
+  // Given:
+  //   - Compressed matrix in CSR format: `row_ptr`, `col_indices`, and `values`.
+  //   - Dense input vector `x` of size N = 4.
+  //   - Output vector `y` of size M = 4.
+  //
+  // Goal:
+  //   - Compute y = A * x directly from the CSR format without visiting zero elements.
+  //
+  // Reference:
+  //   - See Section 3 (Pointer Indirection) and Section 5 (Cache Lines & Bandwidth Waste) of theory.md.
   // -------------------------------------------------------------------------
   {
     std::vector<float> x = {1.0f, 2.0f, 3.0f, 4.0f};
     std::vector<float> y(M, 0.0f);
 
-    // TODO: Compute y[r] using CSR SpMV traversal:
-    //   1. Loop over row 'r' from 0 to M - 1.
-    //   2. Look up row bounds: start = row_ptr[r], end = row_ptr[r + 1].
-    //   3. Loop 'k' from start to end - 1.
-    //   4. Accumulate: y[r] += values[k] * x[ col_indices[k] ];
+    // TODO: Compute SpMV product y = A * x directly from CSR compressed representation.
     // --- YOUR CODE STARTS HERE ---
 
     // --- YOUR CODE ENDS HERE ---
@@ -177,8 +187,16 @@ int main() {
   //          generalized strides:
   //            stride[dim] = prod_{d > dim} shape[d]
   //
-  // Task: Given tensor `src` of shape [D0=4, D1=8, D2=16] (512 floats),
-  //       permute to `dst` of shape [D0=4, D2=16, D1=8].
+  // Given:
+  //   - Tensor `src` of shape [D0=4, D1=8, D2=16] (512 floats).
+  //   - Destination tensor `dst` of shape [D0=4, D2=16, D1=8].
+  //
+  // Goal:
+  //   - Permute dimensions (D0, D1, D2) -> (D0, D2, D1) using multi-dimensional stride mapping.
+  //   - Benchmark memory bandwidth throughput in GB/s.
+  //
+  // Reference:
+  //   - See Section 1 (Flat Address Mapping Formula) and Section 2 (Row-Major vs Column-Major Layouts) of theory.md.
   // -------------------------------------------------------------------------
   {
     const int D0 = 4, D1 = 8, D2 = 16;
@@ -191,11 +209,7 @@ int main() {
 
     auto start = std::chrono::high_resolution_clock::now();
 
-    // TODO: Permute (d0, d1, d2) -> (d0, d2, d1):
-    //   1. Three nested loops over d0, d1, d2.
-    //   2. srcIndex  = d0 * D1 * D2 + d1 * D2 + d2;
-    //   3. destIndex = d0 * D1 * D2 + d2 * D1 + d1;
-    //   4. dst[destIndex] = src[srcIndex];
+    // TODO: Permute 3D tensor dimensions (D0, D1, D2) -> (D0, D2, D1) using stride equations.
     // --- YOUR CODE STARTS HERE ---
 
     // --- YOUR CODE ENDS HERE ---
@@ -234,8 +248,17 @@ int main() {
   //          We decompose a 1024x1024 matrix into 32x32 tiles that stay 100%
   //          resident inside L1 cache lines with zero eviction thrashing.
   //
-  // Task: Transpose `src` of shape [1024, 1024] into `dst` of shape [1024, 1024]
-  //       using 2D tiled traversal (TILE = 32).
+  // Given:
+  //   - Matrix `src` of shape [Rows=1024, Cols=1024] (1,048,576 floats).
+  //   - Destination buffer `dst` of shape [Cols=1024, Rows=1024].
+  //   - Golden tile dimension: TILE = 32.
+  //
+  // Goal:
+  //   - Transpose `src` into `dst` using 32x32 cache-blocked tiles to eliminate cache thrashing.
+  //   - Benchmark memory bandwidth throughput in GB/s.
+  //
+  // Reference:
+  //   - See Section 5 (The Golden Tile Sizing Formula: In-Place vs. Out-of-Place) of theory.md.
   // -------------------------------------------------------------------------
   {
     const int Rows = 1024;
@@ -251,12 +274,7 @@ int main() {
 
     auto start = std::chrono::high_resolution_clock::now();
 
-    // TODO: Implement 2D cache-blocked matrix transpose using TILE = 32:
-    //   1. Outer loops step across tile coordinates: r and c with step TILE.
-    //   2. Inner loops step through elements within the tile:
-    //      inside_tile_row from r to r + TILE, inside_tile_col from c to c + TILE.
-    //   3. Transpose element: dst[inside_tile_col * Rows + inside_tile_row] =
-    //                         src[inside_tile_row * Cols + inside_tile_col];
+    // TODO: Transpose matrix using 32x32 cache-blocked tiles to eliminate cache thrashing.
     // --- YOUR CODE STARTS HERE ---
 
     // --- YOUR CODE ENDS HERE ---

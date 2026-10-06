@@ -45,9 +45,15 @@ int main() {
     //          Before feeding into neural audio encoders (e.g. Whisper / EnCodec),
     //          channels must be separated into planar buffers: [L0, L1, L2...] and [R0, R1, R2...].
     //
-    // Task: Given interleaved stereo buffer `interleaved` of N=64 frames (total 128 floats):
-    //       De-mux into `left_channel` and `right_channel` (each 64 floats)
-    //       using pointer stepping with stride = 2.
+    // Given:
+    //   - Interleaved stereo buffer `interleaved` of FRAMES = 64 (total 128 floats).
+    //   - Planar output buffers: `left_channel` and `right_channel` (each 64 floats).
+    //
+    // Goal:
+    //   - De-mux the interleaved stream into `left_channel` and `right_channel` using stride = 2.
+    //
+    // Reference:
+    //   - See Section 1 (Physical Memory vs. Multidimensional Tensors: Stride Representation) of theory.md.
     // -------------------------------------------------------------------------
     {
         const int FRAMES = 64;
@@ -60,7 +66,7 @@ int main() {
         std::vector<float> left_channel(FRAMES, 0.0f);
         std::vector<float> right_channel(FRAMES, 0.0f);
 
-        // TODO: De-mux interleaved into left_channel and right_channel.
+        // TODO: De-mux interleaved stereo audio into separate planar channel buffers using strided traversal.
         // --- YOUR CODE STARTS HERE ---
 
         // --- YOUR CODE ENDS HERE ---
@@ -85,10 +91,18 @@ int main() {
     //          Rather than padding, tokens are packed into a single 1D memory pool.
     //          An array of pointers `seq_ptrs` points to the start of each sequence.
     //
-    // Task: Given packed token buffer `token_pool` (total 16 floats),
-    //       and sequence lengths: lengths = {4, 7, 2, 3} (NUM_SEQS = 4):
-    //       1. Set `seq_ptrs[s]` to point to the start of sequence s in token_pool.
-    //       2. For each sequence, compute the mean value of its tokens and store in `seq_means[s]`.
+    // Given:
+    //   - Packed token buffer `token_pool` (total 16 floats).
+    //   - Sequence lengths `lengths = {4, 7, 2, 3}` (NUM_SEQS = 4).
+    //   - Pointer array `seq_ptrs` of size NUM_SEQS = 4.
+    //   - Output buffer `seq_means` of size NUM_SEQS = 4.
+    //
+    // Goal:
+    //   - Set `seq_ptrs[s]` to point to the start of each sequence in `token_pool`.
+    //   - Compute the mean value of each sequence and record in `seq_means[s]`.
+    //
+    // Reference:
+    //   - See Section 3 (Pointer Indirection: The Two Mental Models) of theory.md.
     // -------------------------------------------------------------------------
     {
         const int NUM_SEQS = 4;
@@ -103,7 +117,7 @@ int main() {
         const float* seq_ptrs[NUM_SEQS] = {nullptr};
         std::vector<float> seq_means(NUM_SEQS, 0.0f);
 
-        // TODO: Populate seq_ptrs using running offsets, and compute seq_means.
+        // TODO: Map sequence pointers into the packed pool and compute per-sequence mean reductions.
         // --- YOUR CODE STARTS HERE ---
 
         // --- YOUR CODE ENDS HERE ---
@@ -124,11 +138,16 @@ int main() {
     //
     // Context: Emulate PyTorch strided slicing: `sub_mat = A[start_r::step_r, start_c::step_c]`.
     //
-    // Task: Given matrix `A` [ROWS=16, COLS=16]:
-    //       Extract sub-matrix with start_r=1, step_r=3, start_c=2, step_c=4.
-    //       Resulting sub-matrix shape: OUT_ROWS = (16 - 1 + 2) / 3 = 5,
-    //                                  OUT_COLS = (16 - 2 + 3) / 4 = 4.
-    //       Write extracted elements into contiguous buffer `sub_matrix` [5, 4].
+    // Given:
+    //   - Matrix `A` of shape [ROWS=16, COLS=16] in row-major order.
+    //   - Slicing parameters: start_r = 1, step_r = 3, start_c = 2, step_c = 4.
+    //   - Output buffer `sub_matrix` of shape [OUT_ROWS=5, OUT_COLS=4].
+    //
+    // Goal:
+    //   - Extract sliced elements from `A` and store in `sub_matrix` in contiguous order.
+    //
+    // Reference:
+    //   - See Section 1 (Flat Address Mapping Formula) and Section 2 (Row-Major Layouts) of theory.md.
     // -------------------------------------------------------------------------
     {
         const int ROWS = 16, COLS = 16;
@@ -146,7 +165,7 @@ int main() {
 
         std::vector<float> sub_matrix(OUT_ROWS * OUT_COLS, -1.0f);
 
-        // TODO: Extract elements from A into sub_matrix using strided loops.
+        // TODO: Extract the strided 2D sub-grid from matrix A into the contiguous output buffer.
         // --- YOUR CODE STARTS HERE ---
 
         // --- YOUR CODE ENDS HERE ---

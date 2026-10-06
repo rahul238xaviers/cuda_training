@@ -51,10 +51,17 @@ int main() {
     //            Pass 1: Each block of size B=256 reduces 256 elements into a partial sum.
     //            Pass 2: A second kernel reduces the array of partial sums.
     //
-    // Task: Given array `data` of size N=262,144 floats (1 MB):
-    //       1. Pass 1: For each chunk of BLOCK_SIZE=256, reduce to `partial_sums[block_id]`.
-    //       2. Pass 2: Reduce `partial_sums` (NUM_BLOCKS=1024) to `final_total_sum`.
-    //       Measure throughput in GB/s!
+    // Given:
+    //   - Array `data` of size N = 262,144 floats (1 MB).
+    //   - Chunk parameters: BLOCK_SIZE = 256, NUM_BLOCKS = 1024.
+    //   - Output buffers: `partial_sums` (size 1024) and `final_total_sum`.
+    //
+    // Goal:
+    //   - Pass 1: Reduce each 256-element chunk into `partial_sums[block_id]`.
+    //   - Pass 2: Reduce `partial_sums` into `final_total_sum`.
+    //
+    // Reference:
+    //   - See Section 3 (Hierarchy Level 3: Multi-Pass Grid-Strided Reduction) of theory.md.
     // -------------------------------------------------------------------------
     {
         const int N = 262144;
@@ -73,8 +80,7 @@ int main() {
 
         auto start = std::chrono::high_resolution_clock::now();
 
-        // TODO: Pass 1: Compute partial sums for each block.
-        // Pass 2: Sum partial_sums into final_total_sum.
+        // TODO: Compute two-pass reduction producing final_total_sum.
         // --- YOUR CODE STARTS HERE ---
 
         // --- YOUR CODE ENDS HERE ---
@@ -97,10 +103,19 @@ int main() {
     //          does NOT require a full O(N log N) sort. QuickSelect partitions
     //          the top K elements into indices [0..K-1] in O(N) average time.
     //
-    // Task: Given logits array `logits` of size N=512 and K=16:
-    //       Partition `logits` in-place so that the 16 largest elements are located
-    //       in `logits[0..15]` (order within the top 16 does not matter).
-    //       Every element in logits[0..15] must be >= every element in logits[16..511].
+    // Given:
+    //   - Array `logits` of size N = 512 floats.
+    //   - Target top element count: K = 16.
+    //   - Target boundary value: `kth_largest_val`.
+    //
+    // Goal:
+    //   - Partition `logits` in-place so that the 16 largest elements are located
+    //     in `logits[0..15]` (order within the top 16 does not matter).
+    //   - Every element in logits[0..15] must be >= every element in logits[16..511].
+    //   - Zero auxiliary memory allocations allowed.
+    //
+    // Reference:
+    //   - See Section 2B (In-Place Two-Pointer Partitioning) of theory.md.
     // -------------------------------------------------------------------------
     {
         const int N = 512;
@@ -113,8 +128,7 @@ int main() {
         std::sort(sorted_reference.rbegin(), sorted_reference.rend());
         float kth_largest_val = sorted_reference[K - 1];
 
-        // TODO: Implement in-place partition so that all elements >= kth_largest_val
-        // are placed in indices 0..K-1.
+        // TODO: Partition logits in-place so that all elements in [0..K-1] are >= kth_largest_val.
         // --- YOUR CODE STARTS HERE ---
 
         // --- YOUR CODE ENDS HERE ---
@@ -146,10 +160,16 @@ int main() {
     //          Over (P - 1) steps of Reduce-Scatter, each rank sends one chunk to its
     //          neighbor and adds the received chunk to its local buffer.
     //
-    // Task: Simulate 4 GPUs (RANKS=4), each holding 4 chunks of size CHUNK_SIZE=16 floats.
-    //       `gpu_buffers` shape: [RANKS=4, CHUNKS=4, CHUNK_SIZE=16].
-    //       Perform 3 steps of Reduce-Scatter so that at the end, each rank r
-    //       holds the global sum of chunk (r + 1) % 4.
+    // Given:
+    //   - 4 virtual GPUs (RANKS = 4), each holding 4 chunks of CHUNK_SIZE = 16 floats.
+    //   - `gpu_buffers` shape: [RANKS=4, CHUNKS=4, CHUNK_SIZE=16].
+    //
+    // Goal:
+    //   - Perform 3 steps of Reduce-Scatter in a logical ring so that each rank r
+    //     holds the global sum of chunk (r + 1) % 4.
+    //
+    // Reference:
+    //   - See Section 3 (Hierarchy Level 4: Distributed Ring-AllReduce) of theory.md.
     // -------------------------------------------------------------------------
     {
         const int RANKS = 4;
@@ -170,9 +190,7 @@ int main() {
         // Expected global sum across all 4 ranks for any chunk is 1 + 2 + 3 + 4 = 10.0f
         const float expected_sum = 10.0f;
 
-        // TODO: In 3 steps (step = 0..2):
-        // Each rank r sends chunk c_send = (r - step + RANKS) % RANKS
-        // to rank (r + 1) % RANKS, which accumulates into its local chunk c_send.
+        // TODO: Simulate 3 steps of Ring-AllReduce Reduce-Scatter across the 4 ranks.
         // --- YOUR CODE STARTS HERE ---
 
         // --- YOUR CODE ENDS HERE ---

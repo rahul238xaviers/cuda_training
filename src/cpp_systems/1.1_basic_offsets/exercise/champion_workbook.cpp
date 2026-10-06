@@ -51,17 +51,18 @@ int main() {
     //          a large contiguous buffer and carve out memory with a sub-microsecond
     //          bump pointer aligned to 64- or 128-byte cache lines.
     //
-    // Task: Implement an aligned bump allocator over a 64 KB pool.
-    //       Given allocation requests with (size_in_bytes, alignment_in_bytes):
-    //         Req 0: (size=120, align=64)
-    //         Req 1: (size=350, align=128)
-    //         Req 2: (size=48,  align=16)
-    //         Req 3: (size=1024, align=64)
-    //       For each request:
-    //         1. Align current bump address upwards: `aligned_addr = (curr + (align - 1)) & ~(align - 1)`
-    //         2. Check if (aligned_addr + size <= pool_end)
-    //         3. Update current bump address = aligned_addr + size
-    //         4. Track total padding bytes wasted
+    // Given:
+    //   - Memory pool of size POOL_SIZE = 65,536 bytes (64 KB).
+    //   - List of allocation requests: `requests` specifying `{size, align}`.
+    //   - Current bump pointer `curr_bump = pool_start`.
+    //
+    // Goal:
+    //   - Carve out aligned memory for each request, storing results in `allocated_ptrs`.
+    //   - Advance `curr_bump` past each allocated block.
+    //   - Accumulate total alignment padding bytes wasted in `total_padding_wasted`.
+    //
+    // Reference:
+    //   - See Section 7 (Custom Aligned Bump Allocator: Memory Pools) of theory.md.
     // -------------------------------------------------------------------------
     {
         const size_t POOL_SIZE = 65536; // 64 KB
@@ -87,8 +88,7 @@ int main() {
 
         uintptr_t curr_bump = pool_start;
 
-        // TODO: Process each request, compute aligned address, store pointer in allocated_ptrs,
-        // advance curr_bump, and accumulate padding into total_padding_wasted.
+        // TODO: Allocate each request with power-of-2 alignment, advancing the bump pointer and tracking padding.
         // --- YOUR CODE STARTS HERE ---
 
         // --- YOUR CODE ENDS HERE ---
@@ -126,14 +126,19 @@ int main() {
     //          buffer A (Compute Buffer), the host copies the next batch into buffer B
     //          (Transfer Buffer) via PCIe. At each pipeline sync point, pointers swap.
     //
-    // Task: Simulate 8 pipeline iterations over two buffers of size N=64 floats:
-    //       `buffer_A` and `buffer_B`.
-    //       Maintain two pointers: `compute_buf` and `transfer_buf`.
-    //       In each iteration i (0 <= i < 8):
-    //         1. Fill transfer_buf with (i * 100 + element_index).
-    //         2. In compute_buf (if i > 0), verify all elements equal ((i - 1) * 100 + element_index),
-    //            and multiply each element by 2 in-place.
-    //         3. Swap compute_buf and transfer_buf pointers using std::swap.
+    // Given:
+    //   - Two buffers `buffer_A` and `buffer_B` of size N = 64 floats.
+    //   - Initial pointers: `compute_buf = buffer_A.data()`, `transfer_buf = buffer_B.data()`.
+    //   - Pipeline iterations: NUM_ITERATIONS = 8.
+    //
+    // Goal:
+    //   - In each iteration i:
+    //     1. Fill `transfer_buf` with (i * 100 + element_index).
+    //     2. If i > 0, verify and multiply each element of `compute_buf` by 2 in-place.
+    //     3. Swap `compute_buf` and `transfer_buf` pointers (zero memory copies).
+    //
+    // Reference:
+    //   - See Section 8 (Asynchronous Double-Buffering: Pointer Ping-Pong) of theory.md.
     // -------------------------------------------------------------------------
     {
         const int N = 64;
@@ -146,7 +151,7 @@ int main() {
         bool p2_passed = true;
         const int NUM_ITERATIONS = 8;
 
-        // TODO: Implement the double-buffer iteration loop.
+        // TODO: Execute the double-buffered pipeline swapping compute and transfer pointers each iteration.
         // --- YOUR CODE STARTS HERE ---
 
         // --- YOUR CODE ENDS HERE ---
@@ -166,9 +171,17 @@ int main() {
     //          Tiling the transpose into 16x16 blocks keeps reads and writes inside
     //          L1/L2 cache lines before flushing.
     //
-    // Task: Given matrix `src` of shape [512, 512] (262,144 floats = 1 MB):
-    //       Implement a 16x16 tiled transpose into `dst_tiled`.
-    //       Measure memory throughput in GB/s!
+    // Given:
+    //   - Matrix `src` of shape [DIM=512, DIM=512] (262,144 floats = 1 MB).
+    //   - Tile dimension TILE_SIZE = 16.
+    //   - Output buffer `dst_tiled`.
+    //
+    // Goal:
+    //   - Transpose `src` into `dst_tiled` using 16x16 cache-blocked tiles to eliminate cache thrashing.
+    //   - Benchmark memory throughput in GB/s.
+    //
+    // Reference:
+    //   - See Section 9 (2D Matrix Tiling & Cache Thrashing Prevention) of theory.md.
     // -------------------------------------------------------------------------
     {
         const int DIM = 512;
@@ -181,11 +194,7 @@ int main() {
 
         auto start = std::chrono::high_resolution_clock::now();
 
-        // TODO: Transpose src [512, 512] into dst_tiled [512, 512] using 16x16 tiles.
-        // For each tile (ti, tj) where ti, tj advance by TILE_SIZE:
-        //   For each row i inside tile:
-        //     For each col j inside tile:
-        //       dst_tiled[j * DIM + i] = src[i * DIM + j]
+        // TODO: Transpose matrix using 16x16 cache-blocked tiles to prevent cache thrashing.
         // --- YOUR CODE STARTS HERE ---
 
         // --- YOUR CODE ENDS HERE ---

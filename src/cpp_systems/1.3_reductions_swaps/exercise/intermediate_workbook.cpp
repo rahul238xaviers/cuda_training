@@ -43,12 +43,17 @@ int main() {
     //
     // Context: Real deep learning sequence lengths (e.g. N=125 tokens) are rarely
     //          exact powers of 2. In parallel tree reduction, halving an odd length
-    //          (e.g. 125 / 2 = 62) leaves the odd tail element un-paired!
+    //          leaves un-paired tail elements that must be folded into the reduction.
     //
-    // Task: Given array `data` of odd size N=125:
-    //       Perform in-place tree reduction folding halves while ensuring odd tail
-    //       elements are folded into the reduction (e.g. into data[0] on each odd step)
-    //       until the total sum resides in data[0].
+    // Given:
+    //   - Array `data` of odd size N = 125 floats.
+    //
+    // Goal:
+    //   - Perform in-place tree reduction folding halves while ensuring odd tail
+    //     elements are folded into the reduction until the total sum resides in data[0].
+    //
+    // Reference:
+    //   - See Section 1 (Technique 2B: Non-Power-of-2 & Odd-Length Boundary Folding) of theory.md.
     // -------------------------------------------------------------------------
     {
         const int N = 125;
@@ -59,10 +64,7 @@ int main() {
             expected_sum += data[i];
         }
 
-        // TODO: In-place tree reduction with odd-length boundary folding.
-        // On each halving step: pair indices i with i + half.
-        // If current length is odd, fold the un-paired tail element into data[0].
-        // Continue until active length is reduced to 1.
+        // TODO: Reduce `data` in-place so data[0] contains the total sum of all N elements.
         // --- YOUR CODE STARTS HERE ---
 
         // --- YOUR CODE ENDS HERE ---
@@ -79,11 +81,19 @@ int main() {
     // Context: In Top-P (nucleus) and threshold sampling, logits are partitioned
     //          around a threshold without allocating auxiliary memory.
     //
-    // Task: Given array `logits` of size N=64 and threshold PIVOT=2.0f:
-    //       Partition `logits` in-place so that all elements >= PIVOT appear
-    //       at the front (indices 0..num_above - 1), and all elements < PIVOT
-    //       appear at the back (indices num_above..N - 1).
-    //       Record the count of elements >= PIVOT in `num_above`.
+    // Given:
+    //   - Array `logits` of size N = 64 floats.
+    //   - Threshold value `PIVOT = 2.0f`.
+    //
+    // Goal:
+    //   - Partition `logits` in-place so that all elements >= PIVOT appear at the
+    //     front (indices 0..num_above - 1), and all elements < PIVOT appear at
+    //     the back (indices num_above..N - 1).
+    //   - Count elements >= PIVOT and store in `num_above`.
+    //   - Zero auxiliary memory allocations allowed.
+    //
+    // Reference:
+    //   - See Section 2B (In-Place Two-Pointer Partitioning) of theory.md.
     // -------------------------------------------------------------------------
     {
         const int N = 64;
@@ -97,8 +107,7 @@ int main() {
 
         int num_above = 0;
 
-        // TODO: Two-pointer partition: left = 0, right = N - 1.
-        // Swap elements when logits[left] < PIVOT and logits[right] >= PIVOT.
+        // TODO: Partition logits in-place around PIVOT and record the count in num_above.
         // --- YOUR CODE STARTS HERE ---
 
         // --- YOUR CODE ENDS HERE ---
@@ -123,8 +132,15 @@ int main() {
     //          calculating the L2 norm of vectors is a core linear algebra reduction:
     //            norm[b] = sqrt( sum_{d=0}^{D-1} X[b, d]^2 )
     //
-    // Task: Given batch tensor `X` [BATCH=8, DIM=64] (512 floats):
-    //       Compute the L2 norm for each batch vector into `norms` [BATCH=8].
+    // Given:
+    //   - Batch tensor `X` with dimensions [BATCH=8, DIM=64] (512 floats total).
+    //   - Output vector `norms` of size BATCH=8 (initialized to 0.0f).
+    //
+    // Goal:
+    //   - Compute the L2 norm for each batch vector b into `norms[b]`.
+    //
+    // Reference:
+    //   - See Section 1 (Sequential Reduction Mechanics & Accumulation) of theory.md.
     // -------------------------------------------------------------------------
     {
         const int BATCH = 8, DIM = 64;
@@ -135,7 +151,7 @@ int main() {
 
         std::vector<float> norms(BATCH, 0.0f);
 
-        // TODO: For each batch b, compute sqrt(sum(X[b, d]^2)).
+        // TODO: Compute the L2 norm for each batch vector b into norms[b].
         // --- YOUR CODE STARTS HERE ---
 
         // --- YOUR CODE ENDS HERE ---

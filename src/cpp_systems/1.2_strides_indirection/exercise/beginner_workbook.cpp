@@ -45,9 +45,17 @@ int main() {
     //          audio signals are decimated by factor K using strided pointer jumps:
     //            output[i] = input[i * K]
     //
-    // Task: Given input signal `audio` of size N=128 floats, downsample by FACTOR=4
-    //       into `downsampled` (size = N / 4 = 32 floats).
-    //       Traverse `audio` using pointer increments `ptr += FACTOR`.
+    // Given:
+    //   - Input signal `audio` of size N = 128 floats.
+    //   - Downsampling factor FACTOR = 4.
+    //   - Output buffer `downsampled` of size OUT_SIZE = 32 floats.
+    //   - Base pointers `ptr = audio.data()` and `dst = downsampled.data()`.
+    //
+    // Goal:
+    //   - Downsample `audio` into `downsampled` by stepping across elements with stride FACTOR.
+    //
+    // Reference:
+    //   - See Section 1 (Physical Memory vs. Multidimensional Tensors: Stride Representation) of theory.md.
     // -------------------------------------------------------------------------
     {
         const int N = 128;
@@ -62,7 +70,7 @@ int main() {
         const float* ptr = audio.data();
         float* dst = downsampled.data();
 
-        // TODO: Copy OUT_SIZE elements from audio into downsampled by advancing ptr by FACTOR.
+        // TODO: Downsample the audio signal into the output buffer using strided pointer traversal.
         // --- YOUR CODE STARTS HERE ---
 
         // --- YOUR CODE ENDS HERE ---
@@ -87,9 +95,16 @@ int main() {
     //          stride equal to the matrix width W. Accessing a column is a classic
     //          strided memory read.
     //
-    // Task: Given matrix `mat` [ROWS=16, COLS=8], extract column `target_col = 3`
-    //       into vector `col_vec` of size 16.
-    //       Advance through `mat` using stride = COLS.
+    // Given:
+    //   - Matrix `mat` of shape [ROWS=16, COLS=8] in row-major order.
+    //   - Target column index: `target_col = 3`.
+    //   - Output vector `col_vec` of size 16.
+    //
+    // Goal:
+    //   - Extract all elements of column `target_col` into `col_vec` using strided offsets.
+    //
+    // Reference:
+    //   - See Section 2 (Row-Major vs. Column-Major Layouts) of theory.md.
     // -------------------------------------------------------------------------
     {
         const int ROWS = 16;
@@ -104,7 +119,7 @@ int main() {
         const int target_col = 3;
         std::vector<float> col_vec(ROWS, 0.0f);
 
-        // TODO: Extract column target_col using pointer stepping with stride COLS.
+        // TODO: Extract the column vector from the row-major matrix using strided pointer offsets.
         // --- YOUR CODE STARTS HERE ---
 
         // --- YOUR CODE ENDS HERE ---
@@ -128,10 +143,16 @@ int main() {
     // Context: Numerical libraries (e.g. NR in C, older BLAS interfaces) use an
     //          indirection table `float**` where table[r] points to row r of a matrix.
     //
-    // Task: Given flat buffer `matrix_data` [ROWS=4, COLS=4]:
-    //       1. Initialize `float* row_ptrs[4]` so row_ptrs[r] points to row r.
-    //       2. Use double indirection `row_ptrs[r][c]` to compute the trace
-    //          (sum of main diagonal elements where r == c).
+    // Given:
+    //   - Flat matrix buffer `matrix_data` [ROWS=4, COLS=4].
+    //   - Array of row pointers `row_ptrs` of size ROWS = 4.
+    //
+    // Goal:
+    //   - Set each `row_ptrs[r]` to point to the start of row r in `matrix_data`.
+    //   - Compute the matrix trace (sum of diagonal elements) using double indirection.
+    //
+    // Reference:
+    //   - See Section 3 (Pointer Indirection: The Two Mental Models - Model B) of theory.md.
     // -------------------------------------------------------------------------
     {
         const int ROWS = 4, COLS = 4;
@@ -145,7 +166,7 @@ int main() {
         float* row_ptrs[ROWS] = {nullptr};
         float trace = 0.0f;
 
-        // TODO: Populate row_ptrs and compute trace using row_ptrs[i][i].
+        // TODO: Populate row pointers and calculate matrix trace using double indirection.
         // --- YOUR CODE STARTS HERE ---
 
         // --- YOUR CODE ENDS HERE ---

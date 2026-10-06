@@ -48,13 +48,19 @@ int main() {
     // Context: In CUDA, `cudaMallocPitch(&devPtr, &pitch, widthInBytes, height)`
     //          allocates 2D arrays where each row is padded to a multiple of 256/512 bytes
     //          so that every row starts at a hardware-coalesced address.
-    //          To access element (r, c), you must step by `pitch` bytes:
-    //            float* row_ptr = reinterpret_cast<float*>(raw_bytes + r * pitch);
-    //            float val = row_ptr[c];
     //
-    // Task: Given a raw byte buffer `pitched_buffer` of ROWS=8, COLS=32 (each float = 4 bytes).
-    //       Width in bytes = 32 * 4 = 128 bytes, but PITCH = 256 bytes (128 bytes padding per row).
-    //       Write value (r * 100 + c) into every element (r, c) using pitched pointer offsets.
+    // Given:
+    //   - Raw byte buffer `pitched_buffer` of ROWS = 8, COLS = 32 floats (4 bytes each).
+    //   - PITCH = 256 bytes (useful row width = 128 bytes, padding = 128 bytes per row).
+    //   - Base pointer `base_ptr = pitched_buffer.data()`.
+    //
+    // Goal:
+    //   - Calculate each row's start address in byte space using `PITCH`.
+    //   - Populate element (r, c) with value `r * 100.0f + c`.
+    //   - Ensure padding bytes (offsets 128..255 of each row) remain untouched.
+    //
+    // Reference:
+    //   - See Section 5 (2D Pitched Memory Layouts: cudaMallocPitch) of theory.md.
     // -------------------------------------------------------------------------
     {
         const int ROWS = 8;
@@ -66,9 +72,7 @@ int main() {
 
         uint8_t* const base_ptr = pitched_buffer.data();
 
-        // TODO: For each row r in [0, ROWS) and col c in [0, COLS):
-        // Compute pointer to row r using PITCH byte offset, and assign value (r * 100.0f + c).
-        // Ensure padding bytes between col 32 and pitch (128..255) are NOT overwritten!
+        // TODO: Populate 2D pitched buffer elements using row pitch offsets without touching padding.
         // --- YOUR CODE STARTS HERE ---
 
         // --- YOUR CODE ENDS HERE ---
@@ -104,10 +108,16 @@ int main() {
     // Context: In GPU kernels, loading memory in 128-bit chunks (`float4` / `uint4`)
     //          saturates the DRAM bus by issuing full cache-line transaction segments.
     //
-    // Task: Given source and destination buffers of N=4096 floats (16,384 bytes):
-    //       Copy data from `src` to `dst` using 16-byte chunks (`struct alignas(16) Float4`)
-    //       via pointer casting.
-    //       Measure memory throughput in GB/s!
+    // Given:
+    //   - Source buffer `src` and destination buffer `dst` of N = 4096 floats (16,384 bytes).
+    //   - 16-byte aligned vector struct `Float4` (holding 4 floats = 128 bits).
+    //
+    // Goal:
+    //   - Transfer all elements from `src` into `dst` using 128-bit vector pointers.
+    //   - Verify data integrity and benchmark bandwidth throughput in GB/s.
+    //
+    // Reference:
+    //   - See Section 6 (Vectorized Memory Loads: 128-Bit Transfers) of theory.md.
     // -------------------------------------------------------------------------
     {
         struct alignas(16) Float4 {
@@ -121,10 +131,7 @@ int main() {
 
         auto start = std::chrono::high_resolution_clock::now();
 
-        // TODO: Copy src to dst using Float4 pointers.
-        // const Float4* src_vec = reinterpret_cast<const Float4*>(src.data());
-        // Float4* dst_vec = reinterpret_cast<Float4*>(dst.data());
-        // Copy all (N / 4) Float4 elements.
+        // TODO: Copy data from src to dst using 128-bit Float4 vector pointers.
         // --- YOUR CODE STARTS HERE ---
 
         // --- YOUR CODE ENDS HERE ---
@@ -154,10 +161,16 @@ int main() {
     //          Misaligned base pointers force every transaction to span two cache lines,
     //          halving effective memory bandwidth.
     //
-    // Task: Given arbitrary memory addresses `addresses` (as uintptr_t):
-    //       For each address, calculate:
-    //         1. `aligned_address`: rounded UP to the nearest 64-byte boundary using bitwise ops.
-    //         2. `padding_bytes`: the number of padding bytes between address and aligned_address.
+    // Given:
+    //   - List of arbitrary addresses `addresses` (as `uintptr_t`).
+    //   - Target alignment boundary ALIGNMENT = 256 bytes.
+    //
+    // Goal:
+    //   - For each address, compute `aligned_results[i]` rounded up to the nearest ALIGNMENT boundary.
+    //   - Compute `padding_results[i]` representing the slack bytes skipped to align.
+    //
+    // Reference:
+    //   - See Section 4 (Hardware Memory Alignment & Cache-Line Granularity) of theory.md.
     // -------------------------------------------------------------------------
     {
         std::vector<uintptr_t> addresses = {
@@ -172,8 +185,7 @@ int main() {
         std::vector<uintptr_t> aligned_results(addresses.size(), 0);
         std::vector<size_t> padding_results(addresses.size(), 0);
 
-        // TODO: For each address in addresses, compute aligned_address using bitwise formula
-        // (addr + (ALIGNMENT - 1)) & ~(ALIGNMENT - 1), and padding = aligned_address - addr.
+        // TODO: Compute power-of-2 aligned addresses and padding bytes using bitwise operations.
         // --- YOUR CODE STARTS HERE ---
 
         // --- YOUR CODE ENDS HERE ---
