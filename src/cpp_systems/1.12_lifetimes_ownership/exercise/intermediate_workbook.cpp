@@ -24,19 +24,19 @@ using namespace std;
 //   ../../../output/1.12_intermediate
 // =========================================================================
 
-void reportStatus(const std::string& name, bool passed) {
-    std::cout << "  " << std::left << std::setw(60) << name;
+void reportStatus(const string& name, bool passed) {
+    cout << "  " << left << setw(60) << name;
     if (passed) {
-        std::cout << "\033[1;32m[PASSED]\033[0m" << std::endl;
+        cout << "\033[1;32m[PASSED]\033[0m" << endl;
     } else {
-        std::cout << "\033[1;31m[FAILED]\033[0m" << std::endl;
+        cout << "\033[1;31m[FAILED]\033[0m" << endl;
     }
 }
 
 int main() {
-    std::cout << "=================================================================" << std::endl;
-    std::cout << "--- WORKBOOK: Lifetimes, Ownership & Resize (Intermediate Level) ---" << std::endl;
-    std::cout << "=================================================================" << std::endl;
+    cout << "=================================================================" << endl;
+    cout << "--- WORKBOOK: Lifetimes, Ownership & Resize (Intermediate Level) ---" << endl;
+    cout << "=================================================================" << endl;
 
     int passed = 0;
     int total = 0;
@@ -109,9 +109,9 @@ int main() {
     // -------------------------------------------------------------------------
     {
         struct Tensor {
-            std::shared_ptr<std::vector<float>> storage;
+            shared_ptr<vector<float>> storage;
 
-            Tensor(size_t n) : storage(std::make_shared<std::vector<float>>(n)) {}
+            Tensor(size_t n) : storage(make_shared<vector<float>>(n)) {}
 
             Tensor view() {
                 Tensor v(0);
@@ -121,7 +121,7 @@ int main() {
 
             Tensor clone() {
                 Tensor c(0);
-                c.storage = std::make_shared<std::vector<float>>(*this->storage); // Deep copy
+                c.storage = make_shared<vector<float>>(*this->storage); // Deep copy
                 return c;
             }
 
@@ -188,16 +188,16 @@ int main() {
         total++;
     }
 
-    std::cout << "\n=================================================================" << std::endl;
-    std::cout << "--- SCORECARD ---" << std::endl;
-    std::cout << "=================================================================" << std::endl;
-    std::cout << "  Passed: " << passed << " / " << total << " tests." << std::endl;
+    cout << "\n=================================================================" << endl;
+    cout << "--- SCORECARD ---" << endl;
+    cout << "=================================================================" << endl;
+    cout << "  Passed: " << passed << " / " << total << " tests." << endl;
     if (passed == total) {
-        std::cout << "\033[1;32m  [STATUS] ALL " << total << " TESTS PASSED! \033[0m" << std::endl;
+        cout << "\033[1;32m  [STATUS] ALL " << total << " TESTS PASSED! \033[0m" << endl;
     } else {
-        std::cout << "\033[1;31m  [STATUS] INCOMPLETE (" << (total - passed) << " tests failed) \033[0m" << std::endl;
+        cout << "\033[1;31m  [STATUS] INCOMPLETE (" << (total - passed) << " tests failed) \033[0m" << endl;
     }
-    std::cout << "=================================================================" << std::endl;
+    cout << "=================================================================" << endl;
 
     return (passed == total) ? 0 : 1;
 }

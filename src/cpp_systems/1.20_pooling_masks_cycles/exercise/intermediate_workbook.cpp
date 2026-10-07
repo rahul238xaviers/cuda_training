@@ -24,19 +24,19 @@ using namespace std;
 //   ../../../output/1.20_intermediate
 // =========================================================================
 
-void reportStatus(const std::string& name, bool passed) {
-    std::cout << "  " << std::left << std::setw(60) << name;
+void reportStatus(const string& name, bool passed) {
+    cout << "  " << left << setw(60) << name;
     if (passed) {
-        std::cout << "\033[1;32m[PASSED]\033[0m" << std::endl;
+        cout << "\033[1;32m[PASSED]\033[0m" << endl;
     } else {
-        std::cout << "\033[1;31m[FAILED]\033[0m" << std::endl;
+        cout << "\033[1;31m[FAILED]\033[0m" << endl;
     }
 }
 
 int main() {
-    std::cout << "=================================================================" << std::endl;
-    std::cout << "--- WORKBOOK: Pooling, Masks & Cycles (Intermediate Level) ---" << std::endl;
-    std::cout << "=================================================================" << std::endl;
+    cout << "=================================================================" << endl;
+    cout << "--- WORKBOOK: Pooling, Masks & Cycles (Intermediate Level) ---" << endl;
+    cout << "=================================================================" << endl;
 
     int passed = 0;
     int total = 0;
@@ -58,7 +58,7 @@ int main() {
         const int OUT_H = H / STRIDE; // 2
         const int OUT_W = W / STRIDE; // 2
 
-        std::vector<float> X = {
+        vector<float> X = {
             // Channel 0
             1.0f,  9.0f,  3.0f,  4.0f,
             2.0f,  5.0f,  7.0f,  8.0f,
@@ -72,8 +72,8 @@ int main() {
         };
 
         const size_t out_size = C * OUT_H * OUT_W;
-        std::vector<float> out_pooled(out_size, -999.0f);
-        std::vector<int> argmax_indices(out_size, -1);
+        vector<float> out_pooled(out_size, -999.0f);
+        vector<int> argmax_indices(out_size, -1);
 
         // TODO: Compute max pooling and record argmax index into argmax_indices.
         // --- YOUR CODE STARTS HERE ---
@@ -126,12 +126,12 @@ int main() {
         const int SPATIAL_SIZE = H * W; // 64
         const size_t total_elements = BATCH * CHANNELS * SPATIAL_SIZE;
 
-        std::vector<float> X(total_elements);
+        vector<float> X(total_elements);
         for (size_t i = 0; i < total_elements; ++i) {
             X[i] = static_cast<float>((i % 19) + 1.0f);
         }
 
-        std::vector<float> gap(BATCH * CHANNELS, 0.0f);
+        vector<float> gap(BATCH * CHANNELS, 0.0f);
 
         // TODO: Compute Global Average Pooling across spatial dimensions for each (b, c).
         // --- YOUR CODE STARTS HERE ---
@@ -147,7 +147,7 @@ int main() {
                     sum += X[base + i];
                 }
                 float expected = sum / SPATIAL_SIZE;
-                if (std::abs(gap[b * CHANNELS + c] - expected) > 1e-4f) {
+                if (abs(gap[b * CHANNELS + c] - expected) > 1e-4f) {
                     p2_passed = false;
                     break;
                 }
@@ -175,9 +175,9 @@ int main() {
         const int SEQ_LEN = 64;
         // Word 0: 0xFFFFFFF0 -> lower 4 bits are 0 (padding), bits 4..31 are 1 (valid)
         // Word 1: 0x0000FFFF -> lower 16 bits are 1 (valid), upper 16 bits are 0 (padding)
-        std::vector<uint32_t> packed_mask = {0xFFFFFFF0, 0x0000FFFF};
+        vector<uint32_t> packed_mask = {0xFFFFFFF0, 0x0000FFFF};
 
-        std::vector<float> unpacked_float_mask(SEQ_LEN, -1.0f);
+        vector<float> unpacked_float_mask(SEQ_LEN, -1.0f);
 
         // TODO: For each token i in [0, 64):
         // Determine word_idx = i / 32, bit_idx = i % 32.
@@ -203,16 +203,16 @@ int main() {
         total++;
     }
 
-    std::cout << "\n=================================================================" << std::endl;
-    std::cout << "--- SCORECARD ---" << std::endl;
-    std::cout << "=================================================================" << std::endl;
-    std::cout << "  Passed: " << passed << " / " << total << " tests." << std::endl;
+    cout << "\n=================================================================" << endl;
+    cout << "--- SCORECARD ---" << endl;
+    cout << "=================================================================" << endl;
+    cout << "  Passed: " << passed << " / " << total << " tests." << endl;
     if (passed == total) {
-        std::cout << "\033[1;32m  [STATUS] ALL " << total << " TESTS PASSED! \033[0m" << std::endl;
+        cout << "\033[1;32m  [STATUS] ALL " << total << " TESTS PASSED! \033[0m" << endl;
     } else {
-        std::cout << "\033[1;31m  [STATUS] INCOMPLETE (" << (total - passed) << " tests failed) \033[0m" << std::endl;
+        cout << "\033[1;31m  [STATUS] INCOMPLETE (" << (total - passed) << " tests failed) \033[0m" << endl;
     }
-    std::cout << "=================================================================" << std::endl;
+    cout << "=================================================================" << endl;
 
     return (passed == total) ? 0 : 1;
 }

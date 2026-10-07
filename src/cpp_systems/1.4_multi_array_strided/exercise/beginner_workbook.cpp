@@ -23,23 +23,23 @@ using namespace std;
 //   ../../../output/1.4_beginner
 // =========================================================================
 
-void reportStatus(const std::string& name, bool passed, double throughputGBs = -1.0) {
-    std::cout << "  " << std::left << std::setw(60) << name;
+void reportStatus(const string& name, bool passed, double throughputGBs = -1.0) {
+    cout << "  " << left << setw(60) << name;
     if (passed) {
-        std::cout << "\033[1;32m[PASSED]\033[0m";
+        cout << "\033[1;32m[PASSED]\033[0m";
         if (throughputGBs > 0.0) {
-            std::cout << " (" << std::fixed << std::setprecision(2) << throughputGBs << " GB/s)";
+            cout << " (" << fixed << setprecision(2) << throughputGBs << " GB/s)";
         }
-        std::cout << std::endl;
+        cout << endl;
     } else {
-        std::cout << "\033[1;31m[FAILED]\033[0m" << std::endl;
+        cout << "\033[1;31m[FAILED]\033[0m" << endl;
     }
 }
 
 int main() {
-    std::cout << "=================================================================" << std::endl;
-    std::cout << "--- WORKBOOK: Multi-Array & Strided Ops (Beginner Level) ---" << std::endl;
-    std::cout << "=================================================================" << std::endl;
+    cout << "=================================================================" << endl;
+    cout << "--- WORKBOOK: Multi-Array & Strided Ops (Beginner Level) ---" << endl;
+    cout << "=================================================================" << endl;
 
     int passed = 0;
     int total = 0;
@@ -57,29 +57,29 @@ int main() {
     {
         const int N = 131072;
         const float alpha = 2.5f;
-        std::vector<float> X(N), Y(N);
+        vector<float> X(N), Y(N);
         for (int i = 0; i < N; ++i) {
             X[i] = static_cast<float>(i * 0.01f);
             Y[i] = static_cast<float>((i % 100) * 0.5f);
         }
-        std::vector<float> original_Y = Y;
+        vector<float> original_Y = Y;
 
-        auto start = std::chrono::high_resolution_clock::now();
+        auto start = chrono::high_resolution_clock::now();
 
         // TODO: In-place SAXPY: Y[i] = alpha * X[i] + Y[i] using pointer arithmetic.
         // --- YOUR CODE STARTS HERE ---
 
         // --- YOUR CODE ENDS HERE ---
 
-        auto end = std::chrono::high_resolution_clock::now();
-        double elapsed_sec = std::chrono::duration<double>(end - start).count();
+        auto end = chrono::high_resolution_clock::now();
+        double elapsed_sec = chrono::duration<double>(end - start).count();
         double bytes_moved = 3.0 * N * sizeof(float); // Read X, Read Y, Write Y
         double throughput = (bytes_moved / elapsed_sec) / 1e9;
 
         bool p1_passed = true;
         for (int i = 0; i < N; ++i) {
             float expected = alpha * X[i] + original_Y[i];
-            if (std::abs(Y[i] - expected) > 1e-3f) {
+            if (abs(Y[i] - expected) > 1e-3f) {
                 p1_passed = false;
                 break;
             }
@@ -104,12 +104,12 @@ int main() {
         const int STRIDE_X = 2;
         const int STRIDE_Y = 3;
 
-        std::vector<float> X(OUT_N * STRIDE_X);
-        std::vector<float> Y(OUT_N * STRIDE_Y);
+        vector<float> X(OUT_N * STRIDE_X);
+        vector<float> Y(OUT_N * STRIDE_Y);
         for (size_t i = 0; i < X.size(); ++i) X[i] = static_cast<float>(i + 1);
         for (size_t i = 0; i < Y.size(); ++i) Y[i] = static_cast<float>((i % 10) + 1);
 
-        std::vector<float> Z(OUT_N, 0.0f);
+        vector<float> Z(OUT_N, 0.0f);
 
         // TODO: Compute Z[i] = X[i * STRIDE_X] * Y[i * STRIDE_Y].
         // --- YOUR CODE STARTS HERE ---
@@ -119,7 +119,7 @@ int main() {
         bool p2_passed = true;
         for (int i = 0; i < OUT_N; ++i) {
             float expected = X[i * STRIDE_X] * Y[i * STRIDE_Y];
-            if (std::abs(Z[i] - expected) > 1e-4f) {
+            if (abs(Z[i] - expected) > 1e-4f) {
                 p2_passed = false;
                 break;
             }
@@ -142,7 +142,7 @@ int main() {
     // -------------------------------------------------------------------------
     {
         const int N = 128;
-        std::vector<float> A(N), B(N);
+        vector<float> A(N), B(N);
         for (int i = 0; i < N; ++i) {
             A[i] = static_cast<float>((i % 7) - 3);
             B[i] = static_cast<float>((i % 5) - 2);
@@ -161,24 +161,24 @@ int main() {
             norm_a += A[i] * A[i];
             norm_b += B[i] * B[i];
         }
-        float expected_sim = dot / (std::sqrt(norm_a) * std::sqrt(norm_b));
+        float expected_sim = dot / (sqrt(norm_a) * sqrt(norm_b));
 
-        bool p3_passed = (std::abs(cosine_sim - expected_sim) < 1e-4f);
+        bool p3_passed = (abs(cosine_sim - expected_sim) < 1e-4f);
         reportStatus("Problem 3: Dual-Vector Cosine Similarity", p3_passed);
         if (p3_passed) passed++;
         total++;
     }
 
-    std::cout << "\n=================================================================" << std::endl;
-    std::cout << "--- SCORECARD ---" << std::endl;
-    std::cout << "=================================================================" << std::endl;
-    std::cout << "  Passed: " << passed << " / " << total << " tests." << std::endl;
+    cout << "\n=================================================================" << endl;
+    cout << "--- SCORECARD ---" << endl;
+    cout << "=================================================================" << endl;
+    cout << "  Passed: " << passed << " / " << total << " tests." << endl;
     if (passed == total) {
-        std::cout << "\033[1;32m  [STATUS] ALL " << total << " TESTS PASSED! \033[0m" << std::endl;
+        cout << "\033[1;32m  [STATUS] ALL " << total << " TESTS PASSED! \033[0m" << endl;
     } else {
-        std::cout << "\033[1;31m  [STATUS] INCOMPLETE (" << (total - passed) << " tests failed) \033[0m" << std::endl;
+        cout << "\033[1;31m  [STATUS] INCOMPLETE (" << (total - passed) << " tests failed) \033[0m" << endl;
     }
-    std::cout << "=================================================================" << std::endl;
+    cout << "=================================================================" << endl;
 
     return (passed == total) ? 0 : 1;
 }

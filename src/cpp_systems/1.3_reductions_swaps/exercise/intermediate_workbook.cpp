@@ -23,19 +23,19 @@ using namespace std;
 //   ../../../output/1.3_intermediate
 // =========================================================================
 
-void reportStatus(const std::string& name, bool passed) {
-    std::cout << "  " << std::left << std::setw(60) << name;
+void reportStatus(const string& name, bool passed) {
+    cout << "  " << left << setw(60) << name;
     if (passed) {
-        std::cout << "\033[1;32m[PASSED]\033[0m" << std::endl;
+        cout << "\033[1;32m[PASSED]\033[0m" << endl;
     } else {
-        std::cout << "\033[1;31m[FAILED]\033[0m" << std::endl;
+        cout << "\033[1;31m[FAILED]\033[0m" << endl;
     }
 }
 
 int main() {
-    std::cout << "=================================================================" << std::endl;
-    std::cout << "--- WORKBOOK: Array Reductions & Swaps (Intermediate Level) ---" << std::endl;
-    std::cout << "=================================================================" << std::endl;
+    cout << "=================================================================" << endl;
+    cout << "--- WORKBOOK: Array Reductions & Swaps (Intermediate Level) ---" << endl;
+    cout << "=================================================================" << endl;
 
     int passed = 0;
     int total = 0;
@@ -59,7 +59,7 @@ int main() {
     // -------------------------------------------------------------------------
     {
         const int N = 125;
-        std::vector<float> data(N);
+        vector<float> data(N);
         float expected_sum = 0.0f;
         for (int i = 0; i < N; ++i) {
             data[i] = static_cast<float>(i * 0.1f + 0.5f);
@@ -71,7 +71,7 @@ int main() {
 
         // --- YOUR CODE ENDS HERE ---
 
-        bool p1_passed = (std::abs(data[0] - expected_sum) < 1e-2f);
+        bool p1_passed = (abs(data[0] - expected_sum) < 1e-2f);
         reportStatus("Problem 1: Non-Power-of-2 Tree Reduction (N=125)", p1_passed);
         if (p1_passed) passed++;
         total++;
@@ -100,7 +100,7 @@ int main() {
     {
         const int N = 64;
         const float PIVOT = 2.0f;
-        std::vector<float> logits(N);
+        vector<float> logits(N);
         int expected_above = 0;
         for (int i = 0; i < N; ++i) {
             logits[i] = static_cast<float>((i % 11) - 5) * 0.75f;
@@ -146,12 +146,12 @@ int main() {
     // -------------------------------------------------------------------------
     {
         const int BATCH = 8, DIM = 64;
-        std::vector<float> X(BATCH * DIM);
-        for (size_t i = 0; i < X.size(); ++i) {
+        vector<float> X(BATCH * DIM);
+        for (int i = 0; i < BATCH * DIM; ++i) {
             X[i] = static_cast<float>((i % 17) - 8) * 0.25f;
         }
 
-        std::vector<float> norms(BATCH, 0.0f);
+        vector<float> norms(BATCH, 0.0f);
 
         // TODO: Compute the L2 norm for each batch vector b into norms[b].
         // --- YOUR CODE STARTS HERE ---
@@ -165,8 +165,8 @@ int main() {
                 float v = X[b * DIM + d];
                 sum_sq += v * v;
             }
-            float expected = std::sqrt(sum_sq);
-            if (std::abs(norms[b] - expected) > 1e-4f) {
+            float expected = sqrt(sum_sq);
+            if (abs(norms[b] - expected) > 1e-4f) {
                 p3_passed = false;
                 break;
             }
@@ -177,16 +177,16 @@ int main() {
         total++;
     }
 
-    std::cout << "\n=================================================================" << std::endl;
-    std::cout << "--- SCORECARD ---" << std::endl;
-    std::cout << "=================================================================" << std::endl;
-    std::cout << "  Passed: " << passed << " / " << total << " tests." << std::endl;
+    cout << "\n=================================================================" << endl;
+    cout << "--- SCORECARD ---" << endl;
+    cout << "=================================================================" << endl;
+    cout << "  Passed: " << passed << " / " << total << " tests." << endl;
     if (passed == total) {
-        std::cout << "\033[1;32m  [STATUS] ALL " << total << " TESTS PASSED! \033[0m" << std::endl;
+        cout << "\033[1;32m  [STATUS] ALL " << total << " TESTS PASSED! \033[0m" << endl;
     } else {
-        std::cout << "\033[1;31m  [STATUS] INCOMPLETE (" << (total - passed) << " tests failed) \033[0m" << std::endl;
+        cout << "\033[1;31m  [STATUS] INCOMPLETE (" << (total - passed) << " tests failed) \033[0m" << endl;
     }
-    std::cout << "=================================================================" << std::endl;
+    cout << "=================================================================" << endl;
 
     return (passed == total) ? 0 : 1;
 }

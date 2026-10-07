@@ -24,19 +24,19 @@ using namespace std;
 //   ../../../output/1.15_beginner
 // =========================================================================
 
-void reportStatus(const std::string& name, bool passed) {
-    std::cout << "  " << std::left << std::setw(60) << name;
+void reportStatus(const string& name, bool passed) {
+    cout << "  " << left << setw(60) << name;
     if (passed) {
-        std::cout << "\033[1;32m[PASSED]\033[0m" << std::endl;
+        cout << "\033[1;32m[PASSED]\033[0m" << endl;
     } else {
-        std::cout << "\033[1;31m[FAILED]\033[0m" << std::endl;
+        cout << "\033[1;31m[FAILED]\033[0m" << endl;
     }
 }
 
 int main() {
-    std::cout << "=================================================================" << std::endl;
-    std::cout << "--- WORKBOOK: Type Casts & Double Pointers (Beginner Level) ---" << std::endl;
-    std::cout << "=================================================================" << std::endl;
+    cout << "=================================================================" << endl;
+    cout << "--- WORKBOOK: Type Casts & Double Pointers (Beginner Level) ---" << endl;
+    cout << "=================================================================" << endl;
 
     int passed = 0;
     int total = 0;
@@ -137,7 +137,7 @@ int main() {
         const uint32_t L = 12;
         const uint32_t D = 16;
         size_t total_bytes = 8 + (D * D * sizeof(float)) + (128 * sizeof(int32_t));
-        std::vector<uint8_t> blob(total_bytes, 0);
+        vector<uint8_t> blob(total_bytes, 0);
 
         *reinterpret_cast<uint32_t*>(blob.data()) = L;
         *reinterpret_cast<uint32_t*>(blob.data() + 4) = D;
@@ -192,15 +192,15 @@ int main() {
 
         const int B = 4;
         const int L_max = 8;
-        std::vector<int> seq_lens = {3, 8, 5, 2};
+        vector<int> seq_lens = {3, 8, 5, 2};
 
-        std::vector<float> seq0 = {1.0f, 2.0f, 3.0f};
-        std::vector<float> seq1 = {10.0f, 11.0f, 12.0f, 13.0f, 14.0f, 15.0f, 16.0f, 17.0f};
-        std::vector<float> seq2 = {20.0f, 21.0f, 22.0f, 23.0f, 24.0f};
-        std::vector<float> seq3 = {30.0f, 31.0f};
+        vector<float> seq0 = {1.0f, 2.0f, 3.0f};
+        vector<float> seq1 = {10.0f, 11.0f, 12.0f, 13.0f, 14.0f, 15.0f, 16.0f, 17.0f};
+        vector<float> seq2 = {20.0f, 21.0f, 22.0f, 23.0f, 24.0f};
+        vector<float> seq3 = {30.0f, 31.0f};
 
         const float* batch_ptrs[B] = {seq0.data(), seq1.data(), seq2.data(), seq3.data()};
-        std::vector<float> dense_out(B * L_max, -1.0f);
+        vector<float> dense_out(B * L_max, -1.0f);
 
         packRaggedBatch(batch_ptrs, seq_lens.data(), B, L_max, dense_out.data());
 
@@ -222,16 +222,16 @@ int main() {
         total++;
     }
 
-    std::cout << "\n=================================================================" << std::endl;
-    std::cout << "--- SCORECARD ---" << std::endl;
-    std::cout << "=================================================================" << std::endl;
-    std::cout << "  Passed: " << passed << " / " << total << " tests." << std::endl;
+    cout << "\n=================================================================" << endl;
+    cout << "--- SCORECARD ---" << endl;
+    cout << "=================================================================" << endl;
+    cout << "  Passed: " << passed << " / " << total << " tests." << endl;
     if (passed == total) {
-        std::cout << "\033[1;32m  [STATUS] ALL " << total << " TESTS PASSED! \033[0m" << std::endl;
+        cout << "\033[1;32m  [STATUS] ALL " << total << " TESTS PASSED! \033[0m" << endl;
     } else {
-        std::cout << "\033[1;31m  [STATUS] INCOMPLETE (" << (total - passed) << " tests failed) \033[0m" << std::endl;
+        cout << "\033[1;31m  [STATUS] INCOMPLETE (" << (total - passed) << " tests failed) \033[0m" << endl;
     }
-    std::cout << "=================================================================" << std::endl;
+    cout << "=================================================================" << endl;
 
     return (passed == total) ? 0 : 1;
 }

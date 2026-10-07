@@ -25,23 +25,23 @@ using namespace std;
 //   ../../../output/1.9_champion
 // =========================================================================
 
-void reportStatus(const std::string& name, bool passed, double throughputGBs = -1.0) {
-    std::cout << "  " << std::left << std::setw(60) << name;
+void reportStatus(const string& name, bool passed, double throughputGBs = -1.0) {
+    cout << "  " << left << setw(60) << name;
     if (passed) {
-        std::cout << "\033[1;32m[PASSED]\033[0m";
+        cout << "\033[1;32m[PASSED]\033[0m";
         if (throughputGBs > 0.0) {
-            std::cout << " (" << std::fixed << std::setprecision(2) << throughputGBs << " GB/s)";
+            cout << " (" << fixed << setprecision(2) << throughputGBs << " GB/s)";
         }
-        std::cout << std::endl;
+        cout << endl;
     } else {
-        std::cout << "\033[1;31m[FAILED]\033[0m" << std::endl;
+        cout << "\033[1;31m[FAILED]\033[0m" << endl;
     }
 }
 
 int main() {
-    std::cout << "=================================================================" << std::endl;
-    std::cout << "--- WORKBOOK: Single & Array Allocations (Champion Masterclass) ---" << std::endl;
-    std::cout << "=================================================================" << std::endl;
+    cout << "=================================================================" << endl;
+    cout << "--- WORKBOOK: Single & Array Allocations (Champion Masterclass) ---" << endl;
+    cout << "=================================================================" << endl;
 
     int passed = 0;
     int total = 0;
@@ -61,7 +61,7 @@ int main() {
     {
         const size_t BLOCK_SIZE = 256;
         const size_t NUM_BLOCKS = 16;
-        std::vector<uint8_t> pool(NUM_BLOCKS * BLOCK_SIZE);
+        vector<uint8_t> pool(NUM_BLOCKS * BLOCK_SIZE);
 
         struct FreeNode {
             FreeNode* next;
@@ -77,7 +77,7 @@ int main() {
         }
 
         // Allocate 10 blocks
-        std::vector<void*> allocated;
+        vector<void*> allocated;
         for (size_t i = 0; i < 10; ++i) {
             if (free_head) {
                 void* p = free_head;
@@ -119,7 +119,7 @@ int main() {
     //
     // Task: Implement a block cache that reuses an existing block if its capacity >= requested_size.
     //       Verify that allocating size 100, freeing it, and allocating size 80 returns
-    //       the EXACT same pointer without invoking std::malloc a second time!
+    //       the EXACT same pointer without invoking malloc a second time!
     // -------------------------------------------------------------------------
     {
         struct CachedBlock {
@@ -128,7 +128,7 @@ int main() {
             bool in_use;
         };
 
-        std::vector<CachedBlock> block_pool;
+        vector<CachedBlock> block_pool;
         int os_malloc_calls = 0;
 
         auto alloc_fn = [&](size_t bytes) -> void* {
@@ -140,7 +140,7 @@ int main() {
                 }
             }
             // Allocate new from OS
-            void* p = std::malloc(bytes);
+            void* p = malloc(bytes);
             os_malloc_calls++;
             block_pool.push_back({p, bytes, true});
             return p;
@@ -161,7 +161,7 @@ int main() {
 
         bool p2_passed = (ptr1 == ptr2) && (os_malloc_calls == 1);
 
-        for (auto& b : block_pool) std::free(b.ptr);
+        for (auto& b : block_pool) free(b.ptr);
 
         reportStatus("Problem 2: PyTorch-Style Caching Allocator Block Reuse", p2_passed);
         if (p2_passed) passed++;
@@ -204,16 +204,16 @@ int main() {
         total++;
     }
 
-    std::cout << "\n=================================================================" << std::endl;
-    std::cout << "--- SCORECARD ---" << std::endl;
-    std::cout << "=================================================================" << std::endl;
-    std::cout << "  Passed: " << passed << " / " << total << " tests." << std::endl;
+    cout << "\n=================================================================" << endl;
+    cout << "--- SCORECARD ---" << endl;
+    cout << "=================================================================" << endl;
+    cout << "  Passed: " << passed << " / " << total << " tests." << endl;
     if (passed == total) {
-        std::cout << "\033[1;32m  [STATUS] ALL " << total << " TESTS PASSED! \033[0m" << std::endl;
+        cout << "\033[1;32m  [STATUS] ALL " << total << " TESTS PASSED! \033[0m" << endl;
     } else {
-        std::cout << "\033[1;31m  [STATUS] INCOMPLETE (" << (total - passed) << " tests failed) \033[0m" << std::endl;
+        cout << "\033[1;31m  [STATUS] INCOMPLETE (" << (total - passed) << " tests failed) \033[0m" << endl;
     }
-    std::cout << "=================================================================" << std::endl;
+    cout << "=================================================================" << endl;
 
     return (passed == total) ? 0 : 1;
 }

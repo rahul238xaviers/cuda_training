@@ -24,23 +24,23 @@ using namespace std;
 //   ../../../output/1.7_champion
 // =========================================================================
 
-void reportStatus(const std::string& name, bool passed, double throughputGBs = -1.0) {
-    std::cout << "  " << std::left << std::setw(60) << name;
+void reportStatus(const string& name, bool passed, double throughputGBs = -1.0) {
+    cout << "  " << left << setw(60) << name;
     if (passed) {
-        std::cout << "\033[1;32m[PASSED]\033[0m";
+        cout << "\033[1;32m[PASSED]\033[0m";
         if (throughputGBs > 0.0) {
-            std::cout << " (" << std::fixed << std::setprecision(2) << throughputGBs << " GB/s)";
+            cout << " (" << fixed << setprecision(2) << throughputGBs << " GB/s)";
         }
-        std::cout << std::endl;
+        cout << endl;
     } else {
-        std::cout << "\033[1;31m[FAILED]\033[0m" << std::endl;
+        cout << "\033[1;31m[FAILED]\033[0m" << endl;
     }
 }
 
 int main() {
-    std::cout << "=================================================================" << std::endl;
-    std::cout << "--- WORKBOOK: Subgrids, Padding & Diagonals (Champion Masterclass) ---" << std::endl;
-    std::cout << "=================================================================" << std::endl;
+    cout << "=================================================================" << endl;
+    cout << "--- WORKBOOK: Subgrids, Padding & Diagonals (Champion Masterclass) ---" << endl;
+    cout << "=================================================================" << endl;
 
     int passed = 0;
     int total = 0;
@@ -61,14 +61,14 @@ int main() {
         const int PADDED_H = H + 2 * HALO; // 20
         const int PADDED_W = W + 2 * HALO; // 20
 
-        std::vector<float> src(H * W);
+        vector<float> src(H * W);
         for (int r = 0; r < H; ++r) {
             for (int c = 0; c < W; ++c) {
                 src[r * W + c] = static_cast<float>(r * 100 + c);
             }
         }
 
-        std::vector<float> halo_padded(PADDED_H * PADDED_W, -1.0f);
+        vector<float> halo_padded(PADDED_H * PADDED_W, -1.0f);
 
         // TODO: Populate halo_padded using toroidal wrapping logic.
         // --- YOUR CODE STARTS HERE ---
@@ -111,10 +111,10 @@ int main() {
         const int BLOCK_DIM = 4;
         const int N = K * BLOCK_DIM; // 16
 
-        std::vector<float> blocks(K * BLOCK_DIM * BLOCK_DIM);
+        vector<float> blocks(K * BLOCK_DIM * BLOCK_DIM);
         for (size_t i = 0; i < blocks.size(); ++i) blocks[i] = static_cast<float>(i + 1);
 
-        std::vector<float> big_mat(N * N, -1.0f);
+        vector<float> big_mat(N * N, -1.0f);
 
         // TODO: Assemble big_mat as a block-diagonal matrix.
         // --- YOUR CODE STARTS HERE ---
@@ -150,8 +150,8 @@ int main() {
     //
     // Context: In image processing, edge replication (`clamp_to_edge`) repeats the
     //          outermost row and column into the padding borders:
-    //            r_clamped = std::clamp(r, 0, H - 1)
-    //            c_clamped = std::clamp(c, 0, W - 1)
+    //            r_clamped = clamp(r, 0, H - 1)
+    //            c_clamped = clamp(c, 0, W - 1)
     //
     // Task: Given image `img` [C=3, H=64, W=64] (12,288 floats) and PAD=4:
     //       Generate `padded` [C=3, PADDED_H=72, PADDED_W=72] (15,552 floats).
@@ -165,29 +165,29 @@ int main() {
         const size_t total_in = C * H * W;
         const size_t total_out = C * PADDED_H * PADDED_W;
 
-        std::vector<float> img(total_in);
+        vector<float> img(total_in);
         for (size_t i = 0; i < total_in; ++i) img[i] = static_cast<float>(i * 0.01f);
 
-        std::vector<float> padded(total_out, -1.0f);
+        vector<float> padded(total_out, -1.0f);
 
-        auto start = std::chrono::high_resolution_clock::now();
+        auto start = chrono::high_resolution_clock::now();
 
         // TODO: Populate padded with replicated boundary pixels.
         // --- YOUR CODE STARTS HERE ---
 
         // --- YOUR CODE ENDS HERE ---
 
-        auto end = std::chrono::high_resolution_clock::now();
-        double elapsed_sec = std::chrono::duration<double>(end - start).count();
+        auto end = chrono::high_resolution_clock::now();
+        double elapsed_sec = chrono::duration<double>(end - start).count();
         double bytes_moved = (total_in + total_out) * sizeof(float);
         double throughput = (bytes_moved / elapsed_sec) / 1e9;
 
         bool p3_passed = true;
         for (int c = 0; c < C && p3_passed; ++c) {
             for (int pr = 0; pr < PADDED_H && p3_passed; ++pr) {
-                int r = std::clamp(pr - PAD, 0, H - 1);
+                int r = clamp(pr - PAD, 0, H - 1);
                 for (int pc = 0; pc < PADDED_W; ++pc) {
-                    int col = std::clamp(pc - PAD, 0, W - 1);
+                    int col = clamp(pc - PAD, 0, W - 1);
                     float expected = img[c * (H * W) + r * W + col];
                     size_t out_idx = (size_t)c * (PADDED_H * PADDED_W) + (size_t)pr * PADDED_W + pc;
                     if (padded[out_idx] != expected) {
@@ -203,16 +203,16 @@ int main() {
         total++;
     }
 
-    std::cout << "\n=================================================================" << std::endl;
-    std::cout << "--- SCORECARD ---" << std::endl;
-    std::cout << "=================================================================" << std::endl;
-    std::cout << "  Passed: " << passed << " / " << total << " tests." << std::endl;
+    cout << "\n=================================================================" << endl;
+    cout << "--- SCORECARD ---" << endl;
+    cout << "=================================================================" << endl;
+    cout << "  Passed: " << passed << " / " << total << " tests." << endl;
     if (passed == total) {
-        std::cout << "\033[1;32m  [STATUS] ALL " << total << " TESTS PASSED! \033[0m" << std::endl;
+        cout << "\033[1;32m  [STATUS] ALL " << total << " TESTS PASSED! \033[0m" << endl;
     } else {
-        std::cout << "\033[1;31m  [STATUS] INCOMPLETE (" << (total - passed) << " tests failed) \033[0m" << std::endl;
+        cout << "\033[1;31m  [STATUS] INCOMPLETE (" << (total - passed) << " tests failed) \033[0m" << endl;
     }
-    std::cout << "=================================================================" << std::endl;
+    cout << "=================================================================" << endl;
 
     return (passed == total) ? 0 : 1;
 }

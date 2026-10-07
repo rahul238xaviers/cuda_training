@@ -24,19 +24,19 @@ using namespace std;
 //   ../../../output/1.9_beginner
 // =========================================================================
 
-void reportStatus(const std::string& name, bool passed) {
-    std::cout << "  " << std::left << std::setw(60) << name;
+void reportStatus(const string& name, bool passed) {
+    cout << "  " << left << setw(60) << name;
     if (passed) {
-        std::cout << "\033[1;32m[PASSED]\033[0m" << std::endl;
+        cout << "\033[1;32m[PASSED]\033[0m" << endl;
     } else {
-        std::cout << "\033[1;31m[FAILED]\033[0m" << std::endl;
+        cout << "\033[1;31m[FAILED]\033[0m" << endl;
     }
 }
 
 int main() {
-    std::cout << "=================================================================" << std::endl;
-    std::cout << "--- WORKBOOK: Single & Array Allocations (Beginner Level) ---" << std::endl;
-    std::cout << "=================================================================" << std::endl;
+    cout << "=================================================================" << endl;
+    cout << "--- WORKBOOK: Single & Array Allocations (Beginner Level) ---" << endl;
+    cout << "=================================================================" << endl;
 
     int passed = 0;
     int total = 0;
@@ -47,12 +47,12 @@ int main() {
     // Context: Unlike stack arrays, GPU and host tensors are dynamically sized
     //          at runtime based on batch size and sequence length.
     //          Uninitialized heap memory contains garbage bytes; initializing
-    //          with std::memset or calloc is essential for safety.
+    //          with memset or calloc is essential for safety.
     //
-    // Task: Allocate a heap buffer of N=256 floats using std::malloc.
-    //       Zero-initialize all bytes using std::memset.
+    // Task: Allocate a heap buffer of N=256 floats using malloc.
+    //       Zero-initialize all bytes using memset.
     //       Fill elements with val[i] = i * 2.0f.
-    //       Verify all values, then free the memory with std::free.
+    //       Verify all values, then free the memory with free.
     // -------------------------------------------------------------------------
     {
         const size_t N = 256;
@@ -70,7 +70,7 @@ int main() {
                     p1_passed = false;
                 }
             }
-            std::free(heap_tensor);
+            free(heap_tensor);
         }
 
         reportStatus("Problem 1: Dynamic Heap Allocation & Zero-Initialization", p1_passed);
@@ -86,7 +86,7 @@ int main() {
     //          freed when the variable falls out of scope.
     //
     // Task: Implement a simple RAII class `ScopedFloatBuffer` that allocates `size`
-    //       floats in its constructor and calls `std::free` in its destructor.
+    //       floats in its constructor and calls `free` in its destructor.
     //       Support `data()` and `size()` accessors.
     // -------------------------------------------------------------------------
     {
@@ -95,12 +95,12 @@ int main() {
             size_t count = 0;
 
             ScopedFloatBuffer(size_t n) : count(n) {
-                ptr = static_cast<float*>(std::malloc(n * sizeof(float)));
+                ptr = static_cast<float*>(malloc(n * sizeof(float)));
             }
 
             ~ScopedFloatBuffer() {
                 if (ptr) {
-                    std::free(ptr);
+                    free(ptr);
                     ptr = nullptr;
                 }
             }
@@ -143,7 +143,7 @@ int main() {
     {
         size_t capacity = 4;
         size_t size = 0;
-        int* dynamic_arr = static_cast<int*>(std::malloc(capacity * sizeof(int)));
+        int* dynamic_arr = static_cast<int*>(malloc(capacity * sizeof(int)));
 
         const int TOTAL_ELEMENTS = 20;
 
@@ -158,23 +158,23 @@ int main() {
             if (dynamic_arr[i] != i) p3_passed = false;
         }
 
-        std::free(dynamic_arr);
+        free(dynamic_arr);
 
         reportStatus("Problem 3: Dynamic Array Growth with Capacity Doubling", p3_passed);
         if (p3_passed) passed++;
         total++;
     }
 
-    std::cout << "\n=================================================================" << std::endl;
-    std::cout << "--- SCORECARD ---" << std::endl;
-    std::cout << "=================================================================" << std::endl;
-    std::cout << "  Passed: " << passed << " / " << total << " tests." << std::endl;
+    cout << "\n=================================================================" << endl;
+    cout << "--- SCORECARD ---" << endl;
+    cout << "=================================================================" << endl;
+    cout << "  Passed: " << passed << " / " << total << " tests." << endl;
     if (passed == total) {
-        std::cout << "\033[1;32m  [STATUS] ALL " << total << " TESTS PASSED! \033[0m" << std::endl;
+        cout << "\033[1;32m  [STATUS] ALL " << total << " TESTS PASSED! \033[0m" << endl;
     } else {
-        std::cout << "\033[1;31m  [STATUS] INCOMPLETE (" << (total - passed) << " tests failed) \033[0m" << std::endl;
+        cout << "\033[1;31m  [STATUS] INCOMPLETE (" << (total - passed) << " tests failed) \033[0m" << endl;
     }
-    std::cout << "=================================================================" << std::endl;
+    cout << "=================================================================" << endl;
 
     return (passed == total) ? 0 : 1;
 }

@@ -24,23 +24,23 @@ using namespace std;
 //   ../../../output/1.10_champion
 // =========================================================================
 
-void reportStatus(const std::string& name, bool passed, double throughputGBs = -1.0) {
-    std::cout << "  " << std::left << std::setw(60) << name;
+void reportStatus(const string& name, bool passed, double throughputGBs = -1.0) {
+    cout << "  " << left << setw(60) << name;
     if (passed) {
-        std::cout << "\033[1;32m[PASSED]\033[0m";
+        cout << "\033[1;32m[PASSED]\033[0m";
         if (throughputGBs > 0.0) {
-            std::cout << " (" << std::fixed << std::setprecision(2) << throughputGBs << " GB/s)";
+            cout << " (" << fixed << setprecision(2) << throughputGBs << " GB/s)";
         }
-        std::cout << std::endl;
+        cout << endl;
     } else {
-        std::cout << "\033[1;31m[FAILED]\033[0m" << std::endl;
+        cout << "\033[1;31m[FAILED]\033[0m" << endl;
     }
 }
 
 int main() {
-    std::cout << "=================================================================" << std::endl;
-    std::cout << "--- WORKBOOK: Multi-Dim & Alignment (Champion Masterclass) ---" << std::endl;
-    std::cout << "=================================================================" << std::endl;
+    cout << "=================================================================" << endl;
+    cout << "--- WORKBOOK: Multi-Dim & Alignment (Champion Masterclass) ---" << endl;
+    cout << "=================================================================" << endl;
 
     int passed = 0;
     int total = 0;
@@ -65,7 +65,7 @@ int main() {
         const int SLICE_FLOATS = PITCH_FLOATS * HEIGHT; // 1280
         const size_t total_elements = DEPTH * SLICE_FLOATS;
 
-        std::vector<float> pitched_pool(total_elements, 0.0f);
+        vector<float> pitched_pool(total_elements, 0.0f);
         for (int d = 0; d < DEPTH; ++d) {
             for (int h = 0; h < HEIGHT; ++h) {
                 for (int w = 0; w < WIDTH; ++w) {
@@ -76,7 +76,7 @@ int main() {
 
         const int d0 = 2, h0 = 4, w0 = 10;
         const int CROP_D = 4, CROP_H = 8, CROP_W = 16;
-        std::vector<float> subvolume_out(CROP_D * CROP_H * CROP_W, -1.0f);
+        vector<float> subvolume_out(CROP_D * CROP_H * CROP_W, -1.0f);
 
         // TODO: Extract the subvolume into subvolume_out in contiguous order.
         // --- YOUR CODE STARTS HERE ---
@@ -115,24 +115,24 @@ int main() {
     // -------------------------------------------------------------------------
     {
         const int N = 262144;
-        std::vector<float> soa_x(N, 1.5f);
-        std::vector<float> soa_w(N, 2.0f);
+        vector<float> soa_x(N, 1.5f);
+        vector<float> soa_w(N, 2.0f);
 
         float total_dot = 0.0f;
-        auto start = std::chrono::high_resolution_clock::now();
+        auto start = chrono::high_resolution_clock::now();
 
         // TODO: Compute dot product of soa_x and soa_w.
         // --- YOUR CODE STARTS HERE ---
 
         // --- YOUR CODE ENDS HERE ---
 
-        auto end = std::chrono::high_resolution_clock::now();
-        double elapsed_sec = std::chrono::duration<double>(end - start).count();
+        auto end = chrono::high_resolution_clock::now();
+        double elapsed_sec = chrono::duration<double>(end - start).count();
         double bytes_moved = 2.0 * N * sizeof(float);
         double throughput = (bytes_moved / elapsed_sec) / 1e9;
 
         float expected_dot = N * (1.5f * 2.0f);
-        bool p2_passed = (std::abs(total_dot - expected_dot) < 1e-1f);
+        bool p2_passed = (abs(total_dot - expected_dot) < 1e-1f);
 
         reportStatus("Problem 2: SoA Vectorized Memory Bandwidth Benchmark", p2_passed, throughput);
         if (p2_passed) passed++;
@@ -155,7 +155,7 @@ int main() {
     {
         const int B = 2, C = 4, H = 8, W = 16;
         const size_t total_elements = B * C * H * W; // 1024
-        std::vector<float> pool(total_elements);
+        vector<float> pool(total_elements);
         float expected_sum = 0.0f;
         for (size_t i = 0; i < total_elements; ++i) {
             pool[i] = static_cast<float>(i * 0.1f);
@@ -171,22 +171,22 @@ int main() {
 
         // --- YOUR CODE ENDS HERE ---
 
-        bool p3_passed = (std::abs(view_sum - expected_sum) < 1e-2f);
+        bool p3_passed = (abs(view_sum - expected_sum) < 1e-2f);
         reportStatus("Problem 3: Dynamic 4D Strided Tensor View Descriptor", p3_passed);
         if (p3_passed) passed++;
         total++;
     }
 
-    std::cout << "\n=================================================================" << std::endl;
-    std::cout << "--- SCORECARD ---" << std::endl;
-    std::cout << "=================================================================" << std::endl;
-    std::cout << "  Passed: " << passed << " / " << total << " tests." << std::endl;
+    cout << "\n=================================================================" << endl;
+    cout << "--- SCORECARD ---" << endl;
+    cout << "=================================================================" << endl;
+    cout << "  Passed: " << passed << " / " << total << " tests." << endl;
     if (passed == total) {
-        std::cout << "\033[1;32m  [STATUS] ALL " << total << " TESTS PASSED! \033[0m" << std::endl;
+        cout << "\033[1;32m  [STATUS] ALL " << total << " TESTS PASSED! \033[0m" << endl;
     } else {
-        std::cout << "\033[1;31m  [STATUS] INCOMPLETE (" << (total - passed) << " tests failed) \033[0m" << std::endl;
+        cout << "\033[1;31m  [STATUS] INCOMPLETE (" << (total - passed) << " tests failed) \033[0m" << endl;
     }
-    std::cout << "=================================================================" << std::endl;
+    cout << "=================================================================" << endl;
 
     return (passed == total) ? 0 : 1;
 }

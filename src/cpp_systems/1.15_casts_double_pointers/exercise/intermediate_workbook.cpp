@@ -24,12 +24,12 @@ using namespace std;
 //   ../../../output/1.15_intermediate
 // =========================================================================
 
-void reportStatus(const std::string& name, bool passed) {
-    std::cout << "  " << std::left << std::setw(60) << name;
+void reportStatus(const string& name, bool passed) {
+    cout << "  " << left << setw(60) << name;
     if (passed) {
-        std::cout << "\033[1;32m[PASSED]\033[0m" << std::endl;
+        cout << "\033[1;32m[PASSED]\033[0m" << endl;
     } else {
-        std::cout << "\033[1;31m[FAILED]\033[0m" << std::endl;
+        cout << "\033[1;31m[FAILED]\033[0m" << endl;
     }
 }
 
@@ -56,7 +56,7 @@ public:
 
     void relocate(float** handle, float* new_ptr, size_t num_elements) {
         if (!handle || !*handle || !new_ptr) return;
-        std::memcpy(new_ptr, *handle, num_elements * sizeof(float));
+        memcpy(new_ptr, *handle, num_elements * sizeof(float));
         delete[] *handle;
         *handle = new_ptr;
     }
@@ -76,9 +76,9 @@ public:
 };
 
 int main() {
-    std::cout << "=================================================================" << std::endl;
-    std::cout << "--- WORKBOOK: Type Casts & Double Pointers (Intermediate) ---" << std::endl;
-    std::cout << "=================================================================" << std::endl;
+    cout << "=================================================================" << endl;
+    cout << "--- WORKBOOK: Type Casts & Double Pointers (Intermediate) ---" << endl;
+    cout << "=================================================================" << endl;
 
     int passed = 0;
     int total = 0;
@@ -163,14 +163,14 @@ int main() {
         };
 
         const int R = 16, C = 32;
-        std::vector<float> flat(R * C);
+        vector<float> flat(R * C);
         for (int i = 0; i < R * C; ++i) flat[i] = static_cast<float>(i % 7);
 
-        std::vector<float*> row_ptrs(R);
+        vector<float*> row_ptrs(R);
         buildRowIndex(flat.data(), R, C, row_ptrs.data());
 
-        std::vector<float> x(C, 1.0f);
-        std::vector<float> y(R, 0.0f);
+        vector<float> x(C, 1.0f);
+        vector<float> y(R, 0.0f);
 
         gemvRowIndex(const_cast<const float**>(row_ptrs.data()), x.data(), y.data(), R, C);
 
@@ -178,7 +178,7 @@ int main() {
         for (int r = 0; r < R; ++r) {
             float expected = 0.0f;
             for (int c = 0; c < C; ++c) expected += flat[r * C + c];
-            if (std::abs(y[r] - expected) > 1e-4f) {
+            if (abs(y[r] - expected) > 1e-4f) {
                 ok = false;
                 break;
             }
@@ -217,15 +217,15 @@ int main() {
                 case DType::INT32: {
                     int32_t* ptr = reinterpret_cast<int32_t*>(data);
                     for (size_t i = 0; i < count; ++i) {
-                        ptr[i] = static_cast<int32_t>(std::round(ptr[i] * scale));
+                        ptr[i] = static_cast<int32_t>(round(ptr[i] * scale));
                     }
                     break;
                 }
                 case DType::INT8: {
                     int8_t* ptr = reinterpret_cast<int8_t*>(data);
                     for (size_t i = 0; i < count; ++i) {
-                        float v = std::round(ptr[i] * scale);
-                        ptr[i] = static_cast<int8_t>(std::clamp(v, -128.0f, 127.0f));
+                        float v = round(ptr[i] * scale);
+                        ptr[i] = static_cast<int8_t>(clamp(v, -128.0f, 127.0f));
                     }
                     break;
                 }
@@ -234,9 +234,9 @@ int main() {
         };
 
         const size_t COUNT = 16;
-        std::vector<float> fp32_buf(COUNT, 2.5f);
-        std::vector<int32_t> int32_buf(COUNT, 10);
-        std::vector<int8_t> int8_buf(COUNT, 50);
+        vector<float> fp32_buf(COUNT, 2.5f);
+        vector<int32_t> int32_buf(COUNT, 10);
+        vector<int8_t> int8_buf(COUNT, 50);
 
         scaleGenericTensor(fp32_buf.data(), COUNT, DType::FP32, 2.0f);
         scaleGenericTensor(int32_buf.data(), COUNT, DType::INT32, 3.0f);
@@ -254,16 +254,16 @@ int main() {
         total++;
     }
 
-    std::cout << "\n=================================================================" << std::endl;
-    std::cout << "--- SCORECARD ---" << std::endl;
-    std::cout << "=================================================================" << std::endl;
-    std::cout << "  Passed: " << passed << " / " << total << " tests." << std::endl;
+    cout << "\n=================================================================" << endl;
+    cout << "--- SCORECARD ---" << endl;
+    cout << "=================================================================" << endl;
+    cout << "  Passed: " << passed << " / " << total << " tests." << endl;
     if (passed == total) {
-        std::cout << "\033[1;32m  [STATUS] ALL " << total << " TESTS PASSED! \033[0m" << std::endl;
+        cout << "\033[1;32m  [STATUS] ALL " << total << " TESTS PASSED! \033[0m" << endl;
     } else {
-        std::cout << "\033[1;31m  [STATUS] INCOMPLETE (" << (total - passed) << " tests failed) \033[0m" << std::endl;
+        cout << "\033[1;31m  [STATUS] INCOMPLETE (" << (total - passed) << " tests failed) \033[0m" << endl;
     }
-    std::cout << "=================================================================" << std::endl;
+    cout << "=================================================================" << endl;
 
     return (passed == total) ? 0 : 1;
 }

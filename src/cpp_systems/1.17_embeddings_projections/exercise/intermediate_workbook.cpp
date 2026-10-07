@@ -18,19 +18,19 @@ using namespace std;
 //        and ALiBi geometric bias stride patterns.
 // =========================================================================
 
-void reportStatus(const std::string& name, bool passed) {
-    std::cout << "  " << std::left << std::setw(60) << name;
+void reportStatus(const string& name, bool passed) {
+    cout << "  " << left << setw(60) << name;
     if (passed) {
-        std::cout << "\033[1;32m[PASSED]\033[0m" << std::endl;
+        cout << "\033[1;32m[PASSED]\033[0m" << endl;
     } else {
-        std::cout << "\033[1;31m[FAILED]\033[0m" << std::endl;
+        cout << "\033[1;31m[FAILED]\033[0m" << endl;
     }
 }
 
 int main() {
-    std::cout << "=================================================================" << std::endl;
-    std::cout << "--- WORKBOOK: Embeddings & Projections (Intermediate Level) ---" << std::endl;
-    std::cout << "=================================================================" << std::endl;
+    cout << "=================================================================" << endl;
+    cout << "--- WORKBOOK: Embeddings & Projections (Intermediate Level) ---" << endl;
+    cout << "=================================================================" << endl;
 
     int passed = 0;
     int total = 0;
@@ -55,14 +55,14 @@ int main() {
         const int HEAD_DIM_TOTAL = H * D; // 64
         const int PACKED_DIM = 3 * HEAD_DIM_TOTAL; // 192
 
-        std::vector<float> qkv_interleaved(B * S * PACKED_DIM);
+        vector<float> qkv_interleaved(B * S * PACKED_DIM);
         for (size_t i = 0; i < qkv_interleaved.size(); ++i) {
             qkv_interleaved[i] = static_cast<float>(i + 1);
         }
 
-        std::vector<float> Q_out(B * S * HEAD_DIM_TOTAL, 0.0f);
-        std::vector<float> K_out(B * S * HEAD_DIM_TOTAL, 0.0f);
-        std::vector<float> V_out(B * S * HEAD_DIM_TOTAL, 0.0f);
+        vector<float> Q_out(B * S * HEAD_DIM_TOTAL, 0.0f);
+        vector<float> K_out(B * S * HEAD_DIM_TOTAL, 0.0f);
+        vector<float> V_out(B * S * HEAD_DIM_TOTAL, 0.0f);
 
         // TODO: For every batch b and sequence step s, slice and copy the 64 floats
         // for Q, 64 floats for K, and 64 floats for V into their respective output buffers.
@@ -104,12 +104,12 @@ int main() {
     // -------------------------------------------------------------------------
     {
         const int BATCH = 2, NUM_HEADS = 4, MAX_SEQ = 32, HEAD_DIM = 16;
-        std::vector<float> kv_cache(BATCH * NUM_HEADS * MAX_SEQ * HEAD_DIM, 0.0f);
+        vector<float> kv_cache(BATCH * NUM_HEADS * MAX_SEQ * HEAD_DIM, 0.0f);
 
         // Fill cache with placeholder -1.0f
-        std::fill(kv_cache.begin(), kv_cache.end(), -1.0f);
+        fill(kv_cache.begin(), kv_cache.end(), -1.0f);
 
-        std::vector<float> new_keys(BATCH * NUM_HEADS * HEAD_DIM);
+        vector<float> new_keys(BATCH * NUM_HEADS * HEAD_DIM);
         for (size_t i = 0; i < new_keys.size(); ++i) {
             new_keys[i] = static_cast<float>(i + 100.0f);
         }
@@ -163,7 +163,7 @@ int main() {
     {
         const int NUM_HEADS = 4;
         const int SEQ_LEN = 8;
-        std::vector<float> alibi_bias(NUM_HEADS * SEQ_LEN * SEQ_LEN, 0.0f);
+        vector<float> alibi_bias(NUM_HEADS * SEQ_LEN * SEQ_LEN, 0.0f);
 
         // TODO: Populate alibi_bias[h, i, j] according to ALiBi geometric slope formula.
         // --- YOUR CODE STARTS HERE ---
@@ -172,7 +172,7 @@ int main() {
 
         bool p3_passed = true;
         for (int h = 0; h < NUM_HEADS && p3_passed; ++h) {
-            float m_h = std::pow(2.0f, -8.0f * (h + 1) / static_cast<float>(NUM_HEADS));
+            float m_h = pow(2.0f, -8.0f * (h + 1) / static_cast<float>(NUM_HEADS));
             for (int i = 0; i < SEQ_LEN && p3_passed; ++i) {
                 for (int j = 0; j < SEQ_LEN; ++j) {
                     size_t idx = (size_t)h * (SEQ_LEN * SEQ_LEN) + (size_t)i * SEQ_LEN + j;
@@ -180,7 +180,7 @@ int main() {
                         if (alibi_bias[idx] != -1e9f) p3_passed = false;
                     } else {
                         float expected = -m_h * static_cast<float>(i - j);
-                        if (std::abs(alibi_bias[idx] - expected) > 1e-4f) p3_passed = false;
+                        if (abs(alibi_bias[idx] - expected) > 1e-4f) p3_passed = false;
                     }
                 }
             }
@@ -191,16 +191,16 @@ int main() {
         total++;
     }
 
-    std::cout << "\n=================================================================" << std::endl;
-    std::cout << "--- SCORECARD ---" << std::endl;
-    std::cout << "=================================================================" << std::endl;
-    std::cout << "  Passed: " << passed << " / " << total << " tests." << std::endl;
+    cout << "\n=================================================================" << endl;
+    cout << "--- SCORECARD ---" << endl;
+    cout << "=================================================================" << endl;
+    cout << "  Passed: " << passed << " / " << total << " tests." << endl;
     if (passed == total) {
-        std::cout << "\033[1;32m  [STATUS] ALL " << total << " TESTS PASSED! \033[0m" << std::endl;
+        cout << "\033[1;32m  [STATUS] ALL " << total << " TESTS PASSED! \033[0m" << endl;
     } else {
-        std::cout << "\033[1;31m  [STATUS] INCOMPLETE (" << (total - passed) << " tests failed) \033[0m" << std::endl;
+        cout << "\033[1;31m  [STATUS] INCOMPLETE (" << (total - passed) << " tests failed) \033[0m" << endl;
     }
-    std::cout << "=================================================================" << std::endl;
+    cout << "=================================================================" << endl;
 
     return (passed == total) ? 0 : 1;
 }

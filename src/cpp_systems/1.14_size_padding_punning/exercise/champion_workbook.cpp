@@ -25,19 +25,19 @@ using namespace std;
 //   ../../../output/1.14_champion
 // =========================================================================
 
-void reportStatus(const std::string& name, bool passed) {
-    std::cout << "  " << std::left << std::setw(60) << name;
+void reportStatus(const string& name, bool passed) {
+    cout << "  " << left << setw(60) << name;
     if (passed) {
-        std::cout << "\033[1;32m[PASSED]\033[0m" << std::endl;
+        cout << "\033[1;32m[PASSED]\033[0m" << endl;
     } else {
-        std::cout << "\033[1;31m[FAILED]\033[0m" << std::endl;
+        cout << "\033[1;31m[FAILED]\033[0m" << endl;
     }
 }
 
 int main() {
-    std::cout << "=================================================================" << std::endl;
-    std::cout << "--- WORKBOOK: Size, Padding & Type Punning (Champion Level) ---" << std::endl;
-    std::cout << "=================================================================" << std::endl;
+    cout << "=================================================================" << endl;
+    cout << "--- WORKBOOK: Size, Padding & Type Punning (Champion Level) ---" << endl;
+    cout << "=================================================================" << endl;
 
     int passed = 0;
     int total = 0;
@@ -49,13 +49,13 @@ int main() {
     //          calculating 1 / sqrt(x). The classic Carmack fast inverse square root
     //          computes an initial guess using integer bit-punning, followed by
     //          Newton-Raphson refinement steps. In C++20, this is performed
-    //          without undefined behavior using `std::bit_cast`.
+    //          without undefined behavior using `bit_cast`.
     //
     // Task: Implement `fastInvSqrt(float number)`:
     //       - const float xhalf = 0.5f * number;
-    //       - uint32_t i = std::bit_cast<uint32_t>(number);
+    //       - uint32_t i = bit_cast<uint32_t>(number);
     //       - i = 0x5f3759df - (i >> 1);
-    //       - float y = std::bit_cast<float>(i);
+    //       - float y = bit_cast<float>(i);
     //       - Perform 2 Newton-Raphson steps:
     //           y = y * (1.5f - xhalf * y * y);
     //           y = y * (1.5f - xhalf * y * y);
@@ -65,9 +65,9 @@ int main() {
         auto fastInvSqrt = [](float number) -> float {
             // --- YOUR CODE STARTS HERE ---
             const float xhalf = 0.5f * number;
-            uint32_t i = std::bit_cast<uint32_t>(number);
+            uint32_t i = bit_cast<uint32_t>(number);
             i = 0x5f3759df - (i >> 1);
-            float y = std::bit_cast<float>(i);
+            float y = bit_cast<float>(i);
             y = y * (1.5f - xhalf * y * y); // 1st iteration
             y = y * (1.5f - xhalf * y * y); // 2nd iteration
             return y;
@@ -75,12 +75,12 @@ int main() {
         };
 
         bool ok = true;
-        std::vector<float> test_values = {1.0f, 4.0f, 16.0f, 0.25f, 100.0f, 0.001f, 12345.0f};
+        vector<float> test_values = {1.0f, 4.0f, 16.0f, 0.25f, 100.0f, 0.001f, 12345.0f};
 
         for (float v : test_values) {
             float approx = fastInvSqrt(v);
-            float exact = 1.0f / std::sqrt(v);
-            float rel_error = std::abs(approx - exact) / exact;
+            float exact = 1.0f / sqrt(v);
+            float rel_error = abs(approx - exact) / exact;
             // 2 iterations of Newton-Raphson yield relative error < 0.01%
             if (rel_error > 0.0001f) {
                 ok = false;
@@ -115,8 +115,8 @@ int main() {
         auto quantize_fp8_e4m3 = [](float x) -> uint8_t {
             // --- YOUR CODE STARTS HERE ---
             if (x == 0.0f) return 0;
-            float clamped = std::clamp(x, -448.0f, 448.0f);
-            uint32_t f_bits = std::bit_cast<uint32_t>(clamped);
+            float clamped = clamp(x, -448.0f, 448.0f);
+            uint32_t f_bits = bit_cast<uint32_t>(clamped);
             uint8_t sign = (f_bits >> 31) & 0x1;
             int32_t exp = static_cast<int32_t>((f_bits >> 23) & 0xFF) - 127;
             uint32_t mant = f_bits & 0x7FFFFF;
@@ -139,12 +139,12 @@ int main() {
 
             int32_t exp = static_cast<int32_t>(fp8_exp) - 7 + 127;
             uint32_t f_bits = (sign << 31) | (static_cast<uint32_t>(exp) << 23) | (fp8_mant << 20);
-            return std::bit_cast<float>(f_bits);
+            return bit_cast<float>(f_bits);
             // --- YOUR CODE ENDS HERE ---
         };
 
         bool ok = true;
-        std::vector<float> test_values = {1.0f, -1.0f, 2.0f, 0.5f, 4.0f, 16.0f, -32.0f, 0.0f};
+        vector<float> test_values = {1.0f, -1.0f, 2.0f, 0.5f, 4.0f, 16.0f, -32.0f, 0.0f};
 
         for (float val : test_values) {
             uint8_t q = quantize_fp8_e4m3(val);
@@ -177,7 +177,7 @@ int main() {
     // Task: Implement `loadUnalignedFloat4(const void* unaligned_ptr)`:
     //       - Loads 16 contiguous bytes from `unaligned_ptr` into a 16-byte
     //         aligned struct `alignas(16) struct Float4 { float x, y, z, w; };`
-    //         using standard-compliant `std::memcpy`.
+    //         using standard-compliant `memcpy`.
     //       - Verify that reading 1000 consecutive unaligned offsets (offset % 16 != 0)
     //         returns exact float4 elements identical to direct indexing.
     // -------------------------------------------------------------------------
@@ -189,13 +189,13 @@ int main() {
         auto loadUnalignedFloat4 = [](const void* unaligned_ptr) -> Float4 {
             // --- YOUR CODE STARTS HERE ---
             Float4 result;
-            std::memcpy(&result, unaligned_ptr, sizeof(Float4));
+            memcpy(&result, unaligned_ptr, sizeof(Float4));
             return result;
             // --- YOUR CODE ENDS HERE ---
         };
 
         const size_t NUM_FLOATS = 1024;
-        std::vector<float> source_data(NUM_FLOATS);
+        vector<float> source_data(NUM_FLOATS);
         for (size_t i = 0; i < NUM_FLOATS; ++i) {
             source_data[i] = static_cast<float>(i * 3.14159f);
         }
@@ -209,9 +209,9 @@ int main() {
 
             // Compare bit-for-bit against expected memcpy
             Float4 expected;
-            std::memcpy(&expected, byte_ptr + byte_offset, sizeof(Float4));
+            memcpy(&expected, byte_ptr + byte_offset, sizeof(Float4));
 
-            if (std::memcmp(&loaded, &expected, sizeof(Float4)) != 0) {
+            if (memcmp(&loaded, &expected, sizeof(Float4)) != 0) {
                 ok = false;
                 break;
             }
@@ -222,16 +222,16 @@ int main() {
         total++;
     }
 
-    std::cout << "\n=================================================================" << std::endl;
-    std::cout << "--- SCORECARD ---" << std::endl;
-    std::cout << "=================================================================" << std::endl;
-    std::cout << "  Passed: " << passed << " / " << total << " tests." << std::endl;
+    cout << "\n=================================================================" << endl;
+    cout << "--- SCORECARD ---" << endl;
+    cout << "=================================================================" << endl;
+    cout << "  Passed: " << passed << " / " << total << " tests." << endl;
     if (passed == total) {
-        std::cout << "\033[1;32m  [STATUS] ALL " << total << " TESTS PASSED! \033[0m" << std::endl;
+        cout << "\033[1;32m  [STATUS] ALL " << total << " TESTS PASSED! \033[0m" << endl;
     } else {
-        std::cout << "\033[1;31m  [STATUS] INCOMPLETE (" << (total - passed) << " tests failed) \033[0m" << std::endl;
+        cout << "\033[1;31m  [STATUS] INCOMPLETE (" << (total - passed) << " tests failed) \033[0m" << endl;
     }
-    std::cout << "=================================================================" << std::endl;
+    cout << "=================================================================" << endl;
 
     return (passed == total) ? 0 : 1;
 }

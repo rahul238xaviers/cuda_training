@@ -23,19 +23,19 @@ using namespace std;
 //   ../../../output/1.6_beginner
 // =========================================================================
 
-void reportStatus(const std::string& name, bool passed) {
-    std::cout << "  " << std::left << std::setw(60) << name;
+void reportStatus(const string& name, bool passed) {
+    cout << "  " << left << setw(60) << name;
     if (passed) {
-        std::cout << "\033[1;32m[PASSED]\033[0m" << std::endl;
+        cout << "\033[1;32m[PASSED]\033[0m" << endl;
     } else {
-        std::cout << "\033[1;31m[FAILED]\033[0m" << std::endl;
+        cout << "\033[1;31m[FAILED]\033[0m" << endl;
     }
 }
 
 int main() {
-    std::cout << "=================================================================" << std::endl;
-    std::cout << "--- WORKBOOK: 3D/4D Permute & Flatten (Beginner Level) ---" << std::endl;
-    std::cout << "=================================================================" << std::endl;
+    cout << "=================================================================" << endl;
+    cout << "--- WORKBOOK: 3D/4D Permute & Flatten (Beginner Level) ---" << endl;
+    cout << "=================================================================" << endl;
 
     int passed = 0;
     int total = 0;
@@ -54,7 +54,7 @@ int main() {
         const int D = 4, H = 8, W = 8;
         const size_t total_elements = D * H * W;
 
-        std::vector<float> volume(total_elements);
+        vector<float> volume(total_elements);
         for (int d = 0; d < D; ++d) {
             for (int h = 0; h < H; ++h) {
                 for (int w = 0; w < W; ++w) {
@@ -63,7 +63,7 @@ int main() {
             }
         }
 
-        std::vector<float> flat_buffer(total_elements, -1.0f);
+        vector<float> flat_buffer(total_elements, -1.0f);
 
         // TODO: Copy all elements from volume into flat_buffer in flattened order.
         // --- YOUR CODE STARTS HERE ---
@@ -100,14 +100,14 @@ int main() {
         const int NUM_PATCHES = PATCHES_H * PATCHES_W; // 4
         const int PATCH_DIM = P * P; // 16
 
-        std::vector<float> img(H * W);
+        vector<float> img(H * W);
         for (int h = 0; h < H; ++h) {
             for (int w = 0; w < W; ++w) {
                 img[h * W + w] = static_cast<float>(h * 10 + w);
             }
         }
 
-        std::vector<float> patch_matrix(NUM_PATCHES * PATCH_DIM, -1.0f);
+        vector<float> patch_matrix(NUM_PATCHES * PATCH_DIM, -1.0f);
 
         // TODO: For each patch (ph, pw) in [0..1], extract its 4x4 pixels into patch_matrix[p, :].
         // --- YOUR CODE STARTS HERE ---
@@ -165,16 +165,16 @@ int main() {
         total++;
     }
 
-    std::cout << "\n=================================================================" << std::endl;
-    std::cout << "--- SCORECARD ---" << std::endl;
-    std::cout << "=================================================================" << std::endl;
-    std::cout << "  Passed: " << passed << " / " << total << " tests." << std::endl;
+    cout << "\n=================================================================" << endl;
+    cout << "--- SCORECARD ---" << endl;
+    cout << "=================================================================" << endl;
+    cout << "  Passed: " << passed << " / " << total << " tests." << endl;
     if (passed == total) {
-        std::cout << "\033[1;32m  [STATUS] ALL " << total << " TESTS PASSED! \033[0m" << std::endl;
+        cout << "\033[1;32m  [STATUS] ALL " << total << " TESTS PASSED! \033[0m" << endl;
     } else {
-        std::cout << "\033[1;31m  [STATUS] INCOMPLETE (" << (total - passed) << " tests failed) \033[0m" << std::endl;
+        cout << "\033[1;31m  [STATUS] INCOMPLETE (" << (total - passed) << " tests failed) \033[0m" << endl;
     }
-    std::cout << "=================================================================" << std::endl;
+    cout << "=================================================================" << endl;
 
     return (passed == total) ? 0 : 1;
 }

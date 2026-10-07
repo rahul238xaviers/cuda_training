@@ -23,19 +23,19 @@ using namespace std;
 //   ../../../output/1.4_intermediate
 // =========================================================================
 
-void reportStatus(const std::string& name, bool passed) {
-    std::cout << "  " << std::left << std::setw(60) << name;
+void reportStatus(const string& name, bool passed) {
+    cout << "  " << left << setw(60) << name;
     if (passed) {
-        std::cout << "\033[1;32m[PASSED]\033[0m" << std::endl;
+        cout << "\033[1;32m[PASSED]\033[0m" << endl;
     } else {
-        std::cout << "\033[1;31m[FAILED]\033[0m" << std::endl;
+        cout << "\033[1;31m[FAILED]\033[0m" << endl;
     }
 }
 
 int main() {
-    std::cout << "=================================================================" << std::endl;
-    std::cout << "--- WORKBOOK: Multi-Array & Strided Ops (Intermediate Level) ---" << std::endl;
-    std::cout << "=================================================================" << std::endl;
+    cout << "=================================================================" << endl;
+    cout << "--- WORKBOOK: Multi-Array & Strided Ops (Intermediate Level) ---" << endl;
+    cout << "=================================================================" << endl;
 
     int passed = 0;
     int total = 0;
@@ -54,15 +54,15 @@ int main() {
         const int M = 32, K = 64;
         const float alpha = 1.5f, beta = 0.5f;
 
-        std::vector<float> A(M * K);
+        vector<float> A(M * K);
         for (int i = 0; i < M * K; ++i) A[i] = static_cast<float>((i % 13) - 6) * 0.1f;
 
-        std::vector<float> x(K);
+        vector<float> x(K);
         for (int i = 0; i < K; ++i) x[i] = static_cast<float>((i % 7) + 1) * 0.2f;
 
-        std::vector<float> y(M);
+        vector<float> y(M);
         for (int i = 0; i < M; ++i) y[i] = 1.0f;
-        std::vector<float> original_y = y;
+        vector<float> original_y = y;
 
         // TODO: In-place GEMV update on y.
         // --- YOUR CODE STARTS HERE ---
@@ -76,7 +76,7 @@ int main() {
                 dot += A[m * K + k] * x[k];
             }
             float expected = alpha * dot + beta * original_y[m];
-            if (std::abs(y[m] - expected) > 1e-4f) {
+            if (abs(y[m] - expected) > 1e-4f) {
                 p1_passed = false;
                 break;
             }
@@ -94,18 +94,18 @@ int main() {
     //          into a single pass prevents round-tripping data through main DRAM.
     //
     // Task: Given three vectors `X`, `Y`, `Z` of size N=256:
-    //       Compute `Out[i] = std::max(0.0f, 2.0f * X[i] - 1.5f * Y[i] + Z[i])`.
+    //       Compute `Out[i] = max(0.0f, 2.0f * X[i] - 1.5f * Y[i] + Z[i])`.
     // -------------------------------------------------------------------------
     {
         const int N = 256;
-        std::vector<float> X(N), Y(N), Z(N);
+        vector<float> X(N), Y(N), Z(N);
         for (int i = 0; i < N; ++i) {
             X[i] = static_cast<float>((i % 17) - 8);
             Y[i] = static_cast<float>((i % 13) - 6);
             Z[i] = static_cast<float>((i % 7) - 3);
         }
 
-        std::vector<float> Out(N, -1.0f);
+        vector<float> Out(N, -1.0f);
 
         // TODO: Compute Out[i] using fused pointer arithmetic.
         // --- YOUR CODE STARTS HERE ---
@@ -115,8 +115,8 @@ int main() {
         bool p2_passed = true;
         for (int i = 0; i < N; ++i) {
             float val = 2.0f * X[i] - 1.5f * Y[i] + Z[i];
-            float expected = std::max(0.0f, val);
-            if (std::abs(Out[i] - expected) > 1e-4f) {
+            float expected = max(0.0f, val);
+            if (abs(Out[i] - expected) > 1e-4f) {
                 p2_passed = false;
                 break;
             }
@@ -139,7 +139,7 @@ int main() {
     // -------------------------------------------------------------------------
     {
         const int N = 128;
-        std::vector<float> A(N), B(N), C(N), D(N);
+        vector<float> A(N), B(N), C(N), D(N);
         for (int i = 0; i < N; ++i) {
             A[i] = static_cast<float>(i + 1);
             B[i] = static_cast<float>(i * 2 + 1);
@@ -147,7 +147,7 @@ int main() {
             D[i] = static_cast<float>(i * 4 + 1);
         }
 
-        std::vector<float> R(N, 0.0f);
+        vector<float> R(N, 0.0f);
 
         // TODO: Compute R[i] = A[i] * B[i] + C[i] * D[i].
         // --- YOUR CODE STARTS HERE ---
@@ -157,7 +157,7 @@ int main() {
         bool p3_passed = true;
         for (int i = 0; i < N; ++i) {
             float expected = A[i] * B[i] + C[i] * D[i];
-            if (std::abs(R[i] - expected) > 1e-4f) {
+            if (abs(R[i] - expected) > 1e-4f) {
                 p3_passed = false;
                 break;
             }
@@ -168,16 +168,16 @@ int main() {
         total++;
     }
 
-    std::cout << "\n=================================================================" << std::endl;
-    std::cout << "--- SCORECARD ---" << std::endl;
-    std::cout << "=================================================================" << std::endl;
-    std::cout << "  Passed: " << passed << " / " << total << " tests." << std::endl;
+    cout << "\n=================================================================" << endl;
+    cout << "--- SCORECARD ---" << endl;
+    cout << "=================================================================" << endl;
+    cout << "  Passed: " << passed << " / " << total << " tests." << endl;
     if (passed == total) {
-        std::cout << "\033[1;32m  [STATUS] ALL " << total << " TESTS PASSED! \033[0m" << std::endl;
+        cout << "\033[1;32m  [STATUS] ALL " << total << " TESTS PASSED! \033[0m" << endl;
     } else {
-        std::cout << "\033[1;31m  [STATUS] INCOMPLETE (" << (total - passed) << " tests failed) \033[0m" << std::endl;
+        cout << "\033[1;31m  [STATUS] INCOMPLETE (" << (total - passed) << " tests failed) \033[0m" << endl;
     }
-    std::cout << "=================================================================" << std::endl;
+    cout << "=================================================================" << endl;
 
     return (passed == total) ? 0 : 1;
 }

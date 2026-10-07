@@ -24,23 +24,23 @@ using namespace std;
 //   ../../../output/1.16_champion
 // =========================================================================
 
-void reportStatus(const std::string& name, bool passed, double throughput = -1.0) {
-    std::cout << "  " << std::left << std::setw(55) << name;
+void reportStatus(const string& name, bool passed, double throughput = -1.0) {
+    cout << "  " << left << setw(55) << name;
     if (passed) {
-        std::cout << "\033[1;32m[PASSED]\033[0m";
+        cout << "\033[1;32m[PASSED]\033[0m";
         if (throughput > 0.0) {
-            std::cout << " (" << std::fixed << std::setprecision(2) << throughput << " GB/s)";
+            cout << " (" << fixed << setprecision(2) << throughput << " GB/s)";
         }
-        std::cout << std::endl;
+        cout << endl;
     } else {
-        std::cout << "\033[1;31m[FAILED]\033[0m" << std::endl;
+        cout << "\033[1;31m[FAILED]\033[0m" << endl;
     }
 }
 
 int main() {
-    std::cout << "=================================================================" << std::endl;
-    std::cout << "--- WORKBOOK: Pointer Relations & Copying (Champion Level) ---" << std::endl;
-    std::cout << "=================================================================" << std::endl;
+    cout << "=================================================================" << endl;
+    cout << "--- WORKBOOK: Pointer Relations & Copying (Champion Level) ---" << endl;
+    cout << "=================================================================" << endl;
 
     int passed = 0;
     int total = 0;
@@ -86,22 +86,22 @@ int main() {
         };
 
         const size_t NUM_BYTES = 4 * 1024 * 1024; // 4 MB
-        std::vector<uint8_t> src(NUM_BYTES);
+        vector<uint8_t> src(NUM_BYTES);
         for (size_t i = 0; i < NUM_BYTES; ++i) src[i] = static_cast<uint8_t>(i & 0xFF);
-        std::vector<uint8_t> dst(NUM_BYTES, 0);
+        vector<uint8_t> dst(NUM_BYTES, 0);
 
         // Benchmark vector copy
-        auto start = std::chrono::high_resolution_clock::now();
+        auto start = chrono::high_resolution_clock::now();
         const int ITERS = 100;
         for (int it = 0; it < ITERS; ++it) {
             copyVector128(dst.data(), src.data(), NUM_BYTES);
         }
-        auto end = std::chrono::high_resolution_clock::now();
-        double elapsed_sec = std::chrono::duration<double>(end - start).count();
+        auto end = chrono::high_resolution_clock::now();
+        double elapsed_sec = chrono::duration<double>(end - start).count();
         double total_gb = (static_cast<double>(NUM_BYTES) * ITERS) / (1024.0 * 1024.0 * 1024.0);
         double gbps = total_gb / elapsed_sec;
 
-        bool ok = (std::memcmp(dst.data(), src.data(), NUM_BYTES) == 0);
+        bool ok = (memcmp(dst.data(), src.data(), NUM_BYTES) == 0);
 
         reportStatus("Problem 1: 128-Bit Vector Aligned Memory Copy", ok, gbps);
         if (ok) passed++;
@@ -121,8 +121,8 @@ int main() {
     //       - Time overlaps if: NOT (a.t_end <= b.t_start || b.t_end <= a.t_start).
     //       - Space overlaps if: NOT (a.mem_end <= b.mem_start || b.mem_end <= a.mem_start).
     //       - Conflict exists if BOTH time and space overlap.
-    //       Implement `findConflicts(const std::vector<TensorInterval>& tensors)`:
-    //       - Returns vector of conflicting ID pairs `std::pair<int, int>`.
+    //       Implement `findConflicts(const vector<TensorInterval>& tensors)`:
+    //       - Returns vector of conflicting ID pairs `pair<int, int>`.
     // -------------------------------------------------------------------------
     {
         struct TensorInterval {
@@ -133,8 +133,8 @@ int main() {
             int t_end;
         };
 
-        auto findConflicts = [](const std::vector<TensorInterval>& tensors) {
-            std::vector<std::pair<int, int>> conflicts;
+        auto findConflicts = [](const vector<TensorInterval>& tensors) {
+            vector<pair<int, int>> conflicts;
             // --- YOUR CODE STARTS HERE ---
             auto timeOverlaps = [](const TensorInterval& a, const TensorInterval& b) {
                 return !(a.t_end <= b.t_start || b.t_end <= a.t_start);
@@ -154,7 +154,7 @@ int main() {
             return conflicts;
         };
 
-        std::vector<TensorInterval> intervals = {
+        vector<TensorInterval> intervals = {
             {1, 0, 1024, 0, 5},        // Live t=0..5, mem=0..1024
             {2, 0, 1024, 5, 10},       // Live t=5..10, mem=0..1024 (Reuses mem after tensor 1 dies -> SAFE)
             {3, 512, 1536, 2, 7},      // Live t=2..7, mem=512..1536 (Overlaps t with 1 and mem with 1 -> CONFLICT with 1)
@@ -167,8 +167,8 @@ int main() {
         // Should detect conflict between (1, 3) and (2, 3)
         if (conflicts.size() != 2) ok = false;
         if (conflicts.size() == 2) {
-            bool has_1_3 = (conflicts[0] == std::make_pair(1, 3) || conflicts[1] == std::make_pair(1, 3));
-            bool has_2_3 = (conflicts[0] == std::make_pair(2, 3) || conflicts[1] == std::make_pair(2, 3));
+            bool has_1_3 = (conflicts[0] == make_pair(1, 3) || conflicts[1] == make_pair(1, 3));
+            bool has_2_3 = (conflicts[0] == make_pair(2, 3) || conflicts[1] == make_pair(2, 3));
             if (!has_1_3 || !has_2_3) ok = false;
         }
 
@@ -184,12 +184,12 @@ int main() {
     //          pipelines, blocks of tokens are gathered from scattered source
     //          buffers into contiguous expert processing queues.
     //
-    // Task: Implement `executeGatherScatter(const std::vector<TransferOp>& ops)`:
+    // Task: Implement `executeGatherScatter(const vector<TransferOp>& ops)`:
     //       Each `TransferOp`:
     //         `{ const float* src; float* dst; size_t count; }`
     //       - First validates that no two destination spans [dst, dst + count) overlap
     //         (write conflict prevention). If any two dst spans overlap, abort and return false.
-    //       - Otherwise, executes all copies: `std::memcpy(dst, src, count * sizeof(float))`
+    //       - Otherwise, executes all copies: `memcpy(dst, src, count * sizeof(float))`
     //         and returns true.
     // -------------------------------------------------------------------------
     {
@@ -199,7 +199,7 @@ int main() {
             size_t count;
         };
 
-        auto executeGatherScatter = [](const std::vector<TransferOp>& ops) -> bool {
+        auto executeGatherScatter = [](const vector<TransferOp>& ops) -> bool {
             // --- YOUR CODE STARTS HERE ---
             auto spansOverlap = [](uintptr_t a_start, size_t a_len, uintptr_t b_start, size_t b_len) {
                 uintptr_t a_end = a_start + a_len;
@@ -222,26 +222,26 @@ int main() {
 
             // Execute transfers
             for (const auto& op : ops) {
-                std::memcpy(op.dst, op.src, op.count * sizeof(float));
+                memcpy(op.dst, op.src, op.count * sizeof(float));
             }
             return true;
             // --- YOUR CODE ENDS HERE ---
         };
 
-        std::vector<float> src_pool(1024);
+        vector<float> src_pool(1024);
         for (size_t i = 0; i < 1024; ++i) src_pool[i] = static_cast<float>(i + 1);
 
-        std::vector<float> dst_pool(1024, 0.0f);
+        vector<float> dst_pool(1024, 0.0f);
 
         // Valid non-colliding operations
-        std::vector<TransferOp> valid_ops = {
+        vector<TransferOp> valid_ops = {
             {src_pool.data() + 0, dst_pool.data() + 0, 128},
             {src_pool.data() + 200, dst_pool.data() + 128, 64},
             {src_pool.data() + 500, dst_pool.data() + 192, 256}
         };
 
         // Colliding operations (dst 100 overlaps dst 0..128)
-        std::vector<TransferOp> colliding_ops = {
+        vector<TransferOp> colliding_ops = {
             {src_pool.data() + 0, dst_pool.data() + 0, 128},
             {src_pool.data() + 200, dst_pool.data() + 100, 64}
         };
@@ -263,16 +263,16 @@ int main() {
         total++;
     }
 
-    std::cout << "\n=================================================================" << std::endl;
-    std::cout << "--- SCORECARD ---" << std::endl;
-    std::cout << "=================================================================" << std::endl;
-    std::cout << "  Passed: " << passed << " / " << total << " tests." << std::endl;
+    cout << "\n=================================================================" << endl;
+    cout << "--- SCORECARD ---" << endl;
+    cout << "=================================================================" << endl;
+    cout << "  Passed: " << passed << " / " << total << " tests." << endl;
     if (passed == total) {
-        std::cout << "\033[1;32m  [STATUS] ALL " << total << " TESTS PASSED! \033[0m" << std::endl;
+        cout << "\033[1;32m  [STATUS] ALL " << total << " TESTS PASSED! \033[0m" << endl;
     } else {
-        std::cout << "\033[1;31m  [STATUS] INCOMPLETE (" << (total - passed) << " tests failed) \033[0m" << std::endl;
+        cout << "\033[1;31m  [STATUS] INCOMPLETE (" << (total - passed) << " tests failed) \033[0m" << endl;
     }
-    std::cout << "=================================================================" << std::endl;
+    cout << "=================================================================" << endl;
 
     return (passed == total) ? 0 : 1;
 }

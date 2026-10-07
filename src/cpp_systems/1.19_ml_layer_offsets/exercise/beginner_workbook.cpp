@@ -23,19 +23,19 @@ using namespace std;
 //   ../../../output/1.19_beginner
 // =========================================================================
 
-void reportStatus(const std::string& name, bool passed) {
-    std::cout << "  " << std::left << std::setw(60) << name;
+void reportStatus(const string& name, bool passed) {
+    cout << "  " << left << setw(60) << name;
     if (passed) {
-        std::cout << "\033[1;32m[PASSED]\033[0m" << std::endl;
+        cout << "\033[1;32m[PASSED]\033[0m" << endl;
     } else {
-        std::cout << "\033[1;31m[FAILED]\033[0m" << std::endl;
+        cout << "\033[1;31m[FAILED]\033[0m" << endl;
     }
 }
 
 int main() {
-    std::cout << "=================================================================" << std::endl;
-    std::cout << "--- WORKBOOK: ML Layer Offsets (Beginner Level) ---" << std::endl;
-    std::cout << "=================================================================" << std::endl;
+    cout << "=================================================================" << endl;
+    cout << "--- WORKBOOK: ML Layer Offsets (Beginner Level) ---" << endl;
+    cout << "=================================================================" << endl;
 
     int passed = 0;
     int total = 0;
@@ -58,15 +58,15 @@ int main() {
         const int N = 128;
         const float beta1 = 0.9f, beta2 = 0.999f, lr = 1e-3f, wd = 0.01f, eps = 1e-8f;
         const int t = 1;
-        const float corr1 = 1.0f - std::pow(beta1, t);
-        const float corr2 = 1.0f - std::pow(beta2, t);
+        const float corr1 = 1.0f - pow(beta1, t);
+        const float corr2 = 1.0f - pow(beta2, t);
 
-        std::vector<float> W(N), M(N, 0.0f), V(N, 0.0f), G(N);
+        vector<float> W(N), M(N, 0.0f), V(N, 0.0f), G(N);
         for (int i = 0; i < N; ++i) {
             W[i] = static_cast<float>(i * 0.05f - 3.2f);
             G[i] = static_cast<float>((i % 11) - 5) * 0.02f;
         }
-        std::vector<float> original_W = W;
+        vector<float> original_W = W;
 
         // TODO: In a loop over i in [0, N), update M[i], V[i], and W[i] in-place.
         // --- YOUR CODE STARTS HERE ---
@@ -79,8 +79,8 @@ int main() {
             float exp_v = beta2 * 0.0f + (1.0f - beta2) * (G[i] * G[i]);
             float m_hat = exp_m / corr1;
             float v_hat = exp_v / corr2;
-            float exp_w = original_W[i] - lr * (m_hat / (std::sqrt(v_hat) + eps) + wd * original_W[i]);
-            if (std::abs(W[i] - exp_w) > 1e-4f) p1_passed = false;
+            float exp_w = original_W[i] - lr * (m_hat / (sqrt(v_hat) + eps) + wd * original_W[i]);
+            if (abs(W[i] - exp_w) > 1e-4f) p1_passed = false;
         }
 
         reportStatus("Problem 1: Batched AdamW Weight & Momentum Update", p1_passed);
@@ -101,11 +101,11 @@ int main() {
     {
         const int N = 2, C = 4, H = 4, W = 4;
         const size_t total_elements = N * C * H * W;
-        std::vector<float> X(total_elements);
+        vector<float> X(total_elements);
         for (size_t i = 0; i < total_elements; ++i) X[i] = static_cast<float>(i + 1);
-        std::vector<float> original_X = X;
+        vector<float> original_X = X;
 
-        std::vector<float> bias = {10.0f, -20.0f, 30.0f, -40.0f};
+        vector<float> bias = {10.0f, -20.0f, 30.0f, -40.0f};
 
         // TODO: For each n in [0, N), c in [0, C), h in [0, H), w in [0, W):
         // Add bias[c] to X[n, c, h, w].
@@ -120,7 +120,7 @@ int main() {
                     for (int w = 0; w < W; ++w) {
                         size_t idx = (size_t)n * (C * H * W) + (size_t)c * (H * W) + (size_t)h * W + w;
                         float expected = original_X[idx] + bias[c];
-                        if (std::abs(X[idx] - expected) > 1e-4f) {
+                        if (abs(X[idx] - expected) > 1e-4f) {
                             p2_passed = false;
                             break;
                         }
@@ -146,13 +146,13 @@ int main() {
     // -------------------------------------------------------------------------
     {
         const int N = 512;
-        std::vector<float> X(N);
-        std::vector<float> Residual(N);
+        vector<float> X(N);
+        vector<float> Residual(N);
         for (int i = 0; i < N; ++i) {
             X[i] = static_cast<float>(i * 0.1f);
             Residual[i] = static_cast<float>((i % 7) - 3) * 0.5f;
         }
-        std::vector<float> original_X = X;
+        vector<float> original_X = X;
 
         // TODO: In-place add Residual into X.
         // --- YOUR CODE STARTS HERE ---
@@ -161,7 +161,7 @@ int main() {
 
         bool p3_passed = true;
         for (int i = 0; i < N; ++i) {
-            if (std::abs(X[i] - (original_X[i] + Residual[i])) > 1e-4f) {
+            if (abs(X[i] - (original_X[i] + Residual[i])) > 1e-4f) {
                 p3_passed = false;
                 break;
             }
@@ -172,16 +172,16 @@ int main() {
         total++;
     }
 
-    std::cout << "\n=================================================================" << std::endl;
-    std::cout << "--- SCORECARD ---" << std::endl;
-    std::cout << "=================================================================" << std::endl;
-    std::cout << "  Passed: " << passed << " / " << total << " tests." << std::endl;
+    cout << "\n=================================================================" << endl;
+    cout << "--- SCORECARD ---" << endl;
+    cout << "=================================================================" << endl;
+    cout << "  Passed: " << passed << " / " << total << " tests." << endl;
     if (passed == total) {
-        std::cout << "\033[1;32m  [STATUS] ALL " << total << " TESTS PASSED! \033[0m" << std::endl;
+        cout << "\033[1;32m  [STATUS] ALL " << total << " TESTS PASSED! \033[0m" << endl;
     } else {
-        std::cout << "\033[1;31m  [STATUS] INCOMPLETE (" << (total - passed) << " tests failed) \033[0m" << std::endl;
+        cout << "\033[1;31m  [STATUS] INCOMPLETE (" << (total - passed) << " tests failed) \033[0m" << endl;
     }
-    std::cout << "=================================================================" << std::endl;
+    cout << "=================================================================" << endl;
 
     return (passed == total) ? 0 : 1;
 }

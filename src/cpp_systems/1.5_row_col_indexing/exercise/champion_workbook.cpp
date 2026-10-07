@@ -24,23 +24,23 @@ using namespace std;
 //   ../../../output/1.5_champion
 // =========================================================================
 
-void reportStatus(const std::string& name, bool passed, double throughputGBs = -1.0) {
-    std::cout << "  " << std::left << std::setw(60) << name;
+void reportStatus(const string& name, bool passed, double throughputGBs = -1.0) {
+    cout << "  " << left << setw(60) << name;
     if (passed) {
-        std::cout << "\033[1;32m[PASSED]\033[0m";
+        cout << "\033[1;32m[PASSED]\033[0m";
         if (throughputGBs > 0.0) {
-            std::cout << " (" << std::fixed << std::setprecision(2) << throughputGBs << " GB/s)";
+            cout << " (" << fixed << setprecision(2) << throughputGBs << " GB/s)";
         }
-        std::cout << std::endl;
+        cout << endl;
     } else {
-        std::cout << "\033[1;31m[FAILED]\033[0m" << std::endl;
+        cout << "\033[1;31m[FAILED]\033[0m" << endl;
     }
 }
 
 int main() {
-    std::cout << "=================================================================" << std::endl;
-    std::cout << "--- WORKBOOK: Row/Col-Major Indexing (Champion Masterclass) ---" << std::endl;
-    std::cout << "=================================================================" << std::endl;
+    cout << "=================================================================" << endl;
+    cout << "--- WORKBOOK: Row/Col-Major Indexing (Champion Masterclass) ---" << endl;
+    cout << "=================================================================" << endl;
 
     int passed = 0;
     int total = 0;
@@ -59,15 +59,15 @@ int main() {
     {
         const int DIM = 512;
         const size_t total_elements = DIM * DIM;
-        std::vector<float> A(total_elements);
+        vector<float> A(total_elements);
         for (int i = 0; i < DIM; ++i) {
             for (int j = 0; j < DIM; ++j) {
                 A[i * DIM + j] = static_cast<float>(i * 1000 + j);
             }
         }
-        std::vector<float> original_A = A;
+        vector<float> original_A = A;
 
-        auto start = std::chrono::high_resolution_clock::now();
+        auto start = chrono::high_resolution_clock::now();
 
         // TODO: In-place transpose: for i = 0..DIM-1, for j = i+1..DIM-1:
         // swap A[i*DIM + j] with A[j*DIM + i].
@@ -75,8 +75,8 @@ int main() {
 
         // --- YOUR CODE ENDS HERE ---
 
-        auto end = std::chrono::high_resolution_clock::now();
-        double elapsed_sec = std::chrono::duration<double>(end - start).count();
+        auto end = chrono::high_resolution_clock::now();
+        double elapsed_sec = chrono::duration<double>(end - start).count();
         // Number of elements swapped = DIM*(DIM-1)/2, each swap moves 2 elements (read+write)
         double bytes_moved = 2.0 * total_elements * sizeof(float);
         double throughput = (bytes_moved / elapsed_sec) / 1e9;
@@ -113,14 +113,14 @@ int main() {
         const int M = 16, N = 16;
         const int ROW_OFFSET = 8, COL_OFFSET = 16;
 
-        std::vector<float> parent_col(M_PARENT * N_PARENT);
+        vector<float> parent_col(M_PARENT * N_PARENT);
         for (int c = 0; c < N_PARENT; ++c) {
             for (int r = 0; r < M_PARENT; ++r) {
                 parent_col[c * LDA + r] = static_cast<float>(r * 100 + c);
             }
         }
 
-        std::vector<float> sub_row(M * N, -1.0f);
+        vector<float> sub_row(M * N, -1.0f);
 
         // TODO: Extract submatrix into sub_row in row-major order: sub_row[r * N + c].
         // --- YOUR CODE STARTS HERE ---
@@ -163,13 +163,13 @@ int main() {
         const int STRIDE_C = H * W;
         const int STRIDE_B = C * H * W;
 
-        std::vector<int> query_indices = {0, 15, 255, 256, 12345};
+        vector<int> query_indices = {0, 15, 255, 256, 12345};
         const size_t NUM_QUERIES = query_indices.size();
 
-        std::vector<int> out_b(NUM_QUERIES, -1);
-        std::vector<int> out_c(NUM_QUERIES, -1);
-        std::vector<int> out_h(NUM_QUERIES, -1);
-        std::vector<int> out_w(NUM_QUERIES, -1);
+        vector<int> out_b(NUM_QUERIES, -1);
+        vector<int> out_c(NUM_QUERIES, -1);
+        vector<int> out_h(NUM_QUERIES, -1);
+        vector<int> out_w(NUM_QUERIES, -1);
 
         // TODO: Unravel each index in query_indices.
         // --- YOUR CODE STARTS HERE ---
@@ -195,16 +195,16 @@ int main() {
         total++;
     }
 
-    std::cout << "\n=================================================================" << std::endl;
-    std::cout << "--- SCORECARD ---" << std::endl;
-    std::cout << "=================================================================" << std::endl;
-    std::cout << "  Passed: " << passed << " / " << total << " tests." << std::endl;
+    cout << "\n=================================================================" << endl;
+    cout << "--- SCORECARD ---" << endl;
+    cout << "=================================================================" << endl;
+    cout << "  Passed: " << passed << " / " << total << " tests." << endl;
     if (passed == total) {
-        std::cout << "\033[1;32m  [STATUS] ALL " << total << " TESTS PASSED! \033[0m" << std::endl;
+        cout << "\033[1;32m  [STATUS] ALL " << total << " TESTS PASSED! \033[0m" << endl;
     } else {
-        std::cout << "\033[1;31m  [STATUS] INCOMPLETE (" << (total - passed) << " tests failed) \033[0m" << std::endl;
+        cout << "\033[1;31m  [STATUS] INCOMPLETE (" << (total - passed) << " tests failed) \033[0m" << endl;
     }
-    std::cout << "=================================================================" << std::endl;
+    cout << "=================================================================" << endl;
 
     return (passed == total) ? 0 : 1;
 }

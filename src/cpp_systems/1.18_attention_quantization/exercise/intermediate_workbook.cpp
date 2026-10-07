@@ -19,19 +19,19 @@ using namespace std;
 //        (AWQ/GPTQ style), and fused SwiGLU activation layer computation.
 // =========================================================================
 
-void reportStatus(const std::string& name, bool passed) {
-    std::cout << "  " << std::left << std::setw(60) << name;
+void reportStatus(const string& name, bool passed) {
+    cout << "  " << left << setw(60) << name;
     if (passed) {
-        std::cout << "\033[1;32m[PASSED]\033[0m" << std::endl;
+        cout << "\033[1;32m[PASSED]\033[0m" << endl;
     } else {
-        std::cout << "\033[1;31m[FAILED]\033[0m" << std::endl;
+        cout << "\033[1;31m[FAILED]\033[0m" << endl;
     }
 }
 
 int main() {
-    std::cout << "=================================================================" << std::endl;
-    std::cout << "--- WORKBOOK: Attention & Quantization (Intermediate Level) ---" << std::endl;
-    std::cout << "=================================================================" << std::endl;
+    cout << "=================================================================" << endl;
+    cout << "--- WORKBOOK: Attention & Quantization (Intermediate Level) ---" << endl;
+    cout << "=================================================================" << endl;
 
     int passed = 0;
     int total = 0;
@@ -53,11 +53,11 @@ int main() {
     {
         const int BATCH = 2, HEADS = 2, S = 8, W = 3;
         const size_t total_elements = BATCH * HEADS * S * S;
-        std::vector<float> scores(total_elements);
+        vector<float> scores(total_elements);
         for (size_t i = 0; i < total_elements; ++i) {
             scores[i] = static_cast<float>((i % 17) + 1.0f);
         }
-        std::vector<float> original = scores;
+        vector<float> original = scores;
 
         // TODO: For each batch, head, and query position q in [0, S), mask keys k:
         // Set scores to -10000.0f if k > q OR k < q - W + 1.
@@ -107,7 +107,7 @@ int main() {
         const int BLOCK_SIZE = 64;
         const int NUM_BLOCKS = N / BLOCK_SIZE;
 
-        std::vector<float> weights(N);
+        vector<float> weights(N);
         // Fill block 0 with small values, block 1 with large outlier values
         for (int i = 0; i < N; ++i) {
             if (i < 64) weights[i] = (i % 10) * 0.1f;
@@ -115,9 +115,9 @@ int main() {
             else weights[i] = ((i % 7) - 3) * 1.5f;
         }
 
-        std::vector<float> scales(NUM_BLOCKS, 0.0f);
-        std::vector<int8_t> quantized_weights(N, 0);
-        std::vector<float> dequantized_weights(N, 0.0f);
+        vector<float> scales(NUM_BLOCKS, 0.0f);
+        vector<int8_t> quantized_weights(N, 0);
+        vector<float> dequantized_weights(N, 0.0f);
 
         // TODO: Perform block-wise quantization and dequantization.
         // --- YOUR CODE STARTS HERE ---
@@ -128,14 +128,14 @@ int main() {
         for (int b = 0; b < NUM_BLOCKS && p2_passed; ++b) {
             float max_val = 0.0f;
             for (int i = 0; i < BLOCK_SIZE; ++i) {
-                max_val = std::max(max_val, std::abs(weights[b * BLOCK_SIZE + i]));
+                max_val = max(max_val, abs(weights[b * BLOCK_SIZE + i]));
             }
             float expected_scale = max_val / 127.0f;
-            if (std::abs(scales[b] - expected_scale) > 1e-4f) p2_passed = false;
+            if (abs(scales[b] - expected_scale) > 1e-4f) p2_passed = false;
 
             for (int i = 0; i < BLOCK_SIZE; ++i) {
                 int idx = b * BLOCK_SIZE + i;
-                float err = std::abs(dequantized_weights[idx] - weights[idx]);
+                float err = abs(dequantized_weights[idx] - weights[idx]);
                 if (err > expected_scale) p2_passed = false;
             }
         }
@@ -154,13 +154,13 @@ int main() {
     //
     // Task: Given two input activation buffers `gate` and `up` of size N=128:
     //       Compute SwiGLU into `out` buffer in-place:
-    //         out[i] = (gate[i] / (1.0f + std::exp(-gate[i]))) * up[i]
+    //         out[i] = (gate[i] / (1.0f + exp(-gate[i]))) * up[i]
     // -------------------------------------------------------------------------
     {
         const int N = 128;
-        std::vector<float> gate(N);
-        std::vector<float> up(N);
-        std::vector<float> out(N, 0.0f);
+        vector<float> gate(N);
+        vector<float> up(N);
+        vector<float> out(N, 0.0f);
 
         for (int i = 0; i < N; ++i) {
             gate[i] = (i - 64) * 0.1f;
@@ -175,9 +175,9 @@ int main() {
         bool p3_passed = true;
         for (int i = 0; i < N; ++i) {
             float g = gate[i];
-            float swish_g = g / (1.0f + std::exp(-g));
+            float swish_g = g / (1.0f + exp(-g));
             float expected = swish_g * up[i];
-            if (std::abs(out[i] - expected) > 1e-4f) {
+            if (abs(out[i] - expected) > 1e-4f) {
                 p3_passed = false;
                 break;
             }
@@ -188,16 +188,16 @@ int main() {
         total++;
     }
 
-    std::cout << "\n=================================================================" << std::endl;
-    std::cout << "--- SCORECARD ---" << std::endl;
-    std::cout << "=================================================================" << std::endl;
-    std::cout << "  Passed: " << passed << " / " << total << " tests." << std::endl;
+    cout << "\n=================================================================" << endl;
+    cout << "--- SCORECARD ---" << endl;
+    cout << "=================================================================" << endl;
+    cout << "  Passed: " << passed << " / " << total << " tests." << endl;
     if (passed == total) {
-        std::cout << "\033[1;32m  [STATUS] ALL " << total << " TESTS PASSED! \033[0m" << std::endl;
+        cout << "\033[1;32m  [STATUS] ALL " << total << " TESTS PASSED! \033[0m" << endl;
     } else {
-        std::cout << "\033[1;31m  [STATUS] INCOMPLETE (" << (total - passed) << " tests failed) \033[0m" << std::endl;
+        cout << "\033[1;31m  [STATUS] INCOMPLETE (" << (total - passed) << " tests failed) \033[0m" << endl;
     }
-    std::cout << "=================================================================" << std::endl;
+    cout << "=================================================================" << endl;
 
     return (passed == total) ? 0 : 1;
 }

@@ -23,19 +23,19 @@ using namespace std;
 //   ../../../output/1.8_beginner
 // =========================================================================
 
-void reportStatus(const std::string& name, bool passed) {
-    std::cout << "  " << std::left << std::setw(60) << name;
+void reportStatus(const string& name, bool passed) {
+    cout << "  " << left << setw(60) << name;
     if (passed) {
-        std::cout << "\033[1;32m[PASSED]\033[0m" << std::endl;
+        cout << "\033[1;32m[PASSED]\033[0m" << endl;
     } else {
-        std::cout << "\033[1;31m[FAILED]\033[0m" << std::endl;
+        cout << "\033[1;31m[FAILED]\033[0m" << endl;
     }
 }
 
 int main() {
-    std::cout << "=================================================================" << std::endl;
-    std::cout << "--- WORKBOOK: Pack, Wrap, Stencil & Crops (Beginner Level) ---" << std::endl;
-    std::cout << "=================================================================" << std::endl;
+    cout << "=================================================================" << endl;
+    cout << "--- WORKBOOK: Pack, Wrap, Stencil & Crops (Beginner Level) ---" << endl;
+    cout << "=================================================================" << endl;
 
     int passed = 0;
     int total = 0;
@@ -53,14 +53,14 @@ int main() {
     // -------------------------------------------------------------------------
     {
         const int H = 8, W = 8;
-        std::vector<float> grid(H * W);
+        vector<float> grid(H * W);
         for (int r = 0; r < H; ++r) {
             for (int c = 0; c < W; ++c) {
                 grid[r * W + c] = static_cast<float>(r * 10 + c);
             }
         }
 
-        std::vector<float> laplacian(H * W, 0.0f);
+        vector<float> laplacian(H * W, 0.0f);
 
         // TODO: Apply 5-point stencil on interior pixels.
         // --- YOUR CODE STARTS HERE ---
@@ -76,7 +76,7 @@ int main() {
                 float left   = grid[r * W + (c - 1)];
                 float right  = grid[r * W + (c + 1)];
                 float expected = 4.0f * center - (up + down + left + right);
-                if (std::abs(laplacian[r * W + c] - expected) > 1e-4f) {
+                if (abs(laplacian[r * W + c] - expected) > 1e-4f) {
                     p1_passed = false;
                     break;
                 }
@@ -100,11 +100,11 @@ int main() {
     // -------------------------------------------------------------------------
     {
         const int N = 32;
-        std::vector<float> signal(N);
+        vector<float> signal(N);
         for (int i = 0; i < N; ++i) signal[i] = static_cast<float>(i % 5 + 1);
 
         float k0 = 0.25f, k1 = 0.5f, k2 = 0.25f;
-        std::vector<float> smooth_signal(N, -1.0f);
+        vector<float> smooth_signal(N, -1.0f);
 
         // TODO: Compute smooth_signal with 3-point stencil.
         // --- YOUR CODE STARTS HERE ---
@@ -117,7 +117,7 @@ int main() {
             float mid  = signal[i];
             float right = (i < N - 1) ? signal[i + 1] : 0.0f;
             float expected = k0 * left + k1 * mid + k2 * right;
-            if (std::abs(smooth_signal[i] - expected) > 1e-4f) {
+            if (abs(smooth_signal[i] - expected) > 1e-4f) {
                 p2_passed = false;
                 break;
             }
@@ -139,13 +139,13 @@ int main() {
     // -------------------------------------------------------------------------
     {
         const int N = 16;
-        std::vector<bool> flags = {
+        vector<bool> flags = {
             true, false, true, true, false, false, true, false,
             false, true, true, false, true, true, false, true
         };
 
-        std::vector<uint8_t> packed_bytes(2, 0);
-        std::vector<bool> unpacked_flags(N, false);
+        vector<uint8_t> packed_bytes(2, 0);
+        vector<bool> unpacked_flags(N, false);
 
         // TODO: Pack flags into packed_bytes, then unpack into unpacked_flags.
         // --- YOUR CODE STARTS HERE ---
@@ -165,16 +165,16 @@ int main() {
         total++;
     }
 
-    std::cout << "\n=================================================================" << std::endl;
-    std::cout << "--- SCORECARD ---" << std::endl;
-    std::cout << "=================================================================" << std::endl;
-    std::cout << "  Passed: " << passed << " / " << total << " tests." << std::endl;
+    cout << "\n=================================================================" << endl;
+    cout << "--- SCORECARD ---" << endl;
+    cout << "=================================================================" << endl;
+    cout << "  Passed: " << passed << " / " << total << " tests." << endl;
     if (passed == total) {
-        std::cout << "\033[1;32m  [STATUS] ALL " << total << " TESTS PASSED! \033[0m" << std::endl;
+        cout << "\033[1;32m  [STATUS] ALL " << total << " TESTS PASSED! \033[0m" << endl;
     } else {
-        std::cout << "\033[1;31m  [STATUS] INCOMPLETE (" << (total - passed) << " tests failed) \033[0m" << std::endl;
+        cout << "\033[1;31m  [STATUS] INCOMPLETE (" << (total - passed) << " tests failed) \033[0m" << endl;
     }
-    std::cout << "=================================================================" << std::endl;
+    cout << "=================================================================" << endl;
 
     return (passed == total) ? 0 : 1;
 }

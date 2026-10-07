@@ -23,19 +23,19 @@ using namespace std;
 //   ../../../output/1.19_intermediate
 // =========================================================================
 
-void reportStatus(const std::string& name, bool passed) {
-    std::cout << "  " << std::left << std::setw(60) << name;
+void reportStatus(const string& name, bool passed) {
+    cout << "  " << left << setw(60) << name;
     if (passed) {
-        std::cout << "\033[1;32m[PASSED]\033[0m" << std::endl;
+        cout << "\033[1;32m[PASSED]\033[0m" << endl;
     } else {
-        std::cout << "\033[1;31m[FAILED]\033[0m" << std::endl;
+        cout << "\033[1;31m[FAILED]\033[0m" << endl;
     }
 }
 
 int main() {
-    std::cout << "=================================================================" << std::endl;
-    std::cout << "--- WORKBOOK: ML Layer Offsets (Intermediate Level) ---" << std::endl;
-    std::cout << "=================================================================" << std::endl;
+    cout << "=================================================================" << endl;
+    cout << "--- WORKBOOK: ML Layer Offsets (Intermediate Level) ---" << endl;
+    cout << "=================================================================" << endl;
 
     int passed = 0;
     int total = 0;
@@ -61,11 +61,11 @@ int main() {
         const float EPS = 1e-5f;
 
         const size_t total_elements = N * C * H * W;
-        std::vector<float> X(total_elements);
+        vector<float> X(total_elements);
         for (size_t i = 0; i < total_elements; ++i) {
             X[i] = static_cast<float>((i % 23) - 11) * 0.5f;
         }
-        std::vector<float> original_X = X;
+        vector<float> original_X = X;
 
         // TODO: For each batch n and group g, compute mean and variance over the M elements,
         // and normalize all elements in that group in-place.
@@ -97,7 +97,7 @@ int main() {
                     }
                 }
                 float var = sum_sq_diff / M;
-                float inv_std = 1.0f / std::sqrt(var + EPS);
+                float inv_std = 1.0f / sqrt(var + EPS);
 
                 for (int c_rel = 0; c_rel < CHANNELS_PER_GROUP; ++c_rel) {
                     int c = g * CHANNELS_PER_GROUP + c_rel;
@@ -105,7 +105,7 @@ int main() {
                         for (int w = 0; w < W; ++w) {
                             size_t idx = (n * C + c) * (H * W) + h * W + w;
                             float expected = (original_X[idx] - mu) * inv_std;
-                            if (std::abs(X[idx] - expected) > 1e-4f) {
+                            if (abs(X[idx] - expected) > 1e-4f) {
                                 p1_passed = false;
                                 break;
                             }
@@ -136,16 +136,16 @@ int main() {
         const int B = 4, IN_DIM = 16, OUT_DIM = 32;
         const float SQRT_2_OVER_PI = 0.79788456f;
 
-        std::vector<float> X(B * IN_DIM);
+        vector<float> X(B * IN_DIM);
         for (size_t i = 0; i < X.size(); ++i) X[i] = static_cast<float>((i % 7) - 3) * 0.2f;
 
-        std::vector<float> W(OUT_DIM * IN_DIM);
+        vector<float> W(OUT_DIM * IN_DIM);
         for (size_t i = 0; i < W.size(); ++i) W[i] = static_cast<float>((i % 11) - 5) * 0.1f;
 
-        std::vector<float> bias(OUT_DIM);
+        vector<float> bias(OUT_DIM);
         for (int i = 0; i < OUT_DIM; ++i) bias[i] = 0.1f * (i % 3);
 
-        std::vector<float> Y(B * OUT_DIM, 0.0f);
+        vector<float> Y(B * OUT_DIM, 0.0f);
 
         // TODO: For each batch b and output feature o:
         // Compute z = sum_i(X[b, i] * W[o, i]) + bias[o]
@@ -161,8 +161,8 @@ int main() {
                 for (int i = 0; i < IN_DIM; ++i) {
                     z += X[b * IN_DIM + i] * W[o * IN_DIM + i];
                 }
-                float gelu_z = 0.5f * z * (1.0f + std::tanh(SQRT_2_OVER_PI * (z + 0.044715f * z * z * z)));
-                if (std::abs(Y[b * OUT_DIM + o] - gelu_z) > 1e-4f) {
+                float gelu_z = 0.5f * z * (1.0f + tanh(SQRT_2_OVER_PI * (z + 0.044715f * z * z * z)));
+                if (abs(Y[b * OUT_DIM + o] - gelu_z) > 1e-4f) {
                     p2_passed = false;
                     break;
                 }
@@ -188,15 +188,15 @@ int main() {
     // -------------------------------------------------------------------------
     {
         const int BATCH = 4, VOCAB = 16;
-        std::vector<float> logits = {
+        vector<float> logits = {
             12.0f, 15.0f, 11.0f, 8.0f, 9.0f, 14.0f, 10.0f, 13.0f, 10.0f, 11.0f, 12.0f, 8.0f, 7.0f, 6.0f, 5.0f, 4.0f,
             -2.0f, -5.0f, -1.0f, -8.0f, -3.0f, -4.0f, -2.0f, -6.0f, -1.0f, -2.0f, -3.0f, -4.0f, -5.0f, -6.0f, -7.0f, -8.0f,
             80.0f, 85.0f, 90.0f, 75.0f, 88.0f, 82.0f, 84.0f, 86.0f, 81.0f, 83.0f, 85.0f, 79.0f, 78.0f, 77.0f, 76.0f, 75.0f,
             1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f, 7.0f, 8.0f, 9.0f, 10.0f, 11.0f, 12.0f, 13.0f, 14.0f, 15.0f, 16.0f
         };
 
-        std::vector<int> targets = {1, 2, 2, 15};
-        std::vector<float> losses(BATCH, 0.0f);
+        vector<int> targets = {1, 2, 2, 15};
+        vector<float> losses(BATCH, 0.0f);
 
         // TODO: For each batch b, compute loss using log-sum-exp over VOCAB elements.
         // --- YOUR CODE STARTS HERE ---
@@ -206,12 +206,12 @@ int main() {
         bool p3_passed = true;
         for (int b = 0; b < BATCH && p3_passed; ++b) {
             float max_z = -1e30f;
-            for (int v = 0; v < VOCAB; ++v) max_z = std::max(max_z, logits[b * VOCAB + v]);
+            for (int v = 0; v < VOCAB; ++v) max_z = max(max_z, logits[b * VOCAB + v]);
             float sum_exp = 0.0f;
-            for (int v = 0; v < VOCAB; ++v) sum_exp += std::exp(logits[b * VOCAB + v] - max_z);
-            float lse = max_z + std::log(sum_exp);
+            for (int v = 0; v < VOCAB; ++v) sum_exp += exp(logits[b * VOCAB + v] - max_z);
+            float lse = max_z + log(sum_exp);
             float expected_loss = -logits[b * VOCAB + targets[b]] + lse;
-            if (std::abs(losses[b] - expected_loss) > 1e-4f) {
+            if (abs(losses[b] - expected_loss) > 1e-4f) {
                 p3_passed = false;
                 break;
             }
@@ -222,16 +222,16 @@ int main() {
         total++;
     }
 
-    std::cout << "\n=================================================================" << std::endl;
-    std::cout << "--- SCORECARD ---" << std::endl;
-    std::cout << "=================================================================" << std::endl;
-    std::cout << "  Passed: " << passed << " / " << total << " tests." << std::endl;
+    cout << "\n=================================================================" << endl;
+    cout << "--- SCORECARD ---" << endl;
+    cout << "=================================================================" << endl;
+    cout << "  Passed: " << passed << " / " << total << " tests." << endl;
     if (passed == total) {
-        std::cout << "\033[1;32m  [STATUS] ALL " << total << " TESTS PASSED! \033[0m" << std::endl;
+        cout << "\033[1;32m  [STATUS] ALL " << total << " TESTS PASSED! \033[0m" << endl;
     } else {
-        std::cout << "\033[1;31m  [STATUS] INCOMPLETE (" << (total - passed) << " tests failed) \033[0m" << std::endl;
+        cout << "\033[1;31m  [STATUS] INCOMPLETE (" << (total - passed) << " tests failed) \033[0m" << endl;
     }
-    std::cout << "=================================================================" << std::endl;
+    cout << "=================================================================" << endl;
 
     return (passed == total) ? 0 : 1;
 }

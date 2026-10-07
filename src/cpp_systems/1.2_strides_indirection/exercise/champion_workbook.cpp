@@ -24,30 +24,30 @@ using namespace std;
 //   ./champion_test
 // =========================================================================
 
-void reportStatus(const std::string &name, bool passed,
+void reportStatus(const string &name, bool passed,
                   double throughputGBs = -1.0) {
-  std::cout << "  " << std::left << std::setw(60) << name;
+  cout << "  " << left << setw(60) << name;
   if (passed) {
-    std::cout << "\033[1;32m[PASSED]\033[0m";
+    cout << "\033[1;32m[PASSED]\033[0m";
     if (throughputGBs > 0.0) {
-      std::cout << " (" << std::fixed << std::setprecision(2) << throughputGBs
+      cout << " (" << fixed << setprecision(2) << throughputGBs
                 << " GB/s)";
     }
-    std::cout << std::endl;
+    cout << endl;
   } else {
-    std::cout << "\033[1;31m[FAILED]\033[0m" << std::endl;
+    cout << "\033[1;31m[FAILED]\033[0m" << endl;
   }
 }
 
 int main() {
-  std::cout
+  cout
       << "================================================================="
-      << std::endl;
-  std::cout << "--- WORKBOOK: Strides & Indirection (Champion Masterclass) ---"
-            << std::endl;
-  std::cout
+      << endl;
+  cout << "--- WORKBOOK: Strides & Indirection (Champion Masterclass) ---"
+            << endl;
+  cout
       << "================================================================="
-      << std::endl;
+      << endl;
 
   int passed = 0;
   int total = 0;
@@ -60,7 +60,7 @@ int main() {
   //   Row 3: [  0,   0,  60,   0 ]  -> (1 non-zero  at col 2)
   const int M = 4;
   const int N = 4;
-  const std::vector<float> dense_matrix = {
+  const vector<float> dense_matrix = {
       10.0f,  0.0f, 20.0f,  0.0f,
        0.0f, 30.0f,  0.0f,  0.0f,
       40.0f,  0.0f,  0.0f, 50.0f,
@@ -85,18 +85,18 @@ int main() {
   // Reference:
   //   - See Section 3 (Pointer Indirection: The Two Mental Models) of theory.md.
   // -------------------------------------------------------------------------
-  std::vector<int> row_ptr;
-  std::vector<int> col_indices;
-  std::vector<float> values;
+  vector<int> row_ptr;
+  vector<int> col_indices;
+  vector<float> values;
   {
     // TODO: Compress the dense matrix into CSR format (row_ptr, col_indices, values).
     // --- YOUR CODE STARTS HERE ---
 
     // --- YOUR CODE ENDS HERE ---
 
-    std::vector<int> expected_row_ptr = {0, 2, 3, 5, 6};
-    std::vector<int> expected_col_indices = {0, 2, 1, 0, 3, 2};
-    std::vector<float> expected_values = {10.0f, 20.0f, 30.0f, 40.0f, 50.0f, 60.0f};
+    vector<int> expected_row_ptr = {0, 2, 3, 5, 6};
+    vector<int> expected_col_indices = {0, 2, 1, 0, 3, 2};
+    vector<float> expected_values = {10.0f, 20.0f, 30.0f, 40.0f, 50.0f, 60.0f};
 
     bool p1_passed = (row_ptr == expected_row_ptr &&
                       col_indices == expected_col_indices &&
@@ -125,7 +125,7 @@ int main() {
   //   - See Section 3 (Pointer Indirection: The Two Mental Models) of theory.md.
   // -------------------------------------------------------------------------
   {
-    std::vector<float> reconstructed(M * N, 0.0f);
+    vector<float> reconstructed(M * N, 0.0f);
 
     // TODO: Decompress CSR representation back into full 2D dense matrix format.
     // --- YOUR CODE STARTS HERE ---
@@ -157,8 +157,8 @@ int main() {
   //   - See Section 3 (Pointer Indirection) and Section 5 (Cache Lines & Bandwidth Waste) of theory.md.
   // -------------------------------------------------------------------------
   {
-    std::vector<float> x = {1.0f, 2.0f, 3.0f, 4.0f};
-    std::vector<float> y(M, 0.0f);
+    vector<float> x = {1.0f, 2.0f, 3.0f, 4.0f};
+    vector<float> y(M, 0.0f);
 
     // TODO: Compute SpMV product y = A * x directly from CSR compressed representation.
     // --- YOUR CODE STARTS HERE ---
@@ -170,11 +170,11 @@ int main() {
     // Row 1: 30*2 = 60
     // Row 2: 40*1 + 50*4 = 240
     // Row 3: 60*3 = 180
-    std::vector<float> expected_y = {70.0f, 60.0f, 240.0f, 180.0f};
+    vector<float> expected_y = {70.0f, 60.0f, 240.0f, 180.0f};
 
     bool p3_passed = true;
     for (int r = 0; r < M; ++r) {
-      if (std::abs(y[r] - expected_y[r]) > 1e-4f) p3_passed = false;
+      if (abs(y[r] - expected_y[r]) > 1e-4f) p3_passed = false;
     }
 
     reportStatus("Problem 3: Compressed Sparse Row (CSR) SpMV Indirection", p3_passed);
@@ -203,21 +203,21 @@ int main() {
   {
     const int D0 = 4, D1 = 8, D2 = 16;
     const size_t total_elements = D0 * D1 * D2;
-    std::vector<float> src(total_elements);
+    vector<float> src(total_elements);
     for (size_t i = 0; i < total_elements; ++i)
       src[i] = static_cast<float>(i + 1);
 
-    std::vector<float> dst(total_elements, -1.0f);
+    vector<float> dst(total_elements, -1.0f);
 
-    auto start = std::chrono::high_resolution_clock::now();
+    auto start = chrono::high_resolution_clock::now();
 
     // TODO: Permute 3D tensor dimensions (D0, D1, D2) -> (D0, D2, D1) using stride equations.
     // --- YOUR CODE STARTS HERE ---
 
     // --- YOUR CODE ENDS HERE ---
 
-    auto end = std::chrono::high_resolution_clock::now();
-    double elapsed_sec = std::chrono::duration<double>(end - start).count();
+    auto end = chrono::high_resolution_clock::now();
+    double elapsed_sec = chrono::duration<double>(end - start).count();
     double bytes_moved = 2.0 * total_elements * sizeof(float);
     double throughput = (bytes_moved / elapsed_sec) / 1e9;
 
@@ -268,21 +268,21 @@ int main() {
     const int TILE = 32;
     const size_t total_elements = (size_t)Rows * Cols;
 
-    std::vector<float> src(total_elements);
+    vector<float> src(total_elements);
     for (size_t i = 0; i < total_elements; ++i) {
       src[i] = static_cast<float>(i + 1);
     }
-    std::vector<float> dst(total_elements, 0.0f);
+    vector<float> dst(total_elements, 0.0f);
 
-    auto start = std::chrono::high_resolution_clock::now();
+    auto start = chrono::high_resolution_clock::now();
 
     // TODO: Transpose matrix using 32x32 cache-blocked tiles to eliminate cache thrashing.
     // --- YOUR CODE STARTS HERE ---
 
     // --- YOUR CODE ENDS HERE ---
 
-    auto end = std::chrono::high_resolution_clock::now();
-    double elapsed_sec = std::chrono::duration<double>(end - start).count();
+    auto end = chrono::high_resolution_clock::now();
+    double elapsed_sec = chrono::duration<double>(end - start).count();
     double bytes_moved = 2.0 * total_elements * sizeof(float);
     double throughput = (bytes_moved / elapsed_sec) / 1e9;
 
@@ -302,25 +302,25 @@ int main() {
     total++;
   }
 
-  std::cout
+  cout
       << "\n================================================================="
-      << std::endl;
-  std::cout << "--- SCORECARD ---" << std::endl;
-  std::cout
+      << endl;
+  cout << "--- SCORECARD ---" << endl;
+  cout
       << "================================================================="
-      << std::endl;
-  std::cout << "  Passed: " << passed << " / " << total << " tests."
-            << std::endl;
+      << endl;
+  cout << "  Passed: " << passed << " / " << total << " tests."
+            << endl;
   if (passed == total) {
-    std::cout << "\033[1;32m  [STATUS] ALL " << total
-              << " TESTS PASSED! \033[0m" << std::endl;
+    cout << "\033[1;32m  [STATUS] ALL " << total
+              << " TESTS PASSED! \033[0m" << endl;
   } else {
-    std::cout << "\033[1;31m  [STATUS] INCOMPLETE (" << (total - passed)
-              << " tests failed) \033[0m" << std::endl;
+    cout << "\033[1;31m  [STATUS] INCOMPLETE (" << (total - passed)
+              << " tests failed) \033[0m" << endl;
   }
-  std::cout
+  cout
       << "================================================================="
-      << std::endl;
+      << endl;
 
   return (passed == total) ? 0 : 1;
 }

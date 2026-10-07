@@ -24,12 +24,12 @@ using namespace std;
 //   ../../../output/1.13_intermediate
 // =========================================================================
 
-void reportStatus(const std::string& name, bool passed) {
-    std::cout << "  " << std::left << std::setw(60) << name;
+void reportStatus(const string& name, bool passed) {
+    cout << "  " << left << setw(60) << name;
     if (passed) {
-        std::cout << "\033[1;32m[PASSED]\033[0m" << std::endl;
+        cout << "\033[1;32m[PASSED]\033[0m" << endl;
     } else {
-        std::cout << "\033[1;31m[FAILED]\033[0m" << std::endl;
+        cout << "\033[1;31m[FAILED]\033[0m" << endl;
     }
 }
 
@@ -65,9 +65,9 @@ public:
 };
 
 int main() {
-    std::cout << "=================================================================" << std::endl;
-    std::cout << "--- WORKBOOK: Null, Bounds & Alignment Checks (Intermediate) ---" << std::endl;
-    std::cout << "=================================================================" << std::endl;
+    cout << "=================================================================" << endl;
+    cout << "--- WORKBOOK: Null, Bounds & Alignment Checks (Intermediate) ---" << endl;
+    cout << "=================================================================" << endl;
 
     int passed = 0;
     int total = 0;
@@ -123,7 +123,7 @@ int main() {
         };
 
         const int D = 8, H = 16, W = 32;
-        std::vector<float> src(D * H * W);
+        vector<float> src(D * H * W);
         for (int i = 0; i < D * H * W; ++i) src[i] = static_cast<float>(i + 1);
 
         // Subgrid extending beyond boundaries
@@ -134,7 +134,7 @@ int main() {
         int out_D = d1 - d0;
         int out_H = h1 - h0;
         int out_W = w1 - w0;
-        std::vector<float> dst(out_D * out_H * out_W, -999.0f);
+        vector<float> dst(out_D * out_H * out_W, -999.0f);
 
         sliceBox3D(src.data(), D, H, W, dst.data(), d0, d1, h0, h1, w0, w1);
 
@@ -277,7 +277,7 @@ int main() {
         };
 
         const size_t ARENA_SIZE = 4096;
-        std::vector<uint8_t> pool(ARENA_SIZE, 0);
+        vector<uint8_t> pool(ARENA_SIZE, 0);
         AlignedArena arena(pool.data(), ARENA_SIZE);
 
         bool ok = true;
@@ -303,16 +303,16 @@ int main() {
         total++;
     }
 
-    std::cout << "\n=================================================================" << std::endl;
-    std::cout << "--- SCORECARD ---" << std::endl;
-    std::cout << "=================================================================" << std::endl;
-    std::cout << "  Passed: " << passed << " / " << total << " tests." << std::endl;
+    cout << "\n=================================================================" << endl;
+    cout << "--- SCORECARD ---" << endl;
+    cout << "=================================================================" << endl;
+    cout << "  Passed: " << passed << " / " << total << " tests." << endl;
     if (passed == total) {
-        std::cout << "\033[1;32m  [STATUS] ALL " << total << " TESTS PASSED! \033[0m" << std::endl;
+        cout << "\033[1;32m  [STATUS] ALL " << total << " TESTS PASSED! \033[0m" << endl;
     } else {
-        std::cout << "\033[1;31m  [STATUS] INCOMPLETE (" << (total - passed) << " tests failed) \033[0m" << std::endl;
+        cout << "\033[1;31m  [STATUS] INCOMPLETE (" << (total - passed) << " tests failed) \033[0m" << endl;
     }
-    std::cout << "=================================================================" << std::endl;
+    cout << "=================================================================" << endl;
 
     return (passed == total) ? 0 : 1;
 }

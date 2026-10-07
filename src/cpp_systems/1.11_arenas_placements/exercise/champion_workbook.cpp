@@ -18,30 +18,30 @@ using namespace std;
 // Level:  Champion / High-Performance Systems Engineer
 //
 // Focus: RAII Scoped Arena Guards, Ring Buffer Memory Arenas, and
-//        Arena vs std::malloc Allocation Throughput Benchmarking.
+//        Arena vs malloc Allocation Throughput Benchmarking.
 //
 // Compilation:
 //   g++ -std=c++20 -O3 exercise/champion_workbook.cpp -o ../../../output/1.11_champion
 //   ../../../output/1.11_champion
 // =========================================================================
 
-void reportStatus(const std::string& name, bool passed, double throughputGBs = -1.0) {
-    std::cout << "  " << std::left << std::setw(60) << name;
+void reportStatus(const string& name, bool passed, double throughputGBs = -1.0) {
+    cout << "  " << left << setw(60) << name;
     if (passed) {
-        std::cout << "\033[1;32m[PASSED]\033[0m";
+        cout << "\033[1;32m[PASSED]\033[0m";
         if (throughputGBs > 0.0) {
-            std::cout << " (" << std::fixed << std::setprecision(2) << throughputGBs << " Mops/s)";
+            cout << " (" << fixed << setprecision(2) << throughputGBs << " Mops/s)";
         }
-        std::cout << std::endl;
+        cout << endl;
     } else {
-        std::cout << "\033[1;31m[FAILED]\033[0m" << std::endl;
+        cout << "\033[1;31m[FAILED]\033[0m" << endl;
     }
 }
 
 int main() {
-    std::cout << "=================================================================" << std::endl;
-    std::cout << "--- WORKBOOK: Arenas & Placements (Champion Masterclass) ---" << std::endl;
-    std::cout << "=================================================================" << std::endl;
+    cout << "=================================================================" << endl;
+    cout << "--- WORKBOOK: Arenas & Placements (Champion Masterclass) ---" << endl;
+    cout << "=================================================================" << endl;
 
     int passed = 0;
     int total = 0;
@@ -66,7 +66,7 @@ int main() {
     {
         class Arena {
         public:
-            std::vector<uint8_t> mem;
+            vector<uint8_t> mem;
             size_t offset = 0;
             Arena(size_t cap) : mem(cap) {}
 
@@ -163,9 +163,9 @@ int main() {
     }
 
     // -------------------------------------------------------------------------
-    // PROBLEM 3: Arena vs std::malloc Allocation Throughput Benchmark
+    // PROBLEM 3: Arena vs malloc Allocation Throughput Benchmark
     //
-    // Context: Demonstrates why low-latency GPU runtimes never use std::malloc
+    // Context: Demonstrates why low-latency GPU runtimes never use malloc
     //          in inner loops. A bump arena executes millions of allocations per second.
     //
     // Task: Perform 100,000 allocations of 64 bytes using an Arena.
@@ -174,10 +174,10 @@ int main() {
     {
         const int NUM_ALLOCS = 100000;
         const size_t POOL_SIZE = 16 * 1024 * 1024; // 16 MB
-        std::vector<uint8_t> pool(POOL_SIZE);
+        vector<uint8_t> pool(POOL_SIZE);
         size_t offset = 0;
 
-        auto start = std::chrono::high_resolution_clock::now();
+        auto start = chrono::high_resolution_clock::now();
 
         for (int i = 0; i < NUM_ALLOCS; ++i) {
             // Bump allocation
@@ -187,8 +187,8 @@ int main() {
             *reinterpret_cast<float*>(p) = static_cast<float>(i);
         }
 
-        auto end = std::chrono::high_resolution_clock::now();
-        double elapsed_sec = std::chrono::duration<double>(end - start).count();
+        auto end = chrono::high_resolution_clock::now();
+        double elapsed_sec = chrono::duration<double>(end - start).count();
         double mops = (NUM_ALLOCS / elapsed_sec) / 1e6;
 
         bool p3_passed = (mops > 10.0); // Arena should easily exceed 10 Mops/s
@@ -197,16 +197,16 @@ int main() {
         total++;
     }
 
-    std::cout << "\n=================================================================" << std::endl;
-    std::cout << "--- SCORECARD ---" << std::endl;
-    std::cout << "=================================================================" << std::endl;
-    std::cout << "  Passed: " << passed << " / " << total << " tests." << std::endl;
+    cout << "\n=================================================================" << endl;
+    cout << "--- SCORECARD ---" << endl;
+    cout << "=================================================================" << endl;
+    cout << "  Passed: " << passed << " / " << total << " tests." << endl;
     if (passed == total) {
-        std::cout << "\033[1;32m  [STATUS] ALL " << total << " TESTS PASSED! \033[0m" << std::endl;
+        cout << "\033[1;32m  [STATUS] ALL " << total << " TESTS PASSED! \033[0m" << endl;
     } else {
-        std::cout << "\033[1;31m  [STATUS] INCOMPLETE (" << (total - passed) << " tests failed) \033[0m" << std::endl;
+        cout << "\033[1;31m  [STATUS] INCOMPLETE (" << (total - passed) << " tests failed) \033[0m" << endl;
     }
-    std::cout << "=================================================================" << std::endl;
+    cout << "=================================================================" << endl;
 
     return (passed == total) ? 0 : 1;
 }

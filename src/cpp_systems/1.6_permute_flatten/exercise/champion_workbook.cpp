@@ -24,23 +24,23 @@ using namespace std;
 //   ../../../output/1.6_champion
 // =========================================================================
 
-void reportStatus(const std::string& name, bool passed, double throughputGBs = -1.0) {
-    std::cout << "  " << std::left << std::setw(60) << name;
+void reportStatus(const string& name, bool passed, double throughputGBs = -1.0) {
+    cout << "  " << left << setw(60) << name;
     if (passed) {
-        std::cout << "\033[1;32m[PASSED]\033[0m";
+        cout << "\033[1;32m[PASSED]\033[0m";
         if (throughputGBs > 0.0) {
-            std::cout << " (" << std::fixed << std::setprecision(2) << throughputGBs << " GB/s)";
+            cout << " (" << fixed << setprecision(2) << throughputGBs << " GB/s)";
         }
-        std::cout << std::endl;
+        cout << endl;
     } else {
-        std::cout << "\033[1;31m[FAILED]\033[0m" << std::endl;
+        cout << "\033[1;31m[FAILED]\033[0m" << endl;
     }
 }
 
 int main() {
-    std::cout << "=================================================================" << std::endl;
-    std::cout << "--- WORKBOOK: 3D/4D Permute & Flatten (Champion Masterclass) ---" << std::endl;
-    std::cout << "=================================================================" << std::endl;
+    cout << "=================================================================" << endl;
+    cout << "--- WORKBOOK: 3D/4D Permute & Flatten (Champion Masterclass) ---" << endl;
+    cout << "=================================================================" << endl;
 
     int passed = 0;
     int total = 0;
@@ -58,20 +58,20 @@ int main() {
     //       Benchmark memory throughput in GB/s!
     // -------------------------------------------------------------------------
     {
-        const std::vector<int> src_shape = {2, 8, 32, 64};
-        const std::vector<int> perm = {0, 2, 1, 3};
-        const std::vector<int> dst_shape = {
+        const vector<int> src_shape = {2, 8, 32, 64};
+        const vector<int> perm = {0, 2, 1, 3};
+        const vector<int> dst_shape = {
             src_shape[perm[0]], src_shape[perm[1]], src_shape[perm[2]], src_shape[perm[3]]
         };
 
         const size_t total_elements = src_shape[0] * src_shape[1] * src_shape[2] * src_shape[3];
 
-        std::vector<float> src(total_elements);
+        vector<float> src(total_elements);
         for (size_t i = 0; i < total_elements; ++i) src[i] = static_cast<float>(i * 0.01f);
 
-        std::vector<float> dst(total_elements, -1.0f);
+        vector<float> dst(total_elements, -1.0f);
 
-        auto start = std::chrono::high_resolution_clock::now();
+        auto start = chrono::high_resolution_clock::now();
 
         // TODO: Compute source and destination strides dynamically:
         // stride[d] = product of remaining dimensions to the right.
@@ -80,8 +80,8 @@ int main() {
 
         // --- YOUR CODE ENDS HERE ---
 
-        auto end = std::chrono::high_resolution_clock::now();
-        double elapsed_sec = std::chrono::duration<double>(end - start).count();
+        auto end = chrono::high_resolution_clock::now();
+        double elapsed_sec = chrono::duration<double>(end - start).count();
         double bytes_moved = 2.0 * total_elements * sizeof(float);
         double throughput = (bytes_moved / elapsed_sec) / 1e9;
 
@@ -127,13 +127,13 @@ int main() {
         const size_t total_elements = B * S * H * D;
         const float scale = 0.25f;
 
-        std::vector<float> src(total_elements);
+        vector<float> src(total_elements);
         for (size_t i = 0; i < total_elements; ++i) src[i] = static_cast<float>(i + 1);
 
-        std::vector<float> bias(D);
+        vector<float> bias(D);
         for (int d = 0; d < D; ++d) bias[d] = static_cast<float>(d * 0.1f);
 
-        std::vector<float> dst(total_elements, -999.0f);
+        vector<float> dst(total_elements, -999.0f);
 
         // TODO: Permute and apply scale and bias in-place.
         // --- YOUR CODE STARTS HERE ---
@@ -148,7 +148,7 @@ int main() {
                         size_t src_idx = (size_t)b * (S * H * D) + (size_t)s * (H * D) + (size_t)h * D + d;
                         size_t dst_idx = (size_t)b * (H * S * D) + (size_t)h * (S * D) + (size_t)s * D + d;
                         float expected = src[src_idx] * scale + bias[d];
-                        if (std::abs(dst[dst_idx] - expected) > 1e-4f) {
+                        if (abs(dst[dst_idx] - expected) > 1e-4f) {
                             p2_passed = false;
                             break;
                         }
@@ -180,14 +180,14 @@ int main() {
         const int H_OUT = H / R;        // 4
         const int W_OUT = W / R;        // 4
 
-        std::vector<float> space_img(H * W);
+        vector<float> space_img(H * W);
         for (int h = 0; h < H; ++h) {
             for (int w = 0; w < W; ++w) {
                 space_img[h * W + w] = static_cast<float>(h * 10 + w);
             }
         }
 
-        std::vector<float> depth_tensor(C_OUT * H_OUT * W_OUT, -1.0f);
+        vector<float> depth_tensor(C_OUT * H_OUT * W_OUT, -1.0f);
 
         // TODO: Fold 2x2 spatial pixels into 4 channels.
         // For each (oh, ow) in [0..3]:
@@ -219,16 +219,16 @@ int main() {
         total++;
     }
 
-    std::cout << "\n=================================================================" << std::endl;
-    std::cout << "--- SCORECARD ---" << std::endl;
-    std::cout << "=================================================================" << std::endl;
-    std::cout << "  Passed: " << passed << " / " << total << " tests." << std::endl;
+    cout << "\n=================================================================" << endl;
+    cout << "--- SCORECARD ---" << endl;
+    cout << "=================================================================" << endl;
+    cout << "  Passed: " << passed << " / " << total << " tests." << endl;
     if (passed == total) {
-        std::cout << "\033[1;32m  [STATUS] ALL " << total << " TESTS PASSED! \033[0m" << std::endl;
+        cout << "\033[1;32m  [STATUS] ALL " << total << " TESTS PASSED! \033[0m" << endl;
     } else {
-        std::cout << "\033[1;31m  [STATUS] INCOMPLETE (" << (total - passed) << " tests failed) \033[0m" << std::endl;
+        cout << "\033[1;31m  [STATUS] INCOMPLETE (" << (total - passed) << " tests failed) \033[0m" << endl;
     }
-    std::cout << "=================================================================" << std::endl;
+    cout << "=================================================================" << endl;
 
     return (passed == total) ? 0 : 1;
 }

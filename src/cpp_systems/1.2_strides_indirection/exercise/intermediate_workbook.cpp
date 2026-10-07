@@ -23,19 +23,19 @@ using namespace std;
 //   ../../../output/1.2_intermediate
 // =========================================================================
 
-void reportStatus(const std::string& name, bool passed) {
-    std::cout << "  " << std::left << std::setw(60) << name;
+void reportStatus(const string& name, bool passed) {
+    cout << "  " << left << setw(60) << name;
     if (passed) {
-        std::cout << "\033[1;32m[PASSED]\033[0m" << std::endl;
+        cout << "\033[1;32m[PASSED]\033[0m" << endl;
     } else {
-        std::cout << "\033[1;31m[FAILED]\033[0m" << std::endl;
+        cout << "\033[1;31m[FAILED]\033[0m" << endl;
     }
 }
 
 int main() {
-    std::cout << "=================================================================" << std::endl;
-    std::cout << "--- WORKBOOK: Strides & Indirection (Intermediate Level) ---" << std::endl;
-    std::cout << "=================================================================" << std::endl;
+    cout << "=================================================================" << endl;
+    cout << "--- WORKBOOK: Strides & Indirection (Intermediate Level) ---" << endl;
+    cout << "=================================================================" << endl;
 
     int passed = 0;
     int total = 0;
@@ -59,14 +59,14 @@ int main() {
     // -------------------------------------------------------------------------
     {
         const int FRAMES = 64;
-        std::vector<float> interleaved(FRAMES * 2);
+        vector<float> interleaved(FRAMES * 2);
         for (int i = 0; i < FRAMES; ++i) {
             interleaved[2 * i] = static_cast<float>(i * 10);     // Left
             interleaved[2 * i + 1] = static_cast<float>(i * 10 + 5); // Right
         }
 
-        std::vector<float> left_channel(FRAMES, 0.0f);
-        std::vector<float> right_channel(FRAMES, 0.0f);
+        vector<float> left_channel(FRAMES, 0.0f);
+        vector<float> right_channel(FRAMES, 0.0f);
 
         // TODO: De-mux interleaved stereo audio into separate planar channel buffers using strided traversal.
         // --- YOUR CODE STARTS HERE ---
@@ -108,8 +108,8 @@ int main() {
     // -------------------------------------------------------------------------
     {
         const int NUM_SEQS = 4;
-        std::vector<int> lengths = {4, 7, 2, 3};
-        std::vector<float> token_pool = {
+        vector<int> lengths = {4, 7, 2, 3};
+        vector<float> token_pool = {
             1.0f, 2.0f, 3.0f, 4.0f,                   // Seq 0 (len 4, mean = 2.5)
             10.0f, 20.0f, 30.0f, 40.0f, 50.0f, 60.0f, 70.0f, // Seq 1 (len 7, mean = 40.0)
             100.0f, 200.0f,                           // Seq 2 (len 2, mean = 150.0)
@@ -117,17 +117,17 @@ int main() {
         };
 
         const float* seq_ptrs[NUM_SEQS] = {nullptr};
-        std::vector<float> seq_means(NUM_SEQS, 0.0f);
+        vector<float> seq_means(NUM_SEQS, 0.0f);
 
         // TODO: Map sequence pointers into the packed pool and compute per-sequence mean reductions.
         // --- YOUR CODE STARTS HERE ---
 
         // --- YOUR CODE ENDS HERE ---
 
-        std::vector<float> expected_means = {2.5f, 40.0f, 150.0f, 1.5f};
+        vector<float> expected_means = {2.5f, 40.0f, 150.0f, 1.5f};
         bool p2_passed = true;
         for (int s = 0; s < NUM_SEQS; ++s) {
-            if (std::abs(seq_means[s] - expected_means[s]) > 1e-4f) p2_passed = false;
+            if (abs(seq_means[s] - expected_means[s]) > 1e-4f) p2_passed = false;
         }
 
         reportStatus("Problem 2: Ragged/Nested Tensor Indirection & Reductions", p2_passed);
@@ -153,7 +153,7 @@ int main() {
     // -------------------------------------------------------------------------
     {
         const int ROWS = 16, COLS = 16;
-        std::vector<float> A(ROWS * COLS);
+        vector<float> A(ROWS * COLS);
         for (int r = 0; r < ROWS; ++r) {
             for (int c = 0; c < COLS; ++c) {
                 A[r * COLS + c] = static_cast<float>(r * 100 + c);
@@ -165,7 +165,7 @@ int main() {
         const int OUT_ROWS = 5;
         const int OUT_COLS = 4;
 
-        std::vector<float> sub_matrix(OUT_ROWS * OUT_COLS, -1.0f);
+        vector<float> sub_matrix(OUT_ROWS * OUT_COLS, -1.0f);
 
         // TODO: Extract the strided 2D sub-grid from matrix A into the contiguous output buffer.
         // --- YOUR CODE STARTS HERE ---
@@ -190,16 +190,16 @@ int main() {
         total++;
     }
 
-    std::cout << "\n=================================================================" << std::endl;
-    std::cout << "--- SCORECARD ---" << std::endl;
-    std::cout << "=================================================================" << std::endl;
-    std::cout << "  Passed: " << passed << " / " << total << " tests." << std::endl;
+    cout << "\n=================================================================" << endl;
+    cout << "--- SCORECARD ---" << endl;
+    cout << "=================================================================" << endl;
+    cout << "  Passed: " << passed << " / " << total << " tests." << endl;
     if (passed == total) {
-        std::cout << "\033[1;32m  [STATUS] ALL " << total << " TESTS PASSED! \033[0m" << std::endl;
+        cout << "\033[1;32m  [STATUS] ALL " << total << " TESTS PASSED! \033[0m" << endl;
     } else {
-        std::cout << "\033[1;31m  [STATUS] INCOMPLETE (" << (total - passed) << " tests failed) \033[0m" << std::endl;
+        cout << "\033[1;31m  [STATUS] INCOMPLETE (" << (total - passed) << " tests failed) \033[0m" << endl;
     }
-    std::cout << "=================================================================" << std::endl;
+    cout << "=================================================================" << endl;
 
     return (passed == total) ? 0 : 1;
 }

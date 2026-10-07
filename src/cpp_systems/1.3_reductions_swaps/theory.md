@@ -374,6 +374,61 @@ float kahan_sum(const float* data, size_t n) {
 }
 ```
 
+### The Catastrophic Cancellation Trap in Naive Variance
+In statistical normalization layers (LayerNorm, RMSNorm, BatchLinear), we must compute the mean and variance of activations across embedding dimensions.
+
+A naive textbook formula calculates variance by squaring the sum:
+```formula
+variance_naive = (sum(x_i^2) - (sum(x_i))^2 / N) / N
+```
+
+> [!WARNING]
+> **Catastrophic Cancellation**: If activations have a large baseline magnitude (e.g. activations around 10,000.0) with tiny variations (e.g. variance 0.001), both `sum(x_i^2)` and `(sum(x_i))^2 / N` become massive numbers (~10^8).
+> In single-precision IEEE 754 float, subtracting two nearly equal large numbers causes **Catastrophic Precision Loss**: the shared high-order bits cancel out, leaving pure rounding noise. The subtraction can even evaluate to a negative number, causing `sqrt(variance)` to produce **`NaN`** and crashing model training!
+
+---
+
+### Technique: Welford's Online Algorithm (PyTorch LayerNorm / RMSNorm)
+In 1962, B. P. Welford published an online recurrence that computes the running mean and sum of squared differences (`M2`) in a single pass without ever computing large squared totals:
+
+| State Variable | Register Role | Mathematical Definition |
+| :--- | :--- | :--- |
+| **`count`** (k) | Number of samples processed | k = 1, 2, ..., N |
+| **`mean`** (mu_k) | Running centroid | mu_k = (1 / k) * sum(x_i) |
+| **`M2`** | Sum of squared deviations | M2 = sum((x_i - mu_k)^2) |
+
+#### Single-Pass Recurrence Equations:
+For each incoming sample `x`:
+```formula
+count = count + 1
+delta = x - mean
+mean = mean + delta / count
+delta2 = x - mean
+M2 = M2 + delta * delta2
+```
+
+Final population statistics:
+```formula
+variance = M2 / count
+sample_variance = M2 / (count - 1)
+std_dev = sqrt(M2 / count)
+```
+
+> [!IMPORTANT]
+> Because `M2` accumulates only small local squared differences (`delta * delta2`), it is guaranteed to remain non-negative and avoids catastrophic cancellation entirely.
+
+#### Parallel Welford Merge (Chan's Formula for GPU Warps & Blocks):
+When multiple parallel GPU threads or blocks reduce separate chunks A (count n_A, mean mu_A, M2_A) and B (count n_B, mean mu_B, M2_B), their states merge into a single combined state:
+```formula
+n = n_A + n_B
+delta = mu_B - mu_A
+mu = mu_A + delta * (n_B / n)
+M2 = M2_A + M2_B + delta * delta * (n_A * n_B / n)
+```
+This merge formula enables tree-reducing Welford states across GPU warps using `__shfl_down_sync` register instructions.
+
+---
+
 ### Direct Bridge to LLMs: The Online Softmax Trick (FlashAttention)
 In transformer attention (`Attention(Q, K, V)`), the naive softmax requires two full memory passes over the sequence:
 1. Pass 1: Find row maximum `m = max(x_i)` to prevent `exp(x)` overflow.

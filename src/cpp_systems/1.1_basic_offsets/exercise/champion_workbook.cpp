@@ -24,23 +24,23 @@ using namespace std;
 //   ../../../output/1.1_champion
 // =========================================================================
 
-void reportStatus(const std::string& name, bool passed, double throughputGBs = -1.0) {
-    std::cout << "  " << std::left << std::setw(60) << name;
+void reportStatus(const string& name, bool passed, double throughputGBs = -1.0) {
+    cout << "  " << left << setw(60) << name;
     if (passed) {
-        std::cout << "\033[1;32m[PASSED]\033[0m";
+        cout << "\033[1;32m[PASSED]\033[0m";
         if (throughputGBs > 0.0) {
-            std::cout << " (" << std::fixed << std::setprecision(2) << throughputGBs << " GB/s)";
+            cout << " (" << fixed << setprecision(2) << throughputGBs << " GB/s)";
         }
-        std::cout << std::endl;
+        cout << endl;
     } else {
-        std::cout << "\033[1;31m[FAILED]\033[0m" << std::endl;
+        cout << "\033[1;31m[FAILED]\033[0m" << endl;
     }
 }
 
 int main() {
-    std::cout << "=================================================================" << std::endl;
-    std::cout << "--- WORKBOOK: Basic Offsets & Pointer Arithmetic (Champion) ---" << std::endl;
-    std::cout << "=================================================================" << std::endl;
+    cout << "=================================================================" << endl;
+    cout << "--- WORKBOOK: Basic Offsets & Pointer Arithmetic (Champion) ---" << endl;
+    cout << "=================================================================" << endl;
 
     int passed = 0;
     int total = 0;
@@ -68,7 +68,7 @@ int main() {
     // -------------------------------------------------------------------------
     {
         const size_t POOL_SIZE = 65536; // 64 KB
-        std::vector<uint8_t> pool(POOL_SIZE);
+        vector<uint8_t> pool(POOL_SIZE);
         uintptr_t pool_start = reinterpret_cast<uintptr_t>(pool.data());
         uintptr_t pool_end = pool_start + POOL_SIZE;
 
@@ -77,7 +77,7 @@ int main() {
             size_t align;
         };
 
-        std::vector<AllocReq> requests = {
+        vector<AllocReq> requests = {
             {120, 64},
             {350, 128},
             {48, 16},
@@ -85,7 +85,7 @@ int main() {
             {512, 128}
         };
 
-        std::vector<void*> allocated_ptrs(requests.size(), nullptr);
+        vector<void*> allocated_ptrs(requests.size(), nullptr);
         size_t total_padding_wasted = 0;
 
         uintptr_t curr_bump = pool_start;
@@ -144,8 +144,8 @@ int main() {
     // -------------------------------------------------------------------------
     {
         const int N = 64;
-        std::vector<float> buffer_A(N, 0.0f);
-        std::vector<float> buffer_B(N, 0.0f);
+        vector<float> buffer_A(N, 0.0f);
+        vector<float> buffer_B(N, 0.0f);
 
         float* compute_buf = buffer_A.data();
         float* transfer_buf = buffer_B.data();
@@ -188,21 +188,21 @@ int main() {
     {
         const int DIM = 512;
         const size_t total_elements = DIM * DIM;
-        std::vector<float> src(total_elements);
+        vector<float> src(total_elements);
         for (size_t i = 0; i < total_elements; ++i) src[i] = static_cast<float>(i * 0.01f);
-        std::vector<float> dst_tiled(total_elements, -1.0f);
+        vector<float> dst_tiled(total_elements, -1.0f);
 
         const int TILE_SIZE = 16;
 
-        auto start = std::chrono::high_resolution_clock::now();
+        auto start = chrono::high_resolution_clock::now();
 
         // TODO: Transpose matrix using 16x16 cache-blocked tiles to prevent cache thrashing.
         // --- YOUR CODE STARTS HERE ---
 
         // --- YOUR CODE ENDS HERE ---
 
-        auto end = std::chrono::high_resolution_clock::now();
-        double elapsed_sec = std::chrono::duration<double>(end - start).count();
+        auto end = chrono::high_resolution_clock::now();
+        double elapsed_sec = chrono::duration<double>(end - start).count();
         double bytes_moved = 2.0 * total_elements * sizeof(float);
         double throughput = (bytes_moved / elapsed_sec) / 1e9;
 
@@ -221,16 +221,16 @@ int main() {
         total++;
     }
 
-    std::cout << "\n=================================================================" << std::endl;
-    std::cout << "--- SCORECARD ---" << std::endl;
-    std::cout << "=================================================================" << std::endl;
-    std::cout << "  Passed: " << passed << " / " << total << " tests." << std::endl;
+    cout << "\n=================================================================" << endl;
+    cout << "--- SCORECARD ---" << endl;
+    cout << "=================================================================" << endl;
+    cout << "  Passed: " << passed << " / " << total << " tests." << endl;
     if (passed == total) {
-        std::cout << "\033[1;32m  [STATUS] ALL " << total << " TESTS PASSED! \033[0m" << std::endl;
+        cout << "\033[1;32m  [STATUS] ALL " << total << " TESTS PASSED! \033[0m" << endl;
     } else {
-        std::cout << "\033[1;31m  [STATUS] INCOMPLETE (" << (total - passed) << " tests failed) \033[0m" << std::endl;
+        cout << "\033[1;31m  [STATUS] INCOMPLETE (" << (total - passed) << " tests failed) \033[0m" << endl;
     }
-    std::cout << "=================================================================" << std::endl;
+    cout << "=================================================================" << endl;
 
     return (passed == total) ? 0 : 1;
 }

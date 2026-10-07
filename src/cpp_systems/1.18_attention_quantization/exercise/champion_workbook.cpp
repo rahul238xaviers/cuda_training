@@ -24,23 +24,23 @@ using namespace std;
 //   ../../../output/1.18_champion
 // =========================================================================
 
-void reportStatus(const std::string& name, bool passed, double throughputGBs = -1.0) {
-    std::cout << "  " << std::left << std::setw(60) << name;
+void reportStatus(const string& name, bool passed, double throughputGBs = -1.0) {
+    cout << "  " << left << setw(60) << name;
     if (passed) {
-        std::cout << "\033[1;32m[PASSED]\033[0m";
+        cout << "\033[1;32m[PASSED]\033[0m";
         if (throughputGBs > 0.0) {
-            std::cout << " (" << std::fixed << std::setprecision(2) << throughputGBs << " GB/s)";
+            cout << " (" << fixed << setprecision(2) << throughputGBs << " GB/s)";
         }
-        std::cout << std::endl;
+        cout << endl;
     } else {
-        std::cout << "\033[1;31m[FAILED]\033[0m" << std::endl;
+        cout << "\033[1;31m[FAILED]\033[0m" << endl;
     }
 }
 
 int main() {
-    std::cout << "=================================================================" << std::endl;
-    std::cout << "--- WORKBOOK: Attention & Quantization (Champion Masterclass) ---" << std::endl;
-    std::cout << "=================================================================" << std::endl;
+    cout << "=================================================================" << endl;
+    cout << "--- WORKBOOK: Attention & Quantization (Champion Masterclass) ---" << endl;
+    cout << "=================================================================" << endl;
 
     int passed = 0;
     int total = 0;
@@ -68,8 +68,8 @@ int main() {
         const int CHUNK_SIZE = 16;
         const int NUM_CHUNKS = S / CHUNK_SIZE;
 
-        std::vector<float> logits(S);
-        std::vector<float> values(S * DIM);
+        vector<float> logits(S);
+        vector<float> values(S * DIM);
         for (int i = 0; i < S; ++i) {
             logits[i] = static_cast<float>((i % 13) * 0.8f - 4.0f);
             for (int d = 0; d < DIM; ++d) {
@@ -77,11 +77,11 @@ int main() {
             }
         }
 
-        std::vector<float> online_out(DIM, 0.0f);
+        vector<float> online_out(DIM, 0.0f);
         float m_prev = -1e30f;
         float d_prev = 0.0f;
 
-        auto start = std::chrono::high_resolution_clock::now();
+        auto start = chrono::high_resolution_clock::now();
 
         // TODO: Iterate over each of the 4 chunks, update running m, d, and online_out.
         // After all chunks, divide online_out by final d_prev.
@@ -89,19 +89,19 @@ int main() {
 
         // --- YOUR CODE ENDS HERE ---
 
-        auto end = std::chrono::high_resolution_clock::now();
+        auto end = chrono::high_resolution_clock::now();
 
         // Ground-truth: standard full-sequence 3-pass softmax + matmul
-        float full_max = *std::max_element(logits.begin(), logits.end());
+        float full_max = *max_element(logits.begin(), logits.end());
         float full_denom = 0.0f;
-        std::vector<float> exp_scores(S);
+        vector<float> exp_scores(S);
         for (int i = 0; i < S; ++i) {
-            exp_scores[i] = std::exp(logits[i] - full_max);
+            exp_scores[i] = exp(logits[i] - full_max);
             full_denom += exp_scores[i];
         }
         for (int i = 0; i < S; ++i) exp_scores[i] /= full_denom;
 
-        std::vector<float> expected_out(DIM, 0.0f);
+        vector<float> expected_out(DIM, 0.0f);
         for (int i = 0; i < S; ++i) {
             for (int d = 0; d < DIM; ++d) {
                 expected_out[d] += exp_scores[i] * values[i * DIM + d];
@@ -110,7 +110,7 @@ int main() {
 
         bool p1_passed = true;
         for (int d = 0; d < DIM; ++d) {
-            if (std::abs(online_out[d] - expected_out[d]) > 1e-4f) {
+            if (abs(online_out[d] - expected_out[d]) > 1e-4f) {
                 p1_passed = false;
                 break;
             }
@@ -142,7 +142,7 @@ int main() {
     // -------------------------------------------------------------------------
     {
         const int N = 32;
-        std::vector<float> activations = {
+        vector<float> activations = {
             12.5f, -8.25f, 440.0f, -500.0f, 0.125f, -0.0625f, 120.0f, -240.0f,
             1.0f, 2.0f, 3.5f, 7.25f, 15.125f, -31.0f, 63.0f, -127.0f,
             0.5f, -0.25f, 16.0f, -32.0f, 64.0f, -128.0f, 256.0f, -448.0f,
@@ -151,10 +151,10 @@ int main() {
 
         const float MAX_FP8 = 448.0f;
         float max_abs = 0.0f;
-        for (float v : activations) max_abs = std::max(max_abs, std::abs(v));
+        for (float v : activations) max_abs = max(max_abs, abs(v));
         float scale = max_abs / MAX_FP8;
 
-        std::vector<float> fp8_reconstructed(N, 0.0f);
+        vector<float> fp8_reconstructed(N, 0.0f);
 
         // TODO: Quantize each element to simulated FP8 E4M3 and reconstruct.
         // --- YOUR CODE STARTS HERE ---
@@ -166,10 +166,10 @@ int main() {
             float orig = activations[i];
             float recon = fp8_reconstructed[i];
             // Check that value is bounded by clamping
-            if (std::abs(recon) > max_abs + 1e-3f) p2_passed = false;
+            if (abs(recon) > max_abs + 1e-3f) p2_passed = false;
             // FP8 has 3 mantissa bits (~12.5% max quantization step relative error)
-            float rel_err = std::abs(recon - orig) / (std::abs(orig) + 1e-4f);
-            if (std::abs(orig) <= MAX_FP8 * scale && rel_err > 0.15f) p2_passed = false;
+            float rel_err = abs(recon - orig) / (abs(orig) + 1e-4f);
+            if (abs(orig) <= MAX_FP8 * scale && rel_err > 0.15f) p2_passed = false;
         }
 
         reportStatus("Problem 2: FP8 (E4M3) Symmetric Quantization Emulation", p2_passed);
@@ -193,27 +193,27 @@ int main() {
     {
         const int M = 512;
         const int K = 1024;
-        std::vector<int8_t> W(M * K);
+        vector<int8_t> W(M * K);
         for (size_t i = 0; i < W.size(); ++i) {
             W[i] = static_cast<int8_t>((i % 251) - 125);
         }
-        std::vector<float> scales(M);
+        vector<float> scales(M);
         for (int i = 0; i < M; ++i) scales[i] = 0.005f * (i % 10 + 1);
 
-        std::vector<float> x(K);
+        vector<float> x(K);
         for (int i = 0; i < K; ++i) x[i] = static_cast<float>((i % 17) - 8) * 0.1f;
 
-        std::vector<float> y(M, 0.0f);
+        vector<float> y(M, 0.0f);
 
-        auto start = std::chrono::high_resolution_clock::now();
+        auto start = chrono::high_resolution_clock::now();
 
         // TODO: Compute fused dequantized matrix-vector multiplication y = scales * (W @ x).
         // --- YOUR CODE STARTS HERE ---
 
         // --- YOUR CODE ENDS HERE ---
 
-        auto end = std::chrono::high_resolution_clock::now();
-        double elapsed_sec = std::chrono::duration<double>(end - start).count();
+        auto end = chrono::high_resolution_clock::now();
+        double elapsed_sec = chrono::duration<double>(end - start).count();
         double bytes_moved = (size_t)M * K * sizeof(int8_t) + K * sizeof(float) + M * sizeof(float);
         double throughput = (bytes_moved / elapsed_sec) / 1e9;
 
@@ -229,7 +229,7 @@ int main() {
                 float_dot += static_cast<float>(W[i * K + k]) * x[k];
             }
             float expected = scales[i] * float_dot;
-            if (std::abs(y[i] - expected) > 1e-2f) {
+            if (abs(y[i] - expected) > 1e-2f) {
                 p3_passed = false;
                 break;
             }
@@ -257,7 +257,7 @@ int main() {
         const int BATCH = 2, Q_HEADS = 32, KV_HEADS = 8, SEQ_LEN = 32, HEAD_DIM = 16;
         const int GROUP_SIZE = Q_HEADS / KV_HEADS; // 4
 
-        std::vector<float> K_cache(BATCH * KV_HEADS * SEQ_LEN * HEAD_DIM);
+        vector<float> K_cache(BATCH * KV_HEADS * SEQ_LEN * HEAD_DIM);
         for (size_t i = 0; i < K_cache.size(); ++i) {
             K_cache[i] = static_cast<float>(i + 1);
         }
@@ -291,16 +291,16 @@ int main() {
         total++;
     }
 
-    std::cout << "\n=================================================================" << std::endl;
-    std::cout << "--- SCORECARD ---" << std::endl;
-    std::cout << "=================================================================" << std::endl;
-    std::cout << "  Passed: " << passed << " / " << total << " tests." << std::endl;
+    cout << "\n=================================================================" << endl;
+    cout << "--- SCORECARD ---" << endl;
+    cout << "=================================================================" << endl;
+    cout << "  Passed: " << passed << " / " << total << " tests." << endl;
     if (passed == total) {
-        std::cout << "\033[1;32m  [STATUS] ALL " << total << " TESTS PASSED! \033[0m" << std::endl;
+        cout << "\033[1;32m  [STATUS] ALL " << total << " TESTS PASSED! \033[0m" << endl;
     } else {
-        std::cout << "\033[1;31m  [STATUS] INCOMPLETE (" << (total - passed) << " tests failed) \033[0m" << std::endl;
+        cout << "\033[1;31m  [STATUS] INCOMPLETE (" << (total - passed) << " tests failed) \033[0m" << endl;
     }
-    std::cout << "=================================================================" << std::endl;
+    cout << "=================================================================" << endl;
 
     return (passed == total) ? 0 : 1;
 }

@@ -23,19 +23,19 @@ using namespace std;
 //   ../../../output/1.7_intermediate
 // =========================================================================
 
-void reportStatus(const std::string& name, bool passed) {
-    std::cout << "  " << std::left << std::setw(60) << name;
+void reportStatus(const string& name, bool passed) {
+    cout << "  " << left << setw(60) << name;
     if (passed) {
-        std::cout << "\033[1;32m[PASSED]\033[0m" << std::endl;
+        cout << "\033[1;32m[PASSED]\033[0m" << endl;
     } else {
-        std::cout << "\033[1;31m[FAILED]\033[0m" << std::endl;
+        cout << "\033[1;31m[FAILED]\033[0m" << endl;
     }
 }
 
 int main() {
-    std::cout << "=================================================================" << std::endl;
-    std::cout << "--- WORKBOOK: Subgrids, Padding & Diagonals (Intermediate Level) ---" << std::endl;
-    std::cout << "=================================================================" << std::endl;
+    cout << "=================================================================" << endl;
+    cout << "--- WORKBOOK: Subgrids, Padding & Diagonals (Intermediate Level) ---" << endl;
+    cout << "=================================================================" << endl;
 
     int passed = 0;
     int total = 0;
@@ -58,14 +58,14 @@ int main() {
         const int PADDED_H = H + 2 * P; // 8
         const int PADDED_W = W + 2 * P; // 8
 
-        std::vector<float> img(H * W);
+        vector<float> img(H * W);
         for (int r = 0; r < H; ++r) {
             for (int c = 0; c < W; ++c) {
                 img[r * W + c] = static_cast<float>(r * 10 + c);
             }
         }
 
-        std::vector<float> mirror_padded(PADDED_H * PADDED_W, -1.0f);
+        vector<float> mirror_padded(PADDED_H * PADDED_W, -1.0f);
 
         // TODO: Populate mirror_padded using reflection boundary coordinates.
         // --- YOUR CODE STARTS HERE ---
@@ -113,7 +113,7 @@ int main() {
         const int TILES_M = M / TILE_DIM; // 4
         const int TILES_K = K / TILE_DIM; // 4
 
-        std::vector<float> A(M * K);
+        vector<float> A(M * K);
         for (size_t i = 0; i < A.size(); ++i) A[i] = static_cast<float>(i + 1);
 
         bool p2_passed = true;
@@ -151,13 +151,13 @@ int main() {
     // -------------------------------------------------------------------------
     {
         const int N = 16;
-        std::vector<float> A(N * N);
+        vector<float> A(N * N);
         for (int r = 0; r < N; ++r) {
             for (int c = 0; c < N; ++c) {
                 A[r * N + c] = static_cast<float>(r * 100 + c * 2);
             }
         }
-        std::vector<float> original = A;
+        vector<float> original = A;
 
         // TODO: Symmetrize A in-place.
         // --- YOUR CODE STARTS HERE ---
@@ -168,7 +168,7 @@ int main() {
         for (int r = 0; r < N && p3_passed; ++r) {
             for (int c = 0; c < N; ++c) {
                 float expected = 0.5f * (original[r * N + c] + original[c * N + r]);
-                if (std::abs(A[r * N + c] - expected) > 1e-4f || A[r * N + c] != A[c * N + r]) {
+                if (abs(A[r * N + c] - expected) > 1e-4f || A[r * N + c] != A[c * N + r]) {
                     p3_passed = false;
                     break;
                 }
@@ -180,16 +180,16 @@ int main() {
         total++;
     }
 
-    std::cout << "\n=================================================================" << std::endl;
-    std::cout << "--- SCORECARD ---" << std::endl;
-    std::cout << "=================================================================" << std::endl;
-    std::cout << "  Passed: " << passed << " / " << total << " tests." << std::endl;
+    cout << "\n=================================================================" << endl;
+    cout << "--- SCORECARD ---" << endl;
+    cout << "=================================================================" << endl;
+    cout << "  Passed: " << passed << " / " << total << " tests." << endl;
     if (passed == total) {
-        std::cout << "\033[1;32m  [STATUS] ALL " << total << " TESTS PASSED! \033[0m" << std::endl;
+        cout << "\033[1;32m  [STATUS] ALL " << total << " TESTS PASSED! \033[0m" << endl;
     } else {
-        std::cout << "\033[1;31m  [STATUS] INCOMPLETE (" << (total - passed) << " tests failed) \033[0m" << std::endl;
+        cout << "\033[1;31m  [STATUS] INCOMPLETE (" << (total - passed) << " tests failed) \033[0m" << endl;
     }
-    std::cout << "=================================================================" << std::endl;
+    cout << "=================================================================" << endl;
 
     return (passed == total) ? 0 : 1;
 }

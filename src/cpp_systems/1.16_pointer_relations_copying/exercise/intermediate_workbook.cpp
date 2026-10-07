@@ -24,19 +24,19 @@ using namespace std;
 //   ../../../output/1.16_intermediate
 // =========================================================================
 
-void reportStatus(const std::string& name, bool passed) {
-    std::cout << "  " << std::left << std::setw(60) << name;
+void reportStatus(const string& name, bool passed) {
+    cout << "  " << left << setw(60) << name;
     if (passed) {
-        std::cout << "\033[1;32m[PASSED]\033[0m" << std::endl;
+        cout << "\033[1;32m[PASSED]\033[0m" << endl;
     } else {
-        std::cout << "\033[1;31m[FAILED]\033[0m" << std::endl;
+        cout << "\033[1;31m[FAILED]\033[0m" << endl;
     }
 }
 
 int main() {
-    std::cout << "=================================================================" << std::endl;
-    std::cout << "--- WORKBOOK: Pointer Relations & Copying (Intermediate) ---" << std::endl;
-    std::cout << "=================================================================" << std::endl;
+    cout << "=================================================================" << endl;
+    cout << "--- WORKBOOK: Pointer Relations & Copying (Intermediate) ---" << endl;
+    cout << "=================================================================" << endl;
 
     int passed = 0;
     int total = 0;
@@ -54,7 +54,7 @@ int main() {
     //       For row r in [0, height_rows):
     //         const uint8_t* s_row = reinterpret_cast<const uint8_t*>(src) + r * src_pitch;
     //         uint8_t* d_row       = reinterpret_cast<uint8_t*>(dst) + r * dst_pitch;
-    //         std::memcpy(d_row, s_row, width_bytes);
+    //         memcpy(d_row, s_row, width_bytes);
     // -------------------------------------------------------------------------
     {
         auto copy2DStrided = [](void* dst, size_t dst_pitch,
@@ -64,14 +64,14 @@ int main() {
             for (size_t r = 0; r < height_rows; ++r) {
                 const uint8_t* s_row = reinterpret_cast<const uint8_t*>(src) + (r * src_pitch);
                 uint8_t* d_row       = reinterpret_cast<uint8_t*>(dst) + (r * dst_pitch);
-                std::memcpy(d_row, s_row, width_bytes);
+                memcpy(d_row, s_row, width_bytes);
             }
             // --- YOUR CODE ENDS HERE ---
         };
 
         const size_t SRC_H = 32, SRC_W = 64;
         const size_t SRC_PITCH = SRC_W * sizeof(float) + 64; // with padding
-        std::vector<uint8_t> src_buf(SRC_H * SRC_PITCH, 0);
+        vector<uint8_t> src_buf(SRC_H * SRC_PITCH, 0);
 
         // Fill source data
         for (size_t r = 0; r < SRC_H; ++r) {
@@ -84,7 +84,7 @@ int main() {
         // Subgrid of 16 rows x 32 columns
         const size_t SUB_H = 16, SUB_W = 32;
         const size_t DST_PITCH = SUB_W * sizeof(float) + 32; // distinct pitch
-        std::vector<uint8_t> dst_buf(SUB_H * DST_PITCH, 0);
+        vector<uint8_t> dst_buf(SUB_H * DST_PITCH, 0);
 
         // Copy top-left 16x32 region
         copy2DStrided(dst_buf.data(), DST_PITCH, src_buf.data(), SRC_PITCH,
@@ -122,19 +122,19 @@ int main() {
         auto rollKVCacheLeft = [](float* kv_buf, size_t M, size_t D, size_t K) {
             // --- YOUR CODE STARTS HERE ---
             if (K >= M) {
-                std::memset(kv_buf, 0, M * D * sizeof(float));
+                memset(kv_buf, 0, M * D * sizeof(float));
                 return;
             }
             size_t move_count = (M - K) * D;
-            std::memmove(kv_buf, kv_buf + K * D, move_count * sizeof(float));
-            std::memset(kv_buf + move_count, 0, K * D * sizeof(float));
+            memmove(kv_buf, kv_buf + K * D, move_count * sizeof(float));
+            memset(kv_buf + move_count, 0, K * D * sizeof(float));
             // --- YOUR CODE ENDS HERE ---
         };
 
         const size_t M = 8;  // max tokens
         const size_t D = 4;  // hidden dim
         const size_t K = 2;  // evict oldest 2 tokens
-        std::vector<float> cache(M * D);
+        vector<float> cache(M * D);
 
         for (size_t t = 0; t < M; ++t) {
             for (size_t d = 0; d < D; ++d) {
@@ -188,13 +188,13 @@ int main() {
         };
 
         const size_t N = 512;
-        std::vector<float> chA(N), chB(N);
+        vector<float> chA(N), chB(N);
         for (size_t i = 0; i < N; ++i) {
             chA[i] = static_cast<float>(i);
             chB[i] = static_cast<float>(i * 100);
         }
 
-        std::vector<float> interleaved(2 * N, 0.0f);
+        vector<float> interleaved(2 * N, 0.0f);
         interleaveStereo(chA.data(), chB.data(), interleaved.data(), N);
 
         bool ok = true;
@@ -210,16 +210,16 @@ int main() {
         total++;
     }
 
-    std::cout << "\n=================================================================" << std::endl;
-    std::cout << "--- SCORECARD ---" << std::endl;
-    std::cout << "=================================================================" << std::endl;
-    std::cout << "  Passed: " << passed << " / " << total << " tests." << std::endl;
+    cout << "\n=================================================================" << endl;
+    cout << "--- SCORECARD ---" << endl;
+    cout << "=================================================================" << endl;
+    cout << "  Passed: " << passed << " / " << total << " tests." << endl;
     if (passed == total) {
-        std::cout << "\033[1;32m  [STATUS] ALL " << total << " TESTS PASSED! \033[0m" << std::endl;
+        cout << "\033[1;32m  [STATUS] ALL " << total << " TESTS PASSED! \033[0m" << endl;
     } else {
-        std::cout << "\033[1;31m  [STATUS] INCOMPLETE (" << (total - passed) << " tests failed) \033[0m" << std::endl;
+        cout << "\033[1;31m  [STATUS] INCOMPLETE (" << (total - passed) << " tests failed) \033[0m" << endl;
     }
-    std::cout << "=================================================================" << std::endl;
+    cout << "=================================================================" << endl;
 
     return (passed == total) ? 0 : 1;
 }

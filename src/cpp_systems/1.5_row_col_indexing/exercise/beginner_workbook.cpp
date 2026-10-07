@@ -23,19 +23,19 @@ using namespace std;
 //   ../../../output/1.5_beginner
 // =========================================================================
 
-void reportStatus(const std::string& name, bool passed) {
-    std::cout << "  " << std::left << std::setw(60) << name;
+void reportStatus(const string& name, bool passed) {
+    cout << "  " << left << setw(60) << name;
     if (passed) {
-        std::cout << "\033[1;32m[PASSED]\033[0m" << std::endl;
+        cout << "\033[1;32m[PASSED]\033[0m" << endl;
     } else {
-        std::cout << "\033[1;31m[FAILED]\033[0m" << std::endl;
+        cout << "\033[1;31m[FAILED]\033[0m" << endl;
     }
 }
 
 int main() {
-    std::cout << "=================================================================" << std::endl;
-    std::cout << "--- WORKBOOK: Row/Col-Major Indexing (Beginner Level) ---" << std::endl;
-    std::cout << "=================================================================" << std::endl;
+    cout << "=================================================================" << endl;
+    cout << "--- WORKBOOK: Row/Col-Major Indexing (Beginner Level) ---" << endl;
+    cout << "=================================================================" << endl;
 
     int passed = 0;
     int total = 0;
@@ -54,14 +54,14 @@ int main() {
     // -------------------------------------------------------------------------
     {
         const int ROWS = 8, COLS = 16;
-        std::vector<float> row_mat(ROWS * COLS);
+        vector<float> row_mat(ROWS * COLS);
         for (int r = 0; r < ROWS; ++r) {
             for (int c = 0; c < COLS; ++c) {
                 row_mat[r * COLS + c] = static_cast<float>(r * 100 + c);
             }
         }
 
-        std::vector<float> col_mat(ROWS * COLS, -1.0f);
+        vector<float> col_mat(ROWS * COLS, -1.0f);
 
         // TODO: Populate col_mat in column-major order.
         // --- YOUR CODE STARTS HERE ---
@@ -98,11 +98,11 @@ int main() {
     // -------------------------------------------------------------------------
     {
         const int COLS = 12;
-        std::vector<int> flat_ids = {0, 11, 12, 13, 23, 24, 47, 50, 95};
+        vector<int> flat_ids = {0, 11, 12, 13, 23, 24, 47, 50, 95};
         const size_t N = flat_ids.size();
 
-        std::vector<int> out_rows(N, -1);
-        std::vector<int> out_cols(N, -1);
+        vector<int> out_rows(N, -1);
+        vector<int> out_cols(N, -1);
 
         // TODO: Unflatten each flat_id in flat_ids into out_rows[i] and out_cols[i].
         // --- YOUR CODE STARTS HERE ---
@@ -137,16 +137,16 @@ int main() {
     // -------------------------------------------------------------------------
     {
         const int ROWS = 6, COLS = 10;
-        const int DIAG_LEN = std::min(ROWS, COLS); // 6
+        const int DIAG_LEN = min(ROWS, COLS); // 6
 
-        std::vector<float> mat(ROWS * COLS);
+        vector<float> mat(ROWS * COLS);
         for (int r = 0; r < ROWS; ++r) {
             for (int c = 0; c < COLS; ++c) {
                 mat[r * COLS + c] = static_cast<float>(r * 100 + c);
             }
         }
 
-        std::vector<float> diag(DIAG_LEN, -1.0f);
+        vector<float> diag(DIAG_LEN, -1.0f);
 
         // TODO: Extract diagonal elements using pointer stepping.
         // --- YOUR CODE STARTS HERE ---
@@ -166,16 +166,16 @@ int main() {
         total++;
     }
 
-    std::cout << "\n=================================================================" << std::endl;
-    std::cout << "--- SCORECARD ---" << std::endl;
-    std::cout << "=================================================================" << std::endl;
-    std::cout << "  Passed: " << passed << " / " << total << " tests." << std::endl;
+    cout << "\n=================================================================" << endl;
+    cout << "--- SCORECARD ---" << endl;
+    cout << "=================================================================" << endl;
+    cout << "  Passed: " << passed << " / " << total << " tests." << endl;
     if (passed == total) {
-        std::cout << "\033[1;32m  [STATUS] ALL " << total << " TESTS PASSED! \033[0m" << std::endl;
+        cout << "\033[1;32m  [STATUS] ALL " << total << " TESTS PASSED! \033[0m" << endl;
     } else {
-        std::cout << "\033[1;31m  [STATUS] INCOMPLETE (" << (total - passed) << " tests failed) \033[0m" << std::endl;
+        cout << "\033[1;31m  [STATUS] INCOMPLETE (" << (total - passed) << " tests failed) \033[0m" << endl;
     }
-    std::cout << "=================================================================" << std::endl;
+    cout << "=================================================================" << endl;
 
     return (passed == total) ? 0 : 1;
 }

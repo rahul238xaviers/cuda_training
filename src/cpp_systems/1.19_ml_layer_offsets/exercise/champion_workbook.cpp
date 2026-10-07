@@ -24,23 +24,23 @@ using namespace std;
 //   ../../../output/1.19_champion
 // =========================================================================
 
-void reportStatus(const std::string& name, bool passed, double throughputGBs = -1.0) {
-    std::cout << "  " << std::left << std::setw(60) << name;
+void reportStatus(const string& name, bool passed, double throughputGBs = -1.0) {
+    cout << "  " << left << setw(60) << name;
     if (passed) {
-        std::cout << "\033[1;32m[PASSED]\033[0m";
+        cout << "\033[1;32m[PASSED]\033[0m";
         if (throughputGBs > 0.0) {
-            std::cout << " (" << std::fixed << std::setprecision(2) << throughputGBs << " GB/s)";
+            cout << " (" << fixed << setprecision(2) << throughputGBs << " GB/s)";
         }
-        std::cout << std::endl;
+        cout << endl;
     } else {
-        std::cout << "\033[1;31m[FAILED]\033[0m" << std::endl;
+        cout << "\033[1;31m[FAILED]\033[0m" << endl;
     }
 }
 
 int main() {
-    std::cout << "=================================================================" << std::endl;
-    std::cout << "--- WORKBOOK: ML Layer Offsets (Champion Masterclass) ---" << std::endl;
-    std::cout << "=================================================================" << std::endl;
+    cout << "=================================================================" << endl;
+    cout << "--- WORKBOOK: ML Layer Offsets (Champion Masterclass) ---" << endl;
+    cout << "=================================================================" << endl;
 
     int passed = 0;
     int total = 0;
@@ -71,14 +71,14 @@ int main() {
         const int COL_ROWS = C * K * K;                   // 27
         const int COL_COLS = OUT_H * OUT_W;               // 64
 
-        std::vector<float> input_img(C * H * W);
+        vector<float> input_img(C * H * W);
         for (size_t i = 0; i < input_img.size(); ++i) {
             input_img[i] = static_cast<float>(i + 1);
         }
 
-        std::vector<float> col_matrix(COL_ROWS * COL_COLS, -999.0f);
+        vector<float> col_matrix(COL_ROWS * COL_COLS, -999.0f);
 
-        auto start = std::chrono::high_resolution_clock::now();
+        auto start = chrono::high_resolution_clock::now();
 
         // TODO: Populate col_matrix.
         // For each output pixel (oh, ow) and kernel offset (c, kh, kw):
@@ -91,8 +91,8 @@ int main() {
 
         // --- YOUR CODE ENDS HERE ---
 
-        auto end = std::chrono::high_resolution_clock::now();
-        double elapsed_sec = std::chrono::duration<double>(end - start).count();
+        auto end = chrono::high_resolution_clock::now();
+        double elapsed_sec = chrono::duration<double>(end - start).count();
         double throughput = (COL_ROWS * COL_COLS * sizeof(float) / elapsed_sec) / 1e9;
 
         bool p1_passed = true;
@@ -140,26 +140,26 @@ int main() {
         const float EPS = 1e-6f;
         const size_t total_elements = BATCH * SEQ_LEN * HIDDEN_DIM;
 
-        std::vector<float> X(total_elements);
+        vector<float> X(total_elements);
         for (size_t i = 0; i < total_elements; ++i) {
             X[i] = static_cast<float>((i % 29) - 14) * 0.25f;
         }
-        std::vector<float> original_X = X;
+        vector<float> original_X = X;
 
-        std::vector<float> gamma(HIDDEN_DIM);
+        vector<float> gamma(HIDDEN_DIM);
         for (int d = 0; d < HIDDEN_DIM; ++d) {
             gamma[d] = 0.5f + (d % 4) * 0.25f;
         }
 
-        auto start = std::chrono::high_resolution_clock::now();
+        auto start = chrono::high_resolution_clock::now();
 
         // TODO: Apply RMSNorm in-place on each row of length HIDDEN_DIM.
         // --- YOUR CODE STARTS HERE ---
 
         // --- YOUR CODE ENDS HERE ---
 
-        auto end = std::chrono::high_resolution_clock::now();
-        double elapsed_sec = std::chrono::duration<double>(end - start).count();
+        auto end = chrono::high_resolution_clock::now();
+        double elapsed_sec = chrono::duration<double>(end - start).count();
         double throughput = (2.0 * total_elements * sizeof(float) / elapsed_sec) / 1e9;
 
         bool p2_passed = true;
@@ -171,10 +171,10 @@ int main() {
                     float v = original_X[base + d];
                     sum_sq += v * v;
                 }
-                float rms = std::sqrt(sum_sq / HIDDEN_DIM + EPS);
+                float rms = sqrt(sum_sq / HIDDEN_DIM + EPS);
                 for (int d = 0; d < HIDDEN_DIM; ++d) {
                     float expected = (original_X[base + d] / rms) * gamma[d];
-                    if (std::abs(X[base + d] - expected) > 1e-4f) {
+                    if (abs(X[base + d] - expected) > 1e-4f) {
                         p2_passed = false;
                         break;
                     }
@@ -202,14 +202,14 @@ int main() {
         const int N = 2, C = 16, H = 8, W = 8;
         const size_t total_elements = N * C * H * W;
 
-        std::vector<float> src_nchw(total_elements);
+        vector<float> src_nchw(total_elements);
         for (size_t i = 0; i < total_elements; ++i) {
             src_nchw[i] = static_cast<float>(i * 0.05f);
         }
 
-        std::vector<float> dst_nhwc(total_elements, -1.0f);
+        vector<float> dst_nhwc(total_elements, -1.0f);
 
-        auto start = std::chrono::high_resolution_clock::now();
+        auto start = chrono::high_resolution_clock::now();
 
         // TODO: Transpose src_nchw to dst_nhwc.
         // NCHW offset: n * (C * H * W) + c * (H * W) + h * W + w
@@ -218,8 +218,8 @@ int main() {
 
         // --- YOUR CODE ENDS HERE ---
 
-        auto end = std::chrono::high_resolution_clock::now();
-        double elapsed_sec = std::chrono::duration<double>(end - start).count();
+        auto end = chrono::high_resolution_clock::now();
+        double elapsed_sec = chrono::duration<double>(end - start).count();
         double throughput = (2.0 * total_elements * sizeof(float) / elapsed_sec) / 1e9;
 
         bool p3_passed = true;
@@ -260,12 +260,12 @@ int main() {
     {
         const int NUM_TOKENS = 16;
         const int NUM_EXPERTS = 4;
-        std::vector<int> token_expert_assignment = {
+        vector<int> token_expert_assignment = {
             2, 0, 1, 3, 2, 2, 0, 1, 3, 0, 1, 2, 3, 2, 0, 1
         };
 
-        std::vector<int> expert_offsets(NUM_EXPERTS + 1, 0);
-        std::vector<int> dispatch_indices(NUM_TOKENS, -1);
+        vector<int> expert_offsets(NUM_EXPERTS + 1, 0);
+        vector<int> dispatch_indices(NUM_TOKENS, -1);
 
         // TODO: Compute expert_offsets using histogram and prefix sum.
         // Then populate dispatch_indices with original token IDs.
@@ -292,16 +292,16 @@ int main() {
         total++;
     }
 
-    std::cout << "\n=================================================================" << std::endl;
-    std::cout << "--- SCORECARD ---" << std::endl;
-    std::cout << "=================================================================" << std::endl;
-    std::cout << "  Passed: " << passed << " / " << total << " tests." << std::endl;
+    cout << "\n=================================================================" << endl;
+    cout << "--- SCORECARD ---" << endl;
+    cout << "=================================================================" << endl;
+    cout << "  Passed: " << passed << " / " << total << " tests." << endl;
     if (passed == total) {
-        std::cout << "\033[1;32m  [STATUS] ALL " << total << " TESTS PASSED! \033[0m" << std::endl;
+        cout << "\033[1;32m  [STATUS] ALL " << total << " TESTS PASSED! \033[0m" << endl;
     } else {
-        std::cout << "\033[1;31m  [STATUS] INCOMPLETE (" << (total - passed) << " tests failed) \033[0m" << std::endl;
+        cout << "\033[1;31m  [STATUS] INCOMPLETE (" << (total - passed) << " tests failed) \033[0m" << endl;
     }
-    std::cout << "=================================================================" << std::endl;
+    cout << "=================================================================" << endl;
 
     return (passed == total) ? 0 : 1;
 }

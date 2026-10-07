@@ -24,19 +24,19 @@ using namespace std;
 //   ../../../output/1.10_intermediate
 // =========================================================================
 
-void reportStatus(const std::string& name, bool passed) {
-    std::cout << "  " << std::left << std::setw(60) << name;
+void reportStatus(const string& name, bool passed) {
+    cout << "  " << left << setw(60) << name;
     if (passed) {
-        std::cout << "\033[1;32m[PASSED]\033[0m" << std::endl;
+        cout << "\033[1;32m[PASSED]\033[0m" << endl;
     } else {
-        std::cout << "\033[1;31m[FAILED]\033[0m" << std::endl;
+        cout << "\033[1;31m[FAILED]\033[0m" << endl;
     }
 }
 
 int main() {
-    std::cout << "=================================================================" << std::endl;
-    std::cout << "--- WORKBOOK: Multi-Dim & Alignment (Intermediate Level) ---" << std::endl;
-    std::cout << "=================================================================" << std::endl;
+    cout << "=================================================================" << endl;
+    cout << "--- WORKBOOK: Multi-Dim & Alignment (Intermediate Level) ---" << endl;
+    cout << "=================================================================" << endl;
 
     int passed = 0;
     int total = 0;
@@ -57,14 +57,14 @@ int main() {
         const int ROWS = 8, COLS = 50;
         const int PITCH_COLS = (COLS + 31) & ~31; // 64
 
-        std::vector<float> unpadded(ROWS * COLS);
+        vector<float> unpadded(ROWS * COLS);
         for (int r = 0; r < ROWS; ++r) {
             for (int c = 0; c < COLS; ++c) {
                 unpadded[r * COLS + c] = static_cast<float>(r * 100 + c);
             }
         }
 
-        std::vector<float> padded(ROWS * PITCH_COLS, -1.0f);
+        vector<float> padded(ROWS * PITCH_COLS, -1.0f);
 
         // TODO: Copy unpadded into padded with row stride = PITCH_COLS.
         // --- YOUR CODE STARTS HERE ---
@@ -107,7 +107,7 @@ int main() {
         const int SLICE_FLOATS = PITCH_FLOATS * HEIGHT; // 320
         const size_t total_elements = DEPTH * SLICE_FLOATS;
 
-        std::vector<float> pitched_volume(total_elements, -1.0f);
+        vector<float> pitched_volume(total_elements, -1.0f);
 
         // TODO: Populate valid elements in pitched_volume.
         // --- YOUR CODE STARTS HERE ---
@@ -166,16 +166,16 @@ int main() {
         total++;
     }
 
-    std::cout << "\n=================================================================" << std::endl;
-    std::cout << "--- SCORECARD ---" << std::endl;
-    std::cout << "=================================================================" << std::endl;
-    std::cout << "  Passed: " << passed << " / " << total << " tests." << std::endl;
+    cout << "\n=================================================================" << endl;
+    cout << "--- SCORECARD ---" << endl;
+    cout << "=================================================================" << endl;
+    cout << "  Passed: " << passed << " / " << total << " tests." << endl;
     if (passed == total) {
-        std::cout << "\033[1;32m  [STATUS] ALL " << total << " TESTS PASSED! \033[0m" << std::endl;
+        cout << "\033[1;32m  [STATUS] ALL " << total << " TESTS PASSED! \033[0m" << endl;
     } else {
-        std::cout << "\033[1;31m  [STATUS] INCOMPLETE (" << (total - passed) << " tests failed) \033[0m" << std::endl;
+        cout << "\033[1;31m  [STATUS] INCOMPLETE (" << (total - passed) << " tests failed) \033[0m" << endl;
     }
-    std::cout << "=================================================================" << std::endl;
+    cout << "=================================================================" << endl;
 
     return (passed == total) ? 0 : 1;
 }

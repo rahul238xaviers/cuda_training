@@ -19,19 +19,19 @@ using namespace std;
 //        quantization/dequantization with scale factors, and causal masking.
 // =========================================================================
 
-void reportStatus(const std::string& name, bool passed) {
-    std::cout << "  " << std::left << std::setw(60) << name;
+void reportStatus(const string& name, bool passed) {
+    cout << "  " << left << setw(60) << name;
     if (passed) {
-        std::cout << "\033[1;32m[PASSED]\033[0m" << std::endl;
+        cout << "\033[1;32m[PASSED]\033[0m" << endl;
     } else {
-        std::cout << "\033[1;31m[FAILED]\033[0m" << std::endl;
+        cout << "\033[1;31m[FAILED]\033[0m" << endl;
     }
 }
 
 int main() {
-    std::cout << "=================================================================" << std::endl;
-    std::cout << "--- WORKBOOK: Attention & Quantization (Beginner Level) ---" << std::endl;
-    std::cout << "=================================================================" << std::endl;
+    cout << "=================================================================" << endl;
+    cout << "--- WORKBOOK: Attention & Quantization (Beginner Level) ---" << endl;
+    cout << "=================================================================" << endl;
 
     int passed = 0;
     int total = 0;
@@ -53,7 +53,7 @@ int main() {
     {
         const int ROWS = 4;
         const int COLS = 8;
-        std::vector<float> logits = {
+        vector<float> logits = {
             10.0f, 12.0f, 8.0f,  15.0f, 11.0f, 9.0f,  14.0f, 13.0f,
             -5.0f, -2.0f, -1.0f, -8.0f, -3.0f, -4.0f, -2.0f, -6.0f,
             100.0f, 102.0f, 98.0f, 105.0f, 101.0f, 99.0f, 104.0f, 103.0f, // Large values (test overflow)
@@ -70,13 +70,13 @@ int main() {
             float sum = 0.0f;
             for (int c = 0; c < COLS; ++c) {
                 float val = logits[r * COLS + c];
-                if (std::isnan(val) || std::isinf(val) || val < 0.0f || val > 1.0f) {
+                if (isnan(val) || isinf(val) || val < 0.0f || val > 1.0f) {
                     p1_passed = false;
                     break;
                 }
                 sum += val;
             }
-            if (std::abs(sum - 1.0f) > 1e-4f) p1_passed = false;
+            if (abs(sum - 1.0f) > 1e-4f) p1_passed = false;
         }
 
         reportStatus("Problem 1: Numerically-Stable Row-Wise Softmax", p1_passed);
@@ -101,14 +101,14 @@ int main() {
     // -------------------------------------------------------------------------
     {
         const int N = 16;
-        std::vector<float> activations = {
+        vector<float> activations = {
             -12.4f, 5.8f, -0.3f, 44.2f, -31.0f, 0.0f, 18.9f, -44.2f,
             2.1f, -8.7f, 15.3f, -22.1f, 33.0f, -1.5f, 9.8f, -14.6f
         };
 
         float scale = 0.0f;
-        std::vector<int8_t> quantized(N, 0);
-        std::vector<float> reconstructed(N, 0.0f);
+        vector<int8_t> quantized(N, 0);
+        vector<float> reconstructed(N, 0.0f);
 
         // TODO: Compute scale, quantize to quantized array, and reconstruct to reconstructed array.
         // --- YOUR CODE STARTS HERE ---
@@ -117,11 +117,11 @@ int main() {
 
         bool p2_passed = true;
         float expected_scale = 44.2f / 127.0f;
-        if (std::abs(scale - expected_scale) > 1e-4f) p2_passed = false;
+        if (abs(scale - expected_scale) > 1e-4f) p2_passed = false;
 
         float max_error = 0.0f;
         for (int i = 0; i < N && p2_passed; ++i) {
-            float err = std::abs(activations[i] - reconstructed[i]);
+            float err = abs(activations[i] - reconstructed[i]);
             if (err > max_error) max_error = err;
             if (err > expected_scale) { // Error should never exceed half the quantization step
                 p2_passed = false;
@@ -147,11 +147,11 @@ int main() {
     // -------------------------------------------------------------------------
     {
         const int S = 8;
-        std::vector<float> scores(S * S);
+        vector<float> scores(S * S);
         for (int i = 0; i < S * S; ++i) {
             scores[i] = static_cast<float>(i + 1);
         }
-        std::vector<float> original = scores;
+        vector<float> original = scores;
 
         // TODO: Apply causal mask in-place on scores matrix.
         // --- YOUR CODE STARTS HERE ---
@@ -175,16 +175,16 @@ int main() {
         total++;
     }
 
-    std::cout << "\n=================================================================" << std::endl;
-    std::cout << "--- SCORECARD ---" << std::endl;
-    std::cout << "=================================================================" << std::endl;
-    std::cout << "  Passed: " << passed << " / " << total << " tests." << std::endl;
+    cout << "\n=================================================================" << endl;
+    cout << "--- SCORECARD ---" << endl;
+    cout << "=================================================================" << endl;
+    cout << "  Passed: " << passed << " / " << total << " tests." << endl;
     if (passed == total) {
-        std::cout << "\033[1;32m  [STATUS] ALL " << total << " TESTS PASSED! \033[0m" << std::endl;
+        cout << "\033[1;32m  [STATUS] ALL " << total << " TESTS PASSED! \033[0m" << endl;
     } else {
-        std::cout << "\033[1;31m  [STATUS] INCOMPLETE (" << (total - passed) << " tests failed) \033[0m" << std::endl;
+        cout << "\033[1;31m  [STATUS] INCOMPLETE (" << (total - passed) << " tests failed) \033[0m" << endl;
     }
-    std::cout << "=================================================================" << std::endl;
+    cout << "=================================================================" << endl;
 
     return (passed == total) ? 0 : 1;
 }

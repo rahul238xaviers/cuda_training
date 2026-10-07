@@ -26,23 +26,23 @@ using namespace std;
 //   ../../../output/1.12_champion
 // =========================================================================
 
-void reportStatus(const std::string& name, bool passed, double throughputGBs = -1.0) {
-    std::cout << "  " << std::left << std::setw(60) << name;
+void reportStatus(const string& name, bool passed, double throughputGBs = -1.0) {
+    cout << "  " << left << setw(60) << name;
     if (passed) {
-        std::cout << "\033[1;32m[PASSED]\033[0m";
+        cout << "\033[1;32m[PASSED]\033[0m";
         if (throughputGBs > 0.0) {
-            std::cout << " (" << std::fixed << std::setprecision(2) << throughputGBs << " Mmoves/s)";
+            cout << " (" << fixed << setprecision(2) << throughputGBs << " Mmoves/s)";
         }
-        std::cout << std::endl;
+        cout << endl;
     } else {
-        std::cout << "\033[1;31m[FAILED]\033[0m" << std::endl;
+        cout << "\033[1;31m[FAILED]\033[0m" << endl;
     }
 }
 
 int main() {
-    std::cout << "=================================================================" << std::endl;
-    std::cout << "--- WORKBOOK: Lifetimes, Ownership & Resize (Champion Masterclass) ---" << std::endl;
-    std::cout << "=================================================================" << std::endl;
+    cout << "=================================================================" << endl;
+    cout << "--- WORKBOOK: Lifetimes, Ownership & Resize (Champion Masterclass) ---" << endl;
+    cout << "=================================================================" << endl;
 
     int passed = 0;
     int total = 0;
@@ -50,7 +50,7 @@ int main() {
     // -------------------------------------------------------------------------
     // PROBLEM 1: Intrusive Reference-Counted Tensor Storage (c10 Style)
     //
-    // Context: `std::shared_ptr` allocates a separate heap "control block" for the
+    // Context: `shared_ptr` allocates a separate heap "control block" for the
     //          refcount. PyTorch uses intrusive reference counting (`c10::intrusive_ptr`)
     //          where the atomic refcount is embedded directly inside the storage struct,
     //          saving an allocation and improving cache locality.
@@ -64,7 +64,7 @@ int main() {
         total_freed = 0;
 
         struct IntrusiveStorage {
-            std::atomic<int> ref_count{1};
+            atomic<int> ref_count{1};
             float* data;
             size_t size;
 
@@ -78,11 +78,11 @@ int main() {
             }
 
             void retain() {
-                ref_count.fetch_add(1, std::memory_order_relaxed);
+                ref_count.fetch_add(1, memory_order_relaxed);
             }
 
             void release() {
-                if (ref_count.fetch_sub(1, std::memory_order_acq_rel) == 1) {
+                if (ref_count.fetch_sub(1, memory_order_acq_rel) == 1) {
                     delete this;
                 }
             }
@@ -147,15 +147,15 @@ int main() {
         const int NUM_MOVES = 1000000;
         LargeTensor holder(2621440); // 10 MB tensor
 
-        auto start = std::chrono::high_resolution_clock::now();
+        auto start = chrono::high_resolution_clock::now();
 
         for (int i = 0; i < NUM_MOVES; ++i) {
-            LargeTensor temp = std::move(holder);
-            holder = std::move(temp);
+            LargeTensor temp = move(holder);
+            holder = move(temp);
         }
 
-        auto end = std::chrono::high_resolution_clock::now();
-        double elapsed_sec = std::chrono::duration<double>(end - start).count();
+        auto end = chrono::high_resolution_clock::now();
+        double elapsed_sec = chrono::duration<double>(end - start).count();
         double mmoves_per_sec = (NUM_MOVES / elapsed_sec) / 1e6;
 
         bool p2_passed = (holder.data != nullptr) && (mmoves_per_sec > 10.0);
@@ -171,7 +171,7 @@ int main() {
     //          allocated by an external runtime must be adopted into a managed C++
     //          object with an arbitrary callback deleter (e.g. `cudaFree` or custom pool return).
     //
-    // Task: Implement `AdoptedBuffer` that takes a raw pointer and a `std::function<void(void*)>`
+    // Task: Implement `AdoptedBuffer` that takes a raw pointer and a `function<void(void*)>`
     //       deleter. Verify that when AdoptedBuffer is destroyed, the custom callback runs.
     // -------------------------------------------------------------------------
     {
@@ -179,9 +179,9 @@ int main() {
 
         struct AdoptedBuffer {
             void* raw_ptr;
-            std::function<void(void*)> custom_deleter;
+            function<void(void*)> custom_deleter;
 
-            AdoptedBuffer(void* ptr, std::function<void(void*)> deleter)
+            AdoptedBuffer(void* ptr, function<void(void*)> deleter)
                 : raw_ptr(ptr), custom_deleter(deleter) {}
 
             ~AdoptedBuffer() {
@@ -206,16 +206,16 @@ int main() {
         total++;
     }
 
-    std::cout << "\n=================================================================" << std::endl;
-    std::cout << "--- SCORECARD ---" << std::endl;
-    std::cout << "=================================================================" << std::endl;
-    std::cout << "  Passed: " << passed << " / " << total << " tests." << std::endl;
+    cout << "\n=================================================================" << endl;
+    cout << "--- SCORECARD ---" << endl;
+    cout << "=================================================================" << endl;
+    cout << "  Passed: " << passed << " / " << total << " tests." << endl;
     if (passed == total) {
-        std::cout << "\033[1;32m  [STATUS] ALL " << total << " TESTS PASSED! \033[0m" << std::endl;
+        cout << "\033[1;32m  [STATUS] ALL " << total << " TESTS PASSED! \033[0m" << endl;
     } else {
-        std::cout << "\033[1;31m  [STATUS] INCOMPLETE (" << (total - passed) << " tests failed) \033[0m" << std::endl;
+        cout << "\033[1;31m  [STATUS] INCOMPLETE (" << (total - passed) << " tests failed) \033[0m" << endl;
     }
-    std::cout << "=================================================================" << std::endl;
+    cout << "=================================================================" << endl;
 
     return (passed == total) ? 0 : 1;
 }

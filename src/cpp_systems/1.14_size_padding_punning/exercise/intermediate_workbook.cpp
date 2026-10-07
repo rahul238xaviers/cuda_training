@@ -25,19 +25,19 @@ using namespace std;
 //   ../../../output/1.14_intermediate
 // =========================================================================
 
-void reportStatus(const std::string& name, bool passed) {
-    std::cout << "  " << std::left << std::setw(60) << name;
+void reportStatus(const string& name, bool passed) {
+    cout << "  " << left << setw(60) << name;
     if (passed) {
-        std::cout << "\033[1;32m[PASSED]\033[0m" << std::endl;
+        cout << "\033[1;32m[PASSED]\033[0m" << endl;
     } else {
-        std::cout << "\033[1;31m[FAILED]\033[0m" << std::endl;
+        cout << "\033[1;31m[FAILED]\033[0m" << endl;
     }
 }
 
 int main() {
-    std::cout << "=================================================================" << std::endl;
-    std::cout << "--- WORKBOOK: Size, Padding & Type Punning (Intermediate) ---" << std::endl;
-    std::cout << "=================================================================" << std::endl;
+    cout << "=================================================================" << endl;
+    cout << "--- WORKBOOK: Size, Padding & Type Punning (Intermediate) ---" << endl;
+    cout << "=================================================================" << endl;
 
     int passed = 0;
     int total = 0;
@@ -87,16 +87,16 @@ int main() {
         };
 
         const size_t N = 1024;
-        std::vector<int8_t> original(N);
+        vector<int8_t> original(N);
         // Fill with valid 4-bit signed integers [-8, 7]
         for (size_t i = 0; i < N; ++i) {
             original[i] = static_cast<int8_t>((static_cast<int>(i % 16)) - 8);
         }
 
-        std::vector<uint8_t> packed(N / 2);
+        vector<uint8_t> packed(N / 2);
         packINT4(original.data(), N, packed.data());
 
-        std::vector<int8_t> unpacked(N, 0);
+        vector<int8_t> unpacked(N, 0);
         unpackINT4(packed.data(), N, unpacked.data());
 
         bool ok = true;
@@ -133,7 +133,7 @@ int main() {
         auto float32_to_fp16 = [](float val) -> uint16_t {
             // --- YOUR CODE STARTS HERE ---
             if (val == 0.0f) return 0;
-            uint32_t f_bits = std::bit_cast<uint32_t>(val);
+            uint32_t f_bits = bit_cast<uint32_t>(val);
             uint32_t sign = (f_bits >> 31) & 0x1;
             int32_t exp = static_cast<int32_t>((f_bits >> 23) & 0xFF) - 127;
             uint32_t mant = f_bits & 0x7FFFFF;
@@ -158,12 +158,12 @@ int main() {
 
             int32_t exp = static_cast<int32_t>(fp16_exp) - 15 + 127;
             uint32_t f_bits = (sign << 31) | (static_cast<uint32_t>(exp) << 23) | (fp16_mant << 13);
-            return std::bit_cast<float>(f_bits);
+            return bit_cast<float>(f_bits);
             // --- YOUR CODE ENDS HERE ---
         };
 
         bool ok = true;
-        std::vector<float> test_vals = {1.0f, -1.0f, 2.0f, 0.5f, 16.0f, -8.0f, 0.25f};
+        vector<float> test_vals = {1.0f, -1.0f, 2.0f, 0.5f, 16.0f, -8.0f, 0.25f};
 
         for (float v : test_vals) {
             uint16_t h = float32_to_fp16(v);
@@ -232,16 +232,16 @@ int main() {
         total++;
     }
 
-    std::cout << "\n=================================================================" << std::endl;
-    std::cout << "--- SCORECARD ---" << std::endl;
-    std::cout << "=================================================================" << std::endl;
-    std::cout << "  Passed: " << passed << " / " << total << " tests." << std::endl;
+    cout << "\n=================================================================" << endl;
+    cout << "--- SCORECARD ---" << endl;
+    cout << "=================================================================" << endl;
+    cout << "  Passed: " << passed << " / " << total << " tests." << endl;
     if (passed == total) {
-        std::cout << "\033[1;32m  [STATUS] ALL " << total << " TESTS PASSED! \033[0m" << std::endl;
+        cout << "\033[1;32m  [STATUS] ALL " << total << " TESTS PASSED! \033[0m" << endl;
     } else {
-        std::cout << "\033[1;31m  [STATUS] INCOMPLETE (" << (total - passed) << " tests failed) \033[0m" << std::endl;
+        cout << "\033[1;31m  [STATUS] INCOMPLETE (" << (total - passed) << " tests failed) \033[0m" << endl;
     }
-    std::cout << "=================================================================" << std::endl;
+    cout << "=================================================================" << endl;
 
     return (passed == total) ? 0 : 1;
 }

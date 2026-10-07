@@ -23,19 +23,19 @@ using namespace std;
 //   ../../../output/1.2_beginner
 // =========================================================================
 
-void reportStatus(const std::string& name, bool passed) {
-    std::cout << "  " << std::left << std::setw(60) << name;
+void reportStatus(const string& name, bool passed) {
+    cout << "  " << left << setw(60) << name;
     if (passed) {
-        std::cout << "\033[1;32m[PASSED]\033[0m" << std::endl;
+        cout << "\033[1;32m[PASSED]\033[0m" << endl;
     } else {
-        std::cout << "\033[1;31m[FAILED]\033[0m" << std::endl;
+        cout << "\033[1;31m[FAILED]\033[0m" << endl;
     }
 }
 
 int main() {
-    std::cout << "=================================================================" << std::endl;
-    std::cout << "--- WORKBOOK: Strides & Indirection (Beginner Level) ---" << std::endl;
-    std::cout << "=================================================================" << std::endl;
+    cout << "=================================================================" << endl;
+    cout << "--- WORKBOOK: Strides & Indirection (Beginner Level) ---" << endl;
+    cout << "=================================================================" << endl;
 
     int passed = 0;
     int total = 0;
@@ -64,10 +64,10 @@ int main() {
         const int FACTOR = 4;
         const int OUT_SIZE = N / FACTOR; // 32
 
-        std::vector<float> audio(N);
+        vector<float> audio(N);
         for (int i = 0; i < N; ++i) audio[i] = static_cast<float>(i * 0.25f);
 
-        std::vector<float> downsampled(OUT_SIZE, -1.0f);
+        vector<float> downsampled(OUT_SIZE, -1.0f);
 
         const float* ptr = audio.data();
         float* dst = downsampled.data();
@@ -111,7 +111,7 @@ int main() {
     {
         const int ROWS = 16;
         const int COLS = 8;
-        std::vector<float> mat(ROWS * COLS);
+        vector<float> mat(ROWS * COLS);
         for (int r = 0; r < ROWS; ++r) {
             for (int c = 0; c < COLS; ++c) {
                 mat[r * COLS + c] = static_cast<float>(r * 100 + c);
@@ -119,7 +119,7 @@ int main() {
         }
 
         const int target_col = 3;
-        std::vector<float> col_vec(ROWS, 0.0f);
+        vector<float> col_vec(ROWS, 0.0f);
 
         // TODO: Extract the column vector from the row-major matrix using strided pointer offsets.
         // --- YOUR CODE STARTS HERE ---
@@ -158,7 +158,7 @@ int main() {
     // -------------------------------------------------------------------------
     {
         const int ROWS = 4, COLS = 4;
-        std::vector<float> matrix_data = {
+        vector<float> matrix_data = {
             1.0f,  2.0f,  3.0f,  4.0f,
             5.0f,  6.0f,  7.0f,  8.0f,
             9.0f,  10.0f, 11.0f, 12.0f,
@@ -174,7 +174,7 @@ int main() {
         // --- YOUR CODE ENDS HERE ---
 
         float expected_trace = 1.0f + 6.0f + 11.0f + 16.0f; // 34.0f
-        bool p3_passed = (std::abs(trace - expected_trace) < 1e-4f);
+        bool p3_passed = (abs(trace - expected_trace) < 1e-4f);
         for (int r = 0; r < ROWS; ++r) {
             if (row_ptrs[r] != &matrix_data[r * COLS]) p3_passed = false;
         }
@@ -184,16 +184,16 @@ int main() {
         total++;
     }
 
-    std::cout << "\n=================================================================" << std::endl;
-    std::cout << "--- SCORECARD ---" << std::endl;
-    std::cout << "=================================================================" << std::endl;
-    std::cout << "  Passed: " << passed << " / " << total << " tests." << std::endl;
+    cout << "\n=================================================================" << endl;
+    cout << "--- SCORECARD ---" << endl;
+    cout << "=================================================================" << endl;
+    cout << "  Passed: " << passed << " / " << total << " tests." << endl;
     if (passed == total) {
-        std::cout << "\033[1;32m  [STATUS] ALL " << total << " TESTS PASSED! \033[0m" << std::endl;
+        cout << "\033[1;32m  [STATUS] ALL " << total << " TESTS PASSED! \033[0m" << endl;
     } else {
-        std::cout << "\033[1;31m  [STATUS] INCOMPLETE (" << (total - passed) << " tests failed) \033[0m" << std::endl;
+        cout << "\033[1;31m  [STATUS] INCOMPLETE (" << (total - passed) << " tests failed) \033[0m" << endl;
     }
-    std::cout << "=================================================================" << std::endl;
+    cout << "=================================================================" << endl;
 
     return (passed == total) ? 0 : 1;
 }

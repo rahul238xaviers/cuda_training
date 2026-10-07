@@ -25,23 +25,23 @@ using namespace std;
 //   ../../../output/1.17_champion
 // =========================================================================
 
-void reportStatus(const std::string& name, bool passed, double throughputGBs = -1.0) {
-    std::cout << "  " << std::left << std::setw(58) << name;
+void reportStatus(const string& name, bool passed, double throughputGBs = -1.0) {
+    cout << "  " << left << setw(58) << name;
     if (passed) {
-        std::cout << "\033[1;32m[PASSED]\033[0m";
+        cout << "\033[1;32m[PASSED]\033[0m";
         if (throughputGBs > 0.0) {
-            std::cout << " (" << std::fixed << std::setprecision(2) << throughputGBs << " GB/s)";
+            cout << " (" << fixed << setprecision(2) << throughputGBs << " GB/s)";
         }
-        std::cout << std::endl;
+        cout << endl;
     } else {
-        std::cout << "\033[1;31m[FAILED]\033[0m" << std::endl;
+        cout << "\033[1;31m[FAILED]\033[0m" << endl;
     }
 }
 
 int main() {
-    std::cout << "=================================================================" << std::endl;
-    std::cout << "--- WORKBOOK: Embeddings & Projections (Champion Masterclass) ---" << std::endl;
-    std::cout << "=================================================================" << std::endl;
+    cout << "=================================================================" << endl;
+    cout << "--- WORKBOOK: Embeddings & Projections (Champion Masterclass) ---" << endl;
+    cout << "=================================================================" << endl;
 
     int passed = 0;
     int total = 0;
@@ -62,15 +62,15 @@ int main() {
     {
         const int B = 4, S = 128, H = 16, D = 64;
         const size_t total_elements = B * S * H * D;
-        std::vector<float> src(total_elements);
-        std::vector<float> dst(total_elements, -1.0f);
+        vector<float> src(total_elements);
+        vector<float> dst(total_elements, -1.0f);
 
         // Fill source with recognizable pattern
         for (size_t i = 0; i < total_elements; ++i) {
             src[i] = static_cast<float>(i * 0.001f);
         }
 
-        auto start = std::chrono::high_resolution_clock::now();
+        auto start = chrono::high_resolution_clock::now();
 
         // TODO: Transform elements from src [B, S, H, D] into dst [B, H, S, D].
         // Compute strides for both layouts and permute all elements.
@@ -78,8 +78,8 @@ int main() {
         
         // --- YOUR CODE ENDS HERE ---
 
-        auto end = std::chrono::high_resolution_clock::now();
-        double elapsed_sec = std::chrono::duration<double>(end - start).count();
+        auto end = chrono::high_resolution_clock::now();
+        double elapsed_sec = chrono::duration<double>(end - start).count();
         double bytes_moved = 2.0 * total_elements * sizeof(float); // read + write
         double throughput = (bytes_moved / elapsed_sec) / 1e9;
 
@@ -91,7 +91,7 @@ int main() {
                     for (int d = 0; d < D; ++d) {
                         size_t src_idx = (size_t)b * (S * H * D) + (size_t)s * (H * D) + (size_t)h * D + d;
                         size_t dst_idx = (size_t)b * (H * S * D) + (size_t)h * (S * D) + (size_t)s * D + d;
-                        if (std::abs(dst[dst_idx] - src[src_idx]) > 1e-5f) {
+                        if (abs(dst[dst_idx] - src[src_idx]) > 1e-5f) {
                             p1_passed = false;
                             break;
                         }
@@ -122,14 +122,14 @@ int main() {
         const size_t packed_size = B * S * NUM_PROJ * H * D;
         const size_t k_size = B * H * S * D;
 
-        std::vector<float> qkv_packed(packed_size);
-        std::vector<float> k_contiguous(k_size, -999.0f);
+        vector<float> qkv_packed(packed_size);
+        vector<float> k_contiguous(k_size, -999.0f);
 
         for (size_t i = 0; i < packed_size; ++i) {
             qkv_packed[i] = static_cast<float>(i + 1);
         }
 
-        auto start = std::chrono::high_resolution_clock::now();
+        auto start = chrono::high_resolution_clock::now();
 
         // TODO: Extract ONLY the Key projection (proj = 1) from qkv_packed [B, S, 3, H, D]
         // into k_contiguous [B, H, S, D].
@@ -137,8 +137,8 @@ int main() {
 
         // --- YOUR CODE ENDS HERE ---
 
-        auto end = std::chrono::high_resolution_clock::now();
-        double elapsed_sec = std::chrono::duration<double>(end - start).count();
+        auto end = chrono::high_resolution_clock::now();
+        double elapsed_sec = chrono::duration<double>(end - start).count();
         double bytes_moved = (k_size + k_size) * sizeof(float);
         double throughput = (bytes_moved / elapsed_sec) / 1e9;
 
@@ -152,7 +152,7 @@ int main() {
                                             1 * (H * D) + // Key projection
                                             (size_t)h * D + d;
                         size_t k_idx = (size_t)b * (H * S * D) + (size_t)h * (S * D) + (size_t)s * D + d;
-                        if (std::abs(k_contiguous[k_idx] - qkv_packed[packed_idx]) > 1e-5f) {
+                        if (abs(k_contiguous[k_idx] - qkv_packed[packed_idx]) > 1e-5f) {
                             p2_passed = false;
                             break;
                         }
@@ -184,22 +184,22 @@ int main() {
         const int HIDDEN_DIM = 128;
         const int BATCH_TOKENS = 64;
 
-        std::vector<float> embed_table(VOCAB_SIZE * HIDDEN_DIM);
+        vector<float> embed_table(VOCAB_SIZE * HIDDEN_DIM);
         for (size_t i = 0; i < embed_table.size(); ++i) {
             embed_table[i] = static_cast<float>(i % 37 + 1.0f);
         }
 
         // Test token batch including valid IDs, PAD (0), and out-of-bounds IDs
-        std::vector<int> tokens(BATCH_TOKENS);
+        vector<int> tokens(BATCH_TOKENS);
         for (int i = 0; i < BATCH_TOKENS; ++i) {
             if (i % 8 == 0) tokens[i] = 0;            // PAD
             else if (i % 11 == 0) tokens[i] = 1500;   // Out-of-bounds -> clamp to 999
             else tokens[i] = (i * 31) % VOCAB_SIZE;  // Valid
         }
 
-        std::vector<float> out_embeddings(BATCH_TOKENS * HIDDEN_DIM, -1.0f);
+        vector<float> out_embeddings(BATCH_TOKENS * HIDDEN_DIM, -1.0f);
 
-        auto start = std::chrono::high_resolution_clock::now();
+        auto start = chrono::high_resolution_clock::now();
 
         // TODO: Perform the ragged embedding gather with padding and clamping.
         // Output shape: [BATCH_TOKENS, HIDDEN_DIM].
@@ -207,8 +207,8 @@ int main() {
 
         // --- YOUR CODE ENDS HERE ---
 
-        auto end = std::chrono::high_resolution_clock::now();
-        double elapsed_sec = std::chrono::duration<double>(end - start).count();
+        auto end = chrono::high_resolution_clock::now();
+        double elapsed_sec = chrono::duration<double>(end - start).count();
         double bytes_moved = BATCH_TOKENS * HIDDEN_DIM * sizeof(float);
         double throughput = (bytes_moved / elapsed_sec) / 1e9;
 
@@ -222,10 +222,10 @@ int main() {
                     if (out_vec[d] != 0.0f) { p3_passed = false; break; }
                 }
             } else {
-                int effective_tok = std::min(tok, VOCAB_SIZE - 1);
+                int effective_tok = min(tok, VOCAB_SIZE - 1);
                 const float* expected_vec = &embed_table[effective_tok * HIDDEN_DIM];
                 for (int d = 0; d < HIDDEN_DIM; ++d) {
-                    if (std::abs(out_vec[d] - expected_vec[d]) > 1e-5f) {
+                    if (abs(out_vec[d] - expected_vec[d]) > 1e-5f) {
                         p3_passed = false;
                         break;
                     }
@@ -265,18 +265,18 @@ int main() {
         const int HEAD_DIM = 64;
 
         // Total pool size: 64 * 2 * 8 * 16 * 64 = 1,048,576 floats (4 MB)
-        std::vector<float> kv_pool(NUM_BLOCKS * 2 * NUM_HEADS * BLOCK_SIZE * HEAD_DIM);
+        vector<float> kv_pool(NUM_BLOCKS * 2 * NUM_HEADS * BLOCK_SIZE * HEAD_DIM);
         for (size_t i = 0; i < kv_pool.size(); ++i) {
             kv_pool[i] = static_cast<float>(i * 0.1f);
         }
 
         // Logical sequence has 5 blocks allocated across non-contiguous physical blocks:
-        std::vector<int> block_table = {42, 7, 19, 3, 58};
+        vector<int> block_table = {42, 7, 19, 3, 58};
 
         int query_logical_seq_idx = 45; // Falls in block 2 (idx 45 / 16 = 2 -> physical block 19)
         int target_head = 5;
 
-        std::vector<float> out_k_vector(HEAD_DIM, 0.0f);
+        vector<float> out_k_vector(HEAD_DIM, 0.0f);
 
         // TODO: Resolve the physical pointer and copy the Key vector for target_head into out_k_vector.
         // --- YOUR CODE STARTS HERE ---
@@ -296,7 +296,7 @@ int main() {
 
         bool p4_passed = true;
         for (int d = 0; d < HEAD_DIM; ++d) {
-            if (std::abs(out_k_vector[d] - kv_pool[expected_offset + d]) > 1e-5f) {
+            if (abs(out_k_vector[d] - kv_pool[expected_offset + d]) > 1e-5f) {
                 p4_passed = false;
                 break;
             }
@@ -307,16 +307,16 @@ int main() {
         total++;
     }
 
-    std::cout << "\n=================================================================" << std::endl;
-    std::cout << "--- SCORECARD ---" << std::endl;
-    std::cout << "=================================================================" << std::endl;
-    std::cout << "  Passed: " << passed << " / " << total << " tests." << std::endl;
+    cout << "\n=================================================================" << endl;
+    cout << "--- SCORECARD ---" << endl;
+    cout << "=================================================================" << endl;
+    cout << "  Passed: " << passed << " / " << total << " tests." << endl;
     if (passed == total) {
-        std::cout << "\033[1;32m  [STATUS] ALL " << total << " TESTS PASSED! \033[0m" << std::endl;
+        cout << "\033[1;32m  [STATUS] ALL " << total << " TESTS PASSED! \033[0m" << endl;
     } else {
-        std::cout << "\033[1;31m  [STATUS] INCOMPLETE (" << (total - passed) << " tests failed) \033[0m" << std::endl;
+        cout << "\033[1;31m  [STATUS] INCOMPLETE (" << (total - passed) << " tests failed) \033[0m" << endl;
     }
-    std::cout << "=================================================================" << std::endl;
+    cout << "=================================================================" << endl;
 
     return (passed == total) ? 0 : 1;
 }

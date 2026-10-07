@@ -24,23 +24,23 @@ using namespace std;
 //   ../../../output/1.4_champion
 // =========================================================================
 
-void reportStatus(const std::string& name, bool passed, double throughputGBs = -1.0) {
-    std::cout << "  " << std::left << std::setw(60) << name;
+void reportStatus(const string& name, bool passed, double throughputGBs = -1.0) {
+    cout << "  " << left << setw(60) << name;
     if (passed) {
-        std::cout << "\033[1;32m[PASSED]\033[0m";
+        cout << "\033[1;32m[PASSED]\033[0m";
         if (throughputGBs > 0.0) {
-            std::cout << " (" << std::fixed << std::setprecision(2) << throughputGBs << " GB/s)";
+            cout << " (" << fixed << setprecision(2) << throughputGBs << " GB/s)";
         }
-        std::cout << std::endl;
+        cout << endl;
     } else {
-        std::cout << "\033[1;31m[FAILED]\033[0m" << std::endl;
+        cout << "\033[1;31m[FAILED]\033[0m" << endl;
     }
 }
 
 int main() {
-    std::cout << "=================================================================" << std::endl;
-    std::cout << "--- WORKBOOK: Multi-Array & Strided Ops (Champion Masterclass) ---" << std::endl;
-    std::cout << "=================================================================" << std::endl;
+    cout << "=================================================================" << endl;
+    cout << "--- WORKBOOK: Multi-Array & Strided Ops (Champion Masterclass) ---" << endl;
+    cout << "=================================================================" << endl;
 
     int passed = 0;
     int total = 0;
@@ -58,23 +58,23 @@ int main() {
     // -------------------------------------------------------------------------
     {
         const int B = 4, M = 512, K = 1024;
-        std::vector<float> W(M * K);
+        vector<float> W(M * K);
         for (size_t i = 0; i < W.size(); ++i) W[i] = static_cast<float>((i % 19) - 9) * 0.05f;
 
-        std::vector<float> X(B * K);
+        vector<float> X(B * K);
         for (size_t i = 0; i < X.size(); ++i) X[i] = static_cast<float>((i % 11) - 5) * 0.1f;
 
-        std::vector<float> Y(B * M, 0.0f);
+        vector<float> Y(B * M, 0.0f);
 
-        auto start = std::chrono::high_resolution_clock::now();
+        auto start = chrono::high_resolution_clock::now();
 
         // TODO: Compute Batched GEMV Y[b, m] = sum_k(W[m, k] * X[b, k]).
         // --- YOUR CODE STARTS HERE ---
 
         // --- YOUR CODE ENDS HERE ---
 
-        auto end = std::chrono::high_resolution_clock::now();
-        double elapsed_sec = std::chrono::duration<double>(end - start).count();
+        auto end = chrono::high_resolution_clock::now();
+        double elapsed_sec = chrono::duration<double>(end - start).count();
         // Memory moved: Read W once (M * K), Read X for all B (B * K), Write Y (B * M)
         double bytes_moved = ((size_t)M * K + (size_t)B * K + (size_t)B * M) * sizeof(float);
         double throughput = (bytes_moved / elapsed_sec) / 1e9;
@@ -86,7 +86,7 @@ int main() {
                 for (int k = 0; k < K; ++k) {
                     expected += W[m * K + k] * X[b * K + k];
                 }
-                if (std::abs(Y[b * M + m] - expected) > 1e-3f) {
+                if (abs(Y[b * M + m] - expected) > 1e-3f) {
                     p1_passed = false;
                     break;
                 }
@@ -111,24 +111,24 @@ int main() {
         const int DIM = 256;
         const size_t total_elements = DIM * DIM;
 
-        std::vector<float> A(total_elements);
-        std::vector<float> B(total_elements);
+        vector<float> A(total_elements);
+        vector<float> B(total_elements);
         for (size_t i = 0; i < total_elements; ++i) {
             A[i] = static_cast<float>(i * 0.1f);
             B[i] = static_cast<float>((i % 100) * 0.2f);
         }
 
-        std::vector<float> C(total_elements, 0.0f);
+        vector<float> C(total_elements, 0.0f);
 
-        auto start = std::chrono::high_resolution_clock::now();
+        auto start = chrono::high_resolution_clock::now();
 
         // TODO: Compute C[i, j] = A[i * DIM + j] + B[j * DIM + i].
         // --- YOUR CODE STARTS HERE ---
 
         // --- YOUR CODE ENDS HERE ---
 
-        auto end = std::chrono::high_resolution_clock::now();
-        double elapsed_sec = std::chrono::duration<double>(end - start).count();
+        auto end = chrono::high_resolution_clock::now();
+        double elapsed_sec = chrono::duration<double>(end - start).count();
         double bytes_moved = 3.0 * total_elements * sizeof(float);
         double throughput = (bytes_moved / elapsed_sec) / 1e9;
 
@@ -136,7 +136,7 @@ int main() {
         for (int i = 0; i < DIM && p2_passed; ++i) {
             for (int j = 0; j < DIM; ++j) {
                 float expected = A[i * DIM + j] + B[j * DIM + i];
-                if (std::abs(C[i * DIM + j] - expected) > 1e-4f) {
+                if (abs(C[i * DIM + j] - expected) > 1e-4f) {
                     p2_passed = false;
                     break;
                 }
@@ -162,14 +162,14 @@ int main() {
         const int SPATIAL = H * W; // 1024
         const size_t total_elements = C * SPATIAL;
 
-        std::vector<float> planar_img(total_elements);
+        vector<float> planar_img(total_elements);
         for (int c = 0; c < C; ++c) {
             for (int i = 0; i < SPATIAL; ++i) {
                 planar_img[c * SPATIAL + i] = static_cast<float>(c * 1000 + i);
             }
         }
 
-        std::vector<float> interleaved_img(total_elements, -1.0f);
+        vector<float> interleaved_img(total_elements, -1.0f);
 
         // TODO: For each spatial pixel (h, w), pack R, G, B channels contiguously into interleaved_img.
         // Interleaved offset for (h, w, c): (h * W + w) * 3 + c
@@ -197,16 +197,16 @@ int main() {
         total++;
     }
 
-    std::cout << "\n=================================================================" << std::endl;
-    std::cout << "--- SCORECARD ---" << std::endl;
-    std::cout << "=================================================================" << std::endl;
-    std::cout << "  Passed: " << passed << " / " << total << " tests." << std::endl;
+    cout << "\n=================================================================" << endl;
+    cout << "--- SCORECARD ---" << endl;
+    cout << "=================================================================" << endl;
+    cout << "  Passed: " << passed << " / " << total << " tests." << endl;
     if (passed == total) {
-        std::cout << "\033[1;32m  [STATUS] ALL " << total << " TESTS PASSED! \033[0m" << std::endl;
+        cout << "\033[1;32m  [STATUS] ALL " << total << " TESTS PASSED! \033[0m" << endl;
     } else {
-        std::cout << "\033[1;31m  [STATUS] INCOMPLETE (" << (total - passed) << " tests failed) \033[0m" << std::endl;
+        cout << "\033[1;31m  [STATUS] INCOMPLETE (" << (total - passed) << " tests failed) \033[0m" << endl;
     }
-    std::cout << "=================================================================" << std::endl;
+    cout << "=================================================================" << endl;
 
     return (passed == total) ? 0 : 1;
 }

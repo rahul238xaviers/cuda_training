@@ -25,12 +25,12 @@ using namespace std;
 //   ../../../output/1.15_champion
 // =========================================================================
 
-void reportStatus(const std::string& name, bool passed) {
-    std::cout << "  " << std::left << std::setw(60) << name;
+void reportStatus(const string& name, bool passed) {
+    cout << "  " << left << setw(60) << name;
     if (passed) {
-        std::cout << "\033[1;32m[PASSED]\033[0m" << std::endl;
+        cout << "\033[1;32m[PASSED]\033[0m" << endl;
     } else {
-        std::cout << "\033[1;31m[FAILED]\033[0m" << std::endl;
+        cout << "\033[1;31m[FAILED]\033[0m" << endl;
     }
 }
 
@@ -43,9 +43,9 @@ enum class TensorScalarType { FP32 = 0, INT32 = 1, NUM_DTYPES = 2 };
 using KernelFn = void(*)(const void*, const void*, void*, size_t);
 
 int main() {
-    std::cout << "=================================================================" << std::endl;
-    std::cout << "--- WORKBOOK: Type Casts & Double Pointers (Champion Level) ---" << std::endl;
-    std::cout << "=================================================================" << std::endl;
+    cout << "=================================================================" << endl;
+    cout << "--- WORKBOOK: Type Casts & Double Pointers (Champion Level) ---" << endl;
+    cout << "=================================================================" << endl;
 
     int passed = 0;
     int total = 0;
@@ -185,13 +185,13 @@ int main() {
         engine.registerOp(DeviceBackend::CPU, TensorScalarType::INT32, cpu_int32_add);
 
         const size_t N = 8;
-        std::vector<float> fa = {1.f, 2.f, 3.f, 4.f, 5.f, 6.f, 7.f, 8.f};
-        std::vector<float> fb = {0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f};
-        std::vector<float> fo(N, 0.0f);
+        vector<float> fa = {1.f, 2.f, 3.f, 4.f, 5.f, 6.f, 7.f, 8.f};
+        vector<float> fb = {0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f};
+        vector<float> fo(N, 0.0f);
 
-        std::vector<int32_t> ia = {10, 20, 30, 40, 50, 60, 70, 80};
-        std::vector<int32_t> ib = {1, 2, 3, 4, 5, 6, 7, 8};
-        std::vector<int32_t> io(N, 0);
+        vector<int32_t> ia = {10, 20, 30, 40, 50, 60, 70, 80};
+        vector<int32_t> ib = {1, 2, 3, 4, 5, 6, 7, 8};
+        vector<int32_t> io(N, 0);
 
         engine.invokeOp(DeviceBackend::CPU, TensorScalarType::FP32, fa.data(), fb.data(), fo.data(), N);
         engine.invokeOp(DeviceBackend::CPU, TensorScalarType::INT32, ia.data(), ib.data(), io.data(), N);
@@ -215,8 +215,8 @@ int main() {
     //          A header table specifies `{ name, offset, size_bytes }`.
     //
     // Task: Implement `deserializeTensors(const uint8_t* blob, size_t blob_size,
-    //                                    const std::vector<TensorDesc>& descs,
-    //                                    std::vector<const float*>& out_ptrs)`:
+    //                                    const vector<TensorDesc>& descs,
+    //                                    vector<const float*>& out_ptrs)`:
     //       For each descriptor:
     //         - Checks `offset + size_bytes <= blob_size`.
     //         - Checks that the effective address `(blob + offset)` is 64-byte aligned.
@@ -231,8 +231,8 @@ int main() {
         };
 
         auto deserializeTensors = [](const uint8_t* blob, size_t blob_size,
-                                     const std::vector<TensorDesc>& descs,
-                                     std::vector<const float*>& out_ptrs) {
+                                     const vector<TensorDesc>& descs,
+                                     vector<const float*>& out_ptrs) {
             // --- YOUR CODE STARTS HERE ---
             out_ptrs.resize(descs.size(), nullptr);
             for (size_t i = 0; i < descs.size(); ++i) {
@@ -252,7 +252,7 @@ int main() {
         };
 
         const size_t BLOB_SIZE = 16384;
-        std::vector<uint8_t> storage(BLOB_SIZE, 0);
+        vector<uint8_t> storage(BLOB_SIZE, 0);
         uint8_t* raw_blob = storage.data();
         // Compute 64-byte aligned base inside storage
         uintptr_t raw_addr = reinterpret_cast<uintptr_t>(raw_blob);
@@ -260,14 +260,14 @@ int main() {
         uint8_t* aligned_blob = raw_blob + pad;
         size_t effective_blob_size = BLOB_SIZE - pad;
 
-        std::vector<TensorDesc> descs = {
+        vector<TensorDesc> descs = {
             {"q_weight", 0, 1024},         // aligned at 0
             {"k_weight", 1024, 1024},      // aligned at 1024 (1024 % 64 == 0)
             {"misaligned_v", 1050, 1024},  // misaligned (1050 % 64 != 0)
             {"overflow_w", effective_blob_size - 100, 1024} // exceeds blob size
         };
 
-        std::vector<const float*> out_ptrs;
+        vector<const float*> out_ptrs;
         deserializeTensors(aligned_blob, effective_blob_size, descs, out_ptrs);
 
         bool ok = true;
@@ -282,16 +282,16 @@ int main() {
         total++;
     }
 
-    std::cout << "\n=================================================================" << std::endl;
-    std::cout << "--- SCORECARD ---" << std::endl;
-    std::cout << "=================================================================" << std::endl;
-    std::cout << "  Passed: " << passed << " / " << total << " tests." << std::endl;
+    cout << "\n=================================================================" << endl;
+    cout << "--- SCORECARD ---" << endl;
+    cout << "=================================================================" << endl;
+    cout << "  Passed: " << passed << " / " << total << " tests." << endl;
     if (passed == total) {
-        std::cout << "\033[1;32m  [STATUS] ALL " << total << " TESTS PASSED! \033[0m" << std::endl;
+        cout << "\033[1;32m  [STATUS] ALL " << total << " TESTS PASSED! \033[0m" << endl;
     } else {
-        std::cout << "\033[1;31m  [STATUS] INCOMPLETE (" << (total - passed) << " tests failed) \033[0m" << std::endl;
+        cout << "\033[1;31m  [STATUS] INCOMPLETE (" << (total - passed) << " tests failed) \033[0m" << endl;
     }
-    std::cout << "=================================================================" << std::endl;
+    cout << "=================================================================" << endl;
 
     return (passed == total) ? 0 : 1;
 }

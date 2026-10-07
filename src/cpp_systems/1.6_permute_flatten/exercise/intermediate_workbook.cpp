@@ -23,19 +23,19 @@ using namespace std;
 //   ../../../output/1.6_intermediate
 // =========================================================================
 
-void reportStatus(const std::string& name, bool passed) {
-    std::cout << "  " << std::left << std::setw(60) << name;
+void reportStatus(const string& name, bool passed) {
+    cout << "  " << left << setw(60) << name;
     if (passed) {
-        std::cout << "\033[1;32m[PASSED]\033[0m" << std::endl;
+        cout << "\033[1;32m[PASSED]\033[0m" << endl;
     } else {
-        std::cout << "\033[1;31m[FAILED]\033[0m" << std::endl;
+        cout << "\033[1;31m[FAILED]\033[0m" << endl;
     }
 }
 
 int main() {
-    std::cout << "=================================================================" << std::endl;
-    std::cout << "--- WORKBOOK: 3D/4D Permute & Flatten (Intermediate Level) ---" << std::endl;
-    std::cout << "=================================================================" << std::endl;
+    cout << "=================================================================" << endl;
+    cout << "--- WORKBOOK: 3D/4D Permute & Flatten (Intermediate Level) ---" << endl;
+    cout << "=================================================================" << endl;
 
     int passed = 0;
     int total = 0;
@@ -59,7 +59,7 @@ int main() {
         const int NUM_PATCHES = PATCHES_H * PATCHES_W; // 16
         const int PATCH_DIM = C * P * P; // 48
 
-        std::vector<float> image(C * H * W);
+        vector<float> image(C * H * W);
         for (int c = 0; c < C; ++c) {
             for (int h = 0; h < H; ++h) {
                 for (int w = 0; w < W; ++w) {
@@ -68,7 +68,7 @@ int main() {
             }
         }
 
-        std::vector<float> patch_tokens(NUM_PATCHES * PATCH_DIM, -1.0f);
+        vector<float> patch_tokens(NUM_PATCHES * PATCH_DIM, -1.0f);
 
         // TODO: Extract 16 patches from image into patch_tokens.
         // --- YOUR CODE STARTS HERE ---
@@ -113,10 +113,10 @@ int main() {
     {
         const int N = 2, C = 4, H = 8, W = 8;
         const size_t total_elements = N * C * H * W;
-        std::vector<float> src_nchw(total_elements);
+        vector<float> src_nchw(total_elements);
         for (size_t i = 0; i < total_elements; ++i) src_nchw[i] = static_cast<float>(i + 1);
 
-        std::vector<float> dst_chwn(total_elements, -1.0f);
+        vector<float> dst_chwn(total_elements, -1.0f);
 
         // TODO: Permute NCHW to CHWN.
         // NCHW offset: n * (C * H * W) + c * (H * W) + h * W + w
@@ -158,10 +158,10 @@ int main() {
     {
         const int B = 2, D = 4, H = 4, W = 4;
         const size_t total_elements = B * D * H * W;
-        std::vector<float> A(total_elements);
+        vector<float> A(total_elements);
         for (size_t i = 0; i < total_elements; ++i) A[i] = static_cast<float>(i * 0.5f);
 
-        std::vector<float> out_B(total_elements, -1.0f);
+        vector<float> out_B(total_elements, -1.0f);
 
         // TODO: Permute [B, D, H, W] -> [B, H, W, D].
         // --- YOUR CODE STARTS HERE ---
@@ -189,16 +189,16 @@ int main() {
         total++;
     }
 
-    std::cout << "\n=================================================================" << std::endl;
-    std::cout << "--- SCORECARD ---" << std::endl;
-    std::cout << "=================================================================" << std::endl;
-    std::cout << "  Passed: " << passed << " / " << total << " tests." << std::endl;
+    cout << "\n=================================================================" << endl;
+    cout << "--- SCORECARD ---" << endl;
+    cout << "=================================================================" << endl;
+    cout << "  Passed: " << passed << " / " << total << " tests." << endl;
     if (passed == total) {
-        std::cout << "\033[1;32m  [STATUS] ALL " << total << " TESTS PASSED! \033[0m" << std::endl;
+        cout << "\033[1;32m  [STATUS] ALL " << total << " TESTS PASSED! \033[0m" << endl;
     } else {
-        std::cout << "\033[1;31m  [STATUS] INCOMPLETE (" << (total - passed) << " tests failed) \033[0m" << std::endl;
+        cout << "\033[1;31m  [STATUS] INCOMPLETE (" << (total - passed) << " tests failed) \033[0m" << endl;
     }
-    std::cout << "=================================================================" << std::endl;
+    cout << "=================================================================" << endl;
 
     return (passed == total) ? 0 : 1;
 }

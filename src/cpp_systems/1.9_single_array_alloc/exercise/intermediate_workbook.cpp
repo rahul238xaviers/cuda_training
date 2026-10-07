@@ -25,19 +25,19 @@ using namespace std;
 //   ../../../output/1.9_intermediate
 // =========================================================================
 
-void reportStatus(const std::string& name, bool passed) {
-    std::cout << "  " << std::left << std::setw(60) << name;
+void reportStatus(const string& name, bool passed) {
+    cout << "  " << left << setw(60) << name;
     if (passed) {
-        std::cout << "\033[1;32m[PASSED]\033[0m" << std::endl;
+        cout << "\033[1;32m[PASSED]\033[0m" << endl;
     } else {
-        std::cout << "\033[1;31m[FAILED]\033[0m" << std::endl;
+        cout << "\033[1;31m[FAILED]\033[0m" << endl;
     }
 }
 
 int main() {
-    std::cout << "=================================================================" << std::endl;
-    std::cout << "--- WORKBOOK: Single & Array Allocations (Intermediate Level) ---" << std::endl;
-    std::cout << "=================================================================" << std::endl;
+    cout << "=================================================================" << endl;
+    cout << "--- WORKBOOK: Single & Array Allocations (Intermediate Level) ---" << endl;
+    cout << "=================================================================" << endl;
 
     int passed = 0;
     int total = 0;
@@ -68,7 +68,7 @@ int main() {
         if (aligned_ptr) {
             for (size_t i = 0; i < N; ++i) aligned_ptr[i] = static_cast<float>(i * 0.5f);
             if (aligned_ptr[10] != 5.0f) p1_passed = false;
-            std::free(aligned_ptr);
+            free(aligned_ptr);
         }
 
         reportStatus("Problem 1: 64-Byte Cache-Line Aligned Allocation", p1_passed);
@@ -92,10 +92,10 @@ int main() {
         public:
             size_t current_bytes = 0;
             size_t peak_bytes = 0;
-            std::unordered_map<void*, size_t> alloc_map;
+            unordered_map<void*, size_t> alloc_map;
 
             void* allocate(size_t bytes) {
-                void* p = std::malloc(bytes);
+                void* p = malloc(bytes);
                 if (p) {
                     alloc_map[p] = bytes;
                     current_bytes += bytes;
@@ -108,7 +108,7 @@ int main() {
                 if (ptr && alloc_map.count(ptr)) {
                     current_bytes -= alloc_map[ptr];
                     alloc_map.erase(ptr);
-                    std::free(ptr);
+                    free(ptr);
                 }
             }
         };
@@ -160,7 +160,7 @@ int main() {
                     }
                 }
             }
-            std::free(contiguous_mat);
+            free(contiguous_mat);
         }
 
         reportStatus("Problem 3: Contiguous 2D Heap Matrix Allocation", p3_passed);
@@ -168,16 +168,16 @@ int main() {
         total++;
     }
 
-    std::cout << "\n=================================================================" << std::endl;
-    std::cout << "--- SCORECARD ---" << std::endl;
-    std::cout << "=================================================================" << std::endl;
-    std::cout << "  Passed: " << passed << " / " << total << " tests." << std::endl;
+    cout << "\n=================================================================" << endl;
+    cout << "--- SCORECARD ---" << endl;
+    cout << "=================================================================" << endl;
+    cout << "  Passed: " << passed << " / " << total << " tests." << endl;
     if (passed == total) {
-        std::cout << "\033[1;32m  [STATUS] ALL " << total << " TESTS PASSED! \033[0m" << std::endl;
+        cout << "\033[1;32m  [STATUS] ALL " << total << " TESTS PASSED! \033[0m" << endl;
     } else {
-        std::cout << "\033[1;31m  [STATUS] INCOMPLETE (" << (total - passed) << " tests failed) \033[0m" << std::endl;
+        cout << "\033[1;31m  [STATUS] INCOMPLETE (" << (total - passed) << " tests failed) \033[0m" << endl;
     }
-    std::cout << "=================================================================" << std::endl;
+    cout << "=================================================================" << endl;
 
     return (passed == total) ? 0 : 1;
 }

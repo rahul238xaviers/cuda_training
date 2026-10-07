@@ -23,19 +23,19 @@ using namespace std;
 //   ../../../output/1.1_beginner
 // =========================================================================
 
-void reportStatus(const std::string& name, bool passed) {
-    std::cout << "  " << std::left << std::setw(60) << name;
+void reportStatus(const string& name, bool passed) {
+    cout << "  " << left << setw(60) << name;
     if (passed) {
-        std::cout << "\033[1;32m[PASSED]\033[0m" << std::endl;
+        cout << "\033[1;32m[PASSED]\033[0m" << endl;
     } else {
-        std::cout << "\033[1;31m[FAILED]\033[0m" << std::endl;
+        cout << "\033[1;31m[FAILED]\033[0m" << endl;
     }
 }
 
 int main() {
-    std::cout << "=================================================================" << std::endl;
-    std::cout << "--- WORKBOOK: Basic Offsets & Pointer Arithmetic (Beginner) ---" << std::endl;
-    std::cout << "=================================================================" << std::endl;
+    cout << "=================================================================" << endl;
+    cout << "--- WORKBOOK: Basic Offsets & Pointer Arithmetic (Beginner) ---" << endl;
+    cout << "=================================================================" << endl;
 
     int passed = 0;
     int total = 0;
@@ -62,7 +62,7 @@ int main() {
     // -------------------------------------------------------------------------
     {
         const int N = 1024;
-        std::vector<float> data(N);
+        vector<float> data(N);
         for (int i = 0; i < N; ++i) {
             data[i] = static_cast<float>(i * 0.5f);
         }
@@ -87,7 +87,7 @@ int main() {
             expected_steps++;
         }
 
-        bool p1_passed = (steps_taken == expected_steps) && (std::abs(accumulated_sum - expected_sum) < 1e-3f);
+        bool p1_passed = (steps_taken == expected_steps) && (abs(accumulated_sum - expected_sum) < 1e-3f);
         reportStatus("Problem 1: Strided Pointer Stepping & Accumulation", p1_passed);
         if (p1_passed) passed++;
         total++;
@@ -122,14 +122,14 @@ int main() {
         const size_t header_size = sizeof(uint32_t) + sizeof(uint32_t) + sizeof(uint64_t); // 16 bytes
         const size_t total_bytes = header_size + num_elements * sizeof(float);
 
-        std::vector<uint8_t> blob(total_bytes);
+        vector<uint8_t> blob(total_bytes);
         uint8_t* p = blob.data();
-        std::memcpy(p, &magic, sizeof(magic)); p += sizeof(magic);
-        std::memcpy(p, &num_elements, sizeof(num_elements)); p += sizeof(num_elements);
-        std::memcpy(p, &tensor_id, sizeof(tensor_id)); p += sizeof(tensor_id);
+        memcpy(p, &magic, sizeof(magic)); p += sizeof(magic);
+        memcpy(p, &num_elements, sizeof(num_elements)); p += sizeof(num_elements);
+        memcpy(p, &tensor_id, sizeof(tensor_id)); p += sizeof(tensor_id);
         for (uint32_t i = 0; i < num_elements; ++i) {
             float val = static_cast<float>(i * 1.5f);
-            std::memcpy(p, &val, sizeof(float)); p += sizeof(float);
+            memcpy(p, &val, sizeof(float)); p += sizeof(float);
         }
 
         uint32_t out_magic = 0;
@@ -174,9 +174,9 @@ int main() {
     // -------------------------------------------------------------------------
     {
         const int N = 100;
-        std::vector<float> arr(N);
+        vector<float> arr(N);
         for (int i = 0; i < N; ++i) arr[i] = static_cast<float>(i * 2 + 1);
-        std::vector<float> original = arr;
+        vector<float> original = arr;
 
         float* left = arr.data();
         float* right = arr.data() + N - 1;
@@ -219,7 +219,7 @@ int main() {
     // -------------------------------------------------------------------------
     {
         const int CAPACITY = 16;
-        std::vector<int> ring_buffer(CAPACITY, -1);
+        vector<int> ring_buffer(CAPACITY, -1);
         int* const base_ptr = ring_buffer.data();
         int* head = base_ptr;
 
@@ -247,16 +247,16 @@ int main() {
         total++;
     }
 
-    std::cout << "\n=================================================================" << std::endl;
-    std::cout << "--- SCORECARD ---" << std::endl;
-    std::cout << "=================================================================" << std::endl;
-    std::cout << "  Passed: " << passed << " / " << total << " tests." << std::endl;
+    cout << "\n=================================================================" << endl;
+    cout << "--- SCORECARD ---" << endl;
+    cout << "=================================================================" << endl;
+    cout << "  Passed: " << passed << " / " << total << " tests." << endl;
     if (passed == total) {
-        std::cout << "\033[1;32m  [STATUS] ALL " << total << " TESTS PASSED! \033[0m" << std::endl;
+        cout << "\033[1;32m  [STATUS] ALL " << total << " TESTS PASSED! \033[0m" << endl;
     } else {
-        std::cout << "\033[1;31m  [STATUS] INCOMPLETE (" << (total - passed) << " tests failed) \033[0m" << std::endl;
+        cout << "\033[1;31m  [STATUS] INCOMPLETE (" << (total - passed) << " tests failed) \033[0m" << endl;
     }
-    std::cout << "=================================================================" << std::endl;
+    cout << "=================================================================" << endl;
 
     return (passed == total) ? 0 : 1;
 }

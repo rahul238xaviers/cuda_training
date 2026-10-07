@@ -24,82 +24,185 @@ using namespace std;
 //   ../../../output/1.3_champion
 // =========================================================================
 
-void reportStatus(const std::string& name, bool passed, double throughputGBs = -1.0) {
-    std::cout << "  " << std::left << std::setw(60) << name;
+void reportStatus(const string& name, bool passed, double throughputGBs = -1.0) {
+    cout << "  " << left << setw(60) << name;
     if (passed) {
-        std::cout << "\033[1;32m[PASSED]\033[0m";
+        cout << "\033[1;32m[PASSED]\033[0m";
         if (throughputGBs > 0.0) {
-            std::cout << " (" << std::fixed << std::setprecision(2) << throughputGBs << " GB/s)";
+            cout << " (" << fixed << setprecision(2) << throughputGBs << " GB/s)";
         }
-        std::cout << std::endl;
+        cout << endl;
     } else {
-        std::cout << "\033[1;31m[FAILED]\033[0m" << std::endl;
+        cout << "\033[1;31m[FAILED]\033[0m" << endl;
     }
 }
 
 int main() {
-    std::cout << "=================================================================" << std::endl;
-    std::cout << "--- WORKBOOK: Array Reductions & Swaps (Champion Masterclass) ---" << std::endl;
-    std::cout << "=================================================================" << std::endl;
+    cout << "=================================================================" << endl;
+    cout << "--- WORKBOOK: Array Reductions & Swaps (Champion Masterclass) ---" << endl;
+    cout << "=================================================================" << endl;
 
     int passed = 0;
     int total = 0;
 
     // -------------------------------------------------------------------------
-    // PROBLEM 1: Block-Chunked Two-Pass Vector Reduction Benchmark
+    // PROBLEM 1: FlashAttention Online Softmax Rescaling Primitive
     //
-    // Context: Large-scale reductions on GPUs cannot fit all elements in one block.
-    //          Grid-level reduction uses a two-pass kernel:
-    //            Pass 1: Each block of size B=256 reduces 256 elements into a partial sum.
-    //            Pass 2: A second kernel reduces the array of partial sums.
+    // Context: In transformer attention, standard softmax takes 3 passes over memory:
+    //          finding max, computing sum of exp(x - max), and normalizing.
+    //          FlashAttention computes softmax in small chunks (tiles) in SRAM.
+    //          When a chunk arrives with a larger local max, the running denominator
+    //          must be rescaled on the fly using exp(running_max - new_max).
     //
     // Given:
-    //   - Array `data` of size N = 262,144 floats (1 MB).
-    //   - Chunk parameters: BLOCK_SIZE = 256, NUM_BLOCKS = 1024.
-    //   - Output buffers: `partial_sums` (size 1024) and `final_total_sum`.
+    //   - Array `logits` of size N = 1024 floats.
+    //   - Tile chunk size: CHUNK_SIZE = 64 (NUM_CHUNKS = 16).
+    //   - Running accumulators: `running_max = -INFINITY`, `running_sum = 0.0f`.
     //
     // Goal:
-    //   - Pass 1: Reduce each 256-element chunk into `partial_sums[block_id]`.
-    //   - Pass 2: Reduce `partial_sums` into `final_total_sum`.
+    //   - Process `logits` chunk-by-chunk in a single pass.
+    //   - For each chunk, find local chunk max and local sum of exp(x - chunk_max).
+    //   - Rescale `running_sum` by exp(running_max - new_max) and add the new chunk.
+    //   - Verify final `running_max` and `running_sum` match ground truth.
     //
     // Reference:
-    //   - See Section 3 (Hierarchy Level 3: Multi-Pass Grid-Strided Reduction) of theory.md.
+    //   - See Section 5 (Technique: Online Softmax Rescaling) of theory.md.
     // -------------------------------------------------------------------------
     {
-        const int N = 262144;
-        const int BLOCK_SIZE = 256;
-        const int NUM_BLOCKS = N / BLOCK_SIZE; // 1024
+        const int N = 1024;
+        const int CHUNK_SIZE = 64;
+        const int NUM_CHUNKS = N / CHUNK_SIZE;
 
-        std::vector<float> data(N);
-        float expected_sum = 0.0f;
+        vector<float> logits(N);
         for (int i = 0; i < N; ++i) {
-            data[i] = 1.0f;
-            expected_sum += data[i];
+            logits[i] = sin(static_cast<float>(i) * 0.1f) * 15.0f + static_cast<float>((i % 13) - 6) * 1.5f;
         }
 
-        std::vector<float> partial_sums(NUM_BLOCKS, 0.0f);
-        float final_total_sum = 0.0f;
+        // Ground-truth 3-pass safe softmax reference
+        float gt_max = -INFINITY;
+        for (float v : logits) {
+            gt_max = max(gt_max, v);
+        }
+        double gt_sum = 0.0;
+        for (float v : logits) {
+            gt_sum += exp(static_cast<double>(v - gt_max));
+        }
 
-        auto start = std::chrono::high_resolution_clock::now();
+        float running_max = -INFINITY;
+        float running_sum = 0.0f;
 
-        // TODO: Compute two-pass reduction producing final_total_sum.
+        auto start = chrono::high_resolution_clock::now();
+
+        // TODO: Process each chunk of CHUNK_SIZE floats and update running_max and running_sum via online rescaling.
         // --- YOUR CODE STARTS HERE ---
 
         // --- YOUR CODE ENDS HERE ---
 
-        auto end = std::chrono::high_resolution_clock::now();
-        double elapsed_sec = std::chrono::duration<double>(end - start).count();
+        auto end = chrono::high_resolution_clock::now();
+        double elapsed_sec = chrono::duration<double>(end - start).count();
         double bytes_moved = N * sizeof(float);
         double throughput = (bytes_moved / elapsed_sec) / 1e9;
 
-        bool p1_passed = (std::abs(final_total_sum - expected_sum) < 1e-2f);
-        reportStatus("Problem 1: Two-Pass Block-Chunked Vector Reduction", p1_passed, throughput);
+        bool p1_passed = (abs(running_max - gt_max) < 1e-4f) &&
+                         (abs(running_sum - static_cast<float>(gt_sum)) / static_cast<float>(gt_sum) < 1e-4f);
+
+        reportStatus("Problem 1: FlashAttention Online Softmax Rescaling", p1_passed, throughput);
         if (p1_passed) passed++;
         total++;
     }
 
     // -------------------------------------------------------------------------
-    // PROBLEM 2: In-Place Top-K QuickSelect Partitioning (LLM Sampler)
+    // PROBLEM 2: Hierarchical Parallel Welford Merge (Chan's Formula)
+    //
+    // Context: In distributed or multi-warp LayerNorm / RMSNorm, independent blocks
+    //          compute local (count, mean, M2) accumulators. Instead of sequential
+    //          passes or naive variance sums that suffer catastrophic cancellation,
+    //          blocks merge their accumulators pairwise using Chan's exact formula.
+    //
+    // Given:
+    //   - Array `activations` of N = 1024 floats partitioned into NUM_BLOCKS = 4 blocks (size 256).
+    //   - Structure: `struct WelfordAcc { int count; float mean; float M2; };`
+    //   - Pre-computed `vector<WelfordAcc> block_accs(4)` containing each block's local statistics.
+    //
+    // Goal:
+    //   - Merge the 4 block accumulators into a single global `WelfordAcc` using Chan's formula.
+    //   - Derive `global_mean`, `global_variance = M2 / count`, and `global_std = sqrt(global_variance)`.
+    //   - Match double-precision ground truth.
+    //
+    // Reference:
+    //   - See Section 4 (Technique: Parallel Welford Merge - Chan's Formula) of theory.md.
+    // -------------------------------------------------------------------------
+    {
+        const int N = 1024;
+        const int BLOCK_SIZE = 256;
+        const int NUM_BLOCKS = N / BLOCK_SIZE;
+
+        vector<float> activations(N);
+        double gt_sum = 0.0;
+        for (int i = 0; i < N; ++i) {
+            activations[i] = 10000.0f + static_cast<float>((i % 7) - 3) * 0.125f;
+            gt_sum += activations[i];
+        }
+
+        double gt_mean = gt_sum / N;
+        double gt_var = 0.0;
+        for (int i = 0; i < N; ++i) {
+            double diff = activations[i] - gt_mean;
+            gt_var += diff * diff;
+        }
+        gt_var /= N;
+        double gt_std = sqrt(gt_var);
+
+        struct WelfordAcc {
+            int count = 0;
+            float mean = 0.0f;
+            float M2 = 0.0f;
+        };
+
+        // Each block pre-computes its local Welford statistics
+        vector<WelfordAcc> block_accs(NUM_BLOCKS);
+        for (int b = 0; b < NUM_BLOCKS; ++b) {
+            int count = 0;
+            float mean = 0.0f;
+            float M2 = 0.0f;
+            for (int i = 0; i < BLOCK_SIZE; ++i) {
+                float x = activations[b * BLOCK_SIZE + i];
+                count++;
+                float delta1 = x - mean;
+                mean += delta1 / count;
+                float delta2 = x - mean;
+                M2 += delta1 * delta2;
+            }
+            block_accs[b] = {count, mean, M2};
+        }
+
+        float global_mean = 0.0f;
+        float global_variance = 0.0f;
+        float global_std = 0.0f;
+
+        auto start = chrono::high_resolution_clock::now();
+
+        // TODO: Merge the 4 block_accs into a single global accumulator using Chan's merge formula.
+        // --- YOUR CODE STARTS HERE ---
+
+        // --- YOUR CODE ENDS HERE ---
+
+        auto end = chrono::high_resolution_clock::now();
+        double elapsed_sec = chrono::duration<double>(end - start).count();
+        double bytes_moved = NUM_BLOCKS * sizeof(WelfordAcc);
+        double throughput = (bytes_moved / elapsed_sec) / 1e9;
+
+        bool p2_passed = (abs(global_mean - static_cast<float>(gt_mean)) < 1e-2f) &&
+                         (abs(global_variance - static_cast<float>(gt_var)) < 1e-4f) &&
+                         (abs(global_std - static_cast<float>(gt_std)) < 1e-4f);
+
+        reportStatus("Problem 2: Hierarchical Parallel Welford Merge", p2_passed, throughput);
+        if (p2_passed) passed++;
+        total++;
+    }
+
+    // -------------------------------------------------------------------------
+    // PROBLEM 3: In-Place Top-K QuickSelect Partitioning (LLM Sampler)
     //
     // Context: In Top-K sampling for language models, finding the K largest logits
     //          does NOT require a full O(N log N) sort. QuickSelect partitions
@@ -122,12 +225,12 @@ int main() {
     {
         const int N = 512;
         const int K = 16;
-        std::vector<float> logits(N);
+        vector<float> logits(N);
         for (int i = 0; i < N; ++i) {
             logits[i] = static_cast<float>((i * 37) % 1000) * 0.1f;
         }
-        std::vector<float> sorted_reference = logits;
-        std::sort(sorted_reference.rbegin(), sorted_reference.rend());
+        vector<float> sorted_reference = logits;
+        sort(sorted_reference.rbegin(), sorted_reference.rend());
         float kth_largest_val = sorted_reference[K - 1];
 
         // TODO: Partition logits in-place so that all elements in [0..K-1] are >= kth_largest_val.
@@ -135,27 +238,27 @@ int main() {
 
         // --- YOUR CODE ENDS HERE ---
 
-        bool p2_passed = true;
+        bool p3_passed = true;
         for (int i = 0; i < K; ++i) {
             if (logits[i] < kth_largest_val) {
-                p2_passed = false;
+                p3_passed = false;
                 break;
             }
         }
         for (int i = K; i < N; ++i) {
             if (logits[i] > kth_largest_val) {
-                p2_passed = false;
+                p3_passed = false;
                 break;
             }
         }
 
-        reportStatus("Problem 2: In-Place Top-K QuickSelect Partitioning", p2_passed);
-        if (p2_passed) passed++;
+        reportStatus("Problem 3: In-Place Top-K QuickSelect Partitioning", p3_passed);
+        if (p3_passed) passed++;
         total++;
     }
 
     // -------------------------------------------------------------------------
-    // PROBLEM 3: Distributed Ring-AllReduce In-Place Memory Shift Simulator
+    // PROBLEM 4: Distributed Ring-AllReduce In-Place Memory Shift Simulator
     //
     // Context: In distributed deep learning (NCCL / Megatron-LM), Ring-AllReduce
     //          splits data into P chunks across P GPUs arranged in a ring.
@@ -180,7 +283,7 @@ int main() {
         const size_t total_elements = RANKS * CHUNKS * CHUNK_SIZE;
 
         // Each GPU r has chunks initialized with (r + 1)
-        std::vector<float> gpu_buffers(total_elements);
+        vector<float> gpu_buffers(total_elements);
         for (int r = 0; r < RANKS; ++r) {
             for (int c = 0; c < CHUNKS; ++c) {
                 for (int i = 0; i < CHUNK_SIZE; ++i) {
@@ -197,33 +300,33 @@ int main() {
 
         // --- YOUR CODE ENDS HERE ---
 
-        bool p3_passed = true;
-        for (int r = 0; r < RANKS && p3_passed; ++r) {
+        bool p4_passed = true;
+        for (int r = 0; r < RANKS && p4_passed; ++r) {
             int reduced_chunk = (r + 1) % CHUNKS;
             for (int i = 0; i < CHUNK_SIZE; ++i) {
                 float val = gpu_buffers[(r * CHUNKS + reduced_chunk) * CHUNK_SIZE + i];
-                if (std::abs(val - expected_sum) > 1e-3f) {
-                    p3_passed = false;
+                if (abs(val - expected_sum) > 1e-3f) {
+                    p4_passed = false;
                     break;
                 }
             }
         }
 
-        reportStatus("Problem 3: Distributed Ring-AllReduce Memory Shift Simulation", p3_passed);
-        if (p3_passed) passed++;
+        reportStatus("Problem 4: Distributed Ring-AllReduce Memory Shift Simulation", p4_passed);
+        if (p4_passed) passed++;
         total++;
     }
 
-    std::cout << "\n=================================================================" << std::endl;
-    std::cout << "--- SCORECARD ---" << std::endl;
-    std::cout << "=================================================================" << std::endl;
-    std::cout << "  Passed: " << passed << " / " << total << " tests." << std::endl;
+    cout << "\n=================================================================" << endl;
+    cout << "--- SCORECARD ---" << endl;
+    cout << "=================================================================" << endl;
+    cout << "  Passed: " << passed << " / " << total << " tests." << endl;
     if (passed == total) {
-        std::cout << "\033[1;32m  [STATUS] ALL " << total << " TESTS PASSED! \033[0m" << std::endl;
+        cout << "\033[1;32m  [STATUS] ALL " << total << " TESTS PASSED! \033[0m" << endl;
     } else {
-        std::cout << "\033[1;31m  [STATUS] INCOMPLETE (" << (total - passed) << " tests failed) \033[0m" << std::endl;
+        cout << "\033[1;31m  [STATUS] INCOMPLETE (" << (total - passed) << " tests failed) \033[0m" << endl;
     }
-    std::cout << "=================================================================" << std::endl;
+    cout << "=================================================================" << endl;
 
     return (passed == total) ? 0 : 1;
 }

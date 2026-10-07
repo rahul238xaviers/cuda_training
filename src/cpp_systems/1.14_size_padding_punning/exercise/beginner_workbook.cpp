@@ -26,19 +26,19 @@ using namespace std;
 //   ../../../output/1.14_beginner
 // =========================================================================
 
-void reportStatus(const std::string& name, bool passed) {
-    std::cout << "  " << std::left << std::setw(60) << name;
+void reportStatus(const string& name, bool passed) {
+    cout << "  " << left << setw(60) << name;
     if (passed) {
-        std::cout << "\033[1;32m[PASSED]\033[0m" << std::endl;
+        cout << "\033[1;32m[PASSED]\033[0m" << endl;
     } else {
-        std::cout << "\033[1;31m[FAILED]\033[0m" << std::endl;
+        cout << "\033[1;31m[FAILED]\033[0m" << endl;
     }
 }
 
 int main() {
-    std::cout << "=================================================================" << std::endl;
-    std::cout << "--- WORKBOOK: Size, Padding & Type Punning (Beginner Level) ---" << std::endl;
-    std::cout << "=================================================================" << std::endl;
+    cout << "=================================================================" << endl;
+    cout << "--- WORKBOOK: Size, Padding & Type Punning (Beginner Level) ---" << endl;
+    cout << "=================================================================" << endl;
 
     int passed = 0;
     int total = 0;
@@ -51,7 +51,7 @@ int main() {
     //          and mantissa bitfields without invoking undefined behavior.
     //
     // Task: Implement `extractFP32(float val, uint32_t& sign, int32_t& biased_exp, uint32_t& mantissa)`:
-    //       - Use `std::bit_cast<uint32_t>(val)` to inspect the 32 bits safely.
+    //       - Use `bit_cast<uint32_t>(val)` to inspect the 32 bits safely.
     //       - sign: bit 31 (0 or 1).
     //       - biased_exp: bits 23..30 (0 to 255).
     //       - mantissa: bits 0..22 (23-bit fractional payload).
@@ -61,7 +61,7 @@ int main() {
     {
         auto extractFP32 = [](float val, uint32_t& sign, uint32_t& biased_exp, uint32_t& mantissa) {
             // --- YOUR CODE STARTS HERE ---
-            uint32_t bits = std::bit_cast<uint32_t>(val);
+            uint32_t bits = bit_cast<uint32_t>(val);
             sign = (bits >> 31) & 0x1;
             biased_exp = (bits >> 23) & 0xFF;
             mantissa = bits & 0x7FFFFF;
@@ -73,12 +73,12 @@ int main() {
             uint32_t bits = ((sign & 0x1) << 31) |
                             ((biased_exp & 0xFF) << 23) |
                             (mantissa & 0x7FFFFF);
-            return std::bit_cast<float>(bits);
+            return bit_cast<float>(bits);
             // --- YOUR CODE ENDS HERE ---
         };
 
         bool ok = true;
-        std::vector<float> test_values = {1.0f, -1.0f, 2.5f, -0.15625f, 1024.0f, 0.00390625f};
+        vector<float> test_values = {1.0f, -1.0f, 2.5f, -0.15625f, 1024.0f, 0.00390625f};
 
         for (float val : test_values) {
             uint32_t s = 0, exp = 0, mant = 0;
@@ -137,13 +137,13 @@ int main() {
             // --- YOUR CODE STARTS HERE ---
             size_t written = 0;
             for (size_t i = 0; i < n; ++i) {
-                std::memcpy(out + written, &in[i].flag, sizeof(uint8_t));
+                memcpy(out + written, &in[i].flag, sizeof(uint8_t));
                 written += sizeof(uint8_t);
-                std::memcpy(out + written, &in[i].lr, sizeof(double));
+                memcpy(out + written, &in[i].lr, sizeof(double));
                 written += sizeof(double);
-                std::memcpy(out + written, &in[i].id, sizeof(uint16_t));
+                memcpy(out + written, &in[i].id, sizeof(uint16_t));
                 written += sizeof(uint16_t);
-                std::memcpy(out + written, &in[i].weight, sizeof(float));
+                memcpy(out + written, &in[i].weight, sizeof(float));
                 written += sizeof(float);
             }
             return written;
@@ -158,13 +158,13 @@ int main() {
         if (unopt_size != 24 || opt_size != 16 || raw_payload_size != 15) ok = false;
 
         const size_t N = 100;
-        std::vector<UnoptimizedBatch> batch(N);
+        vector<UnoptimizedBatch> batch(N);
         for (size_t i = 0; i < N; ++i) {
             batch[i] = {static_cast<uint8_t>(i % 255), 0.001 * (i + 1),
                         static_cast<uint16_t>(i), static_cast<float>(i * 1.25f)};
         }
 
-        std::vector<uint8_t> packed_stream(N * raw_payload_size);
+        vector<uint8_t> packed_stream(N * raw_payload_size);
         size_t bytes_written = serializePacked(batch.data(), N, packed_stream.data());
 
         if (bytes_written != N * 15) ok = false;
@@ -173,10 +173,10 @@ int main() {
         for (size_t i = 0; i < N; ++i) {
             const uint8_t* record = packed_stream.data() + i * 15;
             uint8_t f; double lr; uint16_t id; float w;
-            std::memcpy(&f, record, 1);
-            std::memcpy(&lr, record + 1, 8);
-            std::memcpy(&id, record + 9, 2);
-            std::memcpy(&w, record + 11, 4);
+            memcpy(&f, record, 1);
+            memcpy(&lr, record + 1, 8);
+            memcpy(&id, record + 9, 2);
+            memcpy(&w, record + 11, 4);
 
             if (f != batch[i].flag || lr != batch[i].lr || id != batch[i].id || w != batch[i].weight) {
                 ok = false;
@@ -205,7 +205,7 @@ int main() {
     {
         auto float32_to_bfloat16 = [](float val) -> uint16_t {
             // --- YOUR CODE STARTS HERE ---
-            uint32_t bits = std::bit_cast<uint32_t>(val);
+            uint32_t bits = bit_cast<uint32_t>(val);
             // Nearest rounding with tie breaking
             uint32_t lsb = (bits >> 16) & 1;
             uint32_t rounding_bias = 0x7FFF + lsb;
@@ -217,12 +217,12 @@ int main() {
         auto bfloat16_to_float32 = [](uint16_t bf) -> float {
             // --- YOUR CODE STARTS HERE ---
             uint32_t bits = static_cast<uint32_t>(bf) << 16;
-            return std::bit_cast<float>(bits);
+            return bit_cast<float>(bits);
             // --- YOUR CODE ENDS HERE ---
         };
 
         bool ok = true;
-        std::vector<float> values = {0.0f, 1.0f, -1.0f, 4.0f, 65536.0f, 0.125f};
+        vector<float> values = {0.0f, 1.0f, -1.0f, 4.0f, 65536.0f, 0.125f};
 
         for (float val : values) {
             uint16_t bf = float32_to_bfloat16(val);
@@ -238,23 +238,23 @@ int main() {
         uint16_t bf_approx = float32_to_bfloat16(approx);
         float restored_approx = bfloat16_to_float32(bf_approx);
         // Relative error must be within 1% (BF16 has ~2-3 decimal digits of precision)
-        if (std::abs(restored_approx - approx) / approx > 0.01f) ok = false;
+        if (abs(restored_approx - approx) / approx > 0.01f) ok = false;
 
         reportStatus("Problem 3: FP32 <-> BF16 Bitcast Conversion", ok);
         if (ok) passed++;
         total++;
     }
 
-    std::cout << "\n=================================================================" << std::endl;
-    std::cout << "--- SCORECARD ---" << std::endl;
-    std::cout << "=================================================================" << std::endl;
-    std::cout << "  Passed: " << passed << " / " << total << " tests." << std::endl;
+    cout << "\n=================================================================" << endl;
+    cout << "--- SCORECARD ---" << endl;
+    cout << "=================================================================" << endl;
+    cout << "  Passed: " << passed << " / " << total << " tests." << endl;
     if (passed == total) {
-        std::cout << "\033[1;32m  [STATUS] ALL " << total << " TESTS PASSED! \033[0m" << std::endl;
+        cout << "\033[1;32m  [STATUS] ALL " << total << " TESTS PASSED! \033[0m" << endl;
     } else {
-        std::cout << "\033[1;31m  [STATUS] INCOMPLETE (" << (total - passed) << " tests failed) \033[0m" << std::endl;
+        cout << "\033[1;31m  [STATUS] INCOMPLETE (" << (total - passed) << " tests failed) \033[0m" << endl;
     }
-    std::cout << "=================================================================" << std::endl;
+    cout << "=================================================================" << endl;
 
     return (passed == total) ? 0 : 1;
 }

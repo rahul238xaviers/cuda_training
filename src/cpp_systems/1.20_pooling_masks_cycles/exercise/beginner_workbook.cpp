@@ -23,19 +23,19 @@ using namespace std;
 //   ../../../output/1.20_beginner
 // =========================================================================
 
-void reportStatus(const std::string& name, bool passed) {
-    std::cout << "  " << std::left << std::setw(60) << name;
+void reportStatus(const string& name, bool passed) {
+    cout << "  " << left << setw(60) << name;
     if (passed) {
-        std::cout << "\033[1;32m[PASSED]\033[0m" << std::endl;
+        cout << "\033[1;32m[PASSED]\033[0m" << endl;
     } else {
-        std::cout << "\033[1;31m[FAILED]\033[0m" << std::endl;
+        cout << "\033[1;31m[FAILED]\033[0m" << endl;
     }
 }
 
 int main() {
-    std::cout << "=================================================================" << std::endl;
-    std::cout << "--- WORKBOOK: Pooling, Masks & Cycles (Beginner Level) ---" << std::endl;
-    std::cout << "=================================================================" << std::endl;
+    cout << "=================================================================" << endl;
+    cout << "--- WORKBOOK: Pooling, Masks & Cycles (Beginner Level) ---" << endl;
+    cout << "=================================================================" << endl;
 
     int passed = 0;
     int total = 0;
@@ -57,10 +57,10 @@ int main() {
         const int OUT_H = H / STRIDE; // 4
         const int OUT_W = W / STRIDE; // 4
 
-        std::vector<float> in_img(H * W);
+        vector<float> in_img(H * W);
         for (int i = 0; i < H * W; ++i) in_img[i] = static_cast<float>((i * 13) % 47);
 
-        std::vector<float> out_img(OUT_H * OUT_W, -999.0f);
+        vector<float> out_img(OUT_H * OUT_W, -999.0f);
 
         // TODO: For each (oh, ow), compute the max value over the 2x2 receptive window.
         // --- YOUR CODE STARTS HERE ---
@@ -73,7 +73,7 @@ int main() {
                 float expected_max = -1e30f;
                 for (int kh = 0; kh < POOL; ++kh) {
                     for (int kw = 0; kw < POOL; ++kw) {
-                        expected_max = std::max(expected_max, in_img[(oh * STRIDE + kh) * W + (ow * STRIDE + kw)]);
+                        expected_max = max(expected_max, in_img[(oh * STRIDE + kh) * W + (ow * STRIDE + kw)]);
                     }
                 }
                 if (out_img[oh * OUT_W + ow] != expected_max) {
@@ -104,10 +104,10 @@ int main() {
         const int OUT_W = W / STRIDE; // 2
 
         const size_t in_size = C * H * W;
-        std::vector<float> X(in_size);
+        vector<float> X(in_size);
         for (size_t i = 0; i < in_size; ++i) X[i] = static_cast<float>(i + 1);
 
-        std::vector<float> Y(C * OUT_H * OUT_W, 0.0f);
+        vector<float> Y(C * OUT_H * OUT_W, 0.0f);
 
         // TODO: Compute average pooling for each channel c and output pixel (oh, ow).
         // --- YOUR CODE STARTS HERE ---
@@ -125,7 +125,7 @@ int main() {
                         }
                     }
                     float expected = sum / (POOL * POOL);
-                    if (std::abs(Y[(c * OUT_H + oh) * OUT_W + ow] - expected) > 1e-4f) {
+                    if (abs(Y[(c * OUT_H + oh) * OUT_W + ow] - expected) > 1e-4f) {
                         p2_passed = false;
                         break;
                     }
@@ -152,13 +152,13 @@ int main() {
     {
         const int BATCH = 2, SEQ_LEN = 8;
         // Batch 0 has 5 valid tokens (tokens 0..4), batch 1 has 6 valid tokens (0..5)
-        std::vector<uint8_t> token_mask = {
+        vector<uint8_t> token_mask = {
             1, 1, 1, 1, 1, 0, 0, 0,
             1, 1, 1, 1, 1, 1, 0, 0
         };
 
         const size_t total_scores = BATCH * SEQ_LEN * SEQ_LEN;
-        std::vector<float> scores(total_scores, 1.0f);
+        vector<float> scores(total_scores, 1.0f);
 
         // TODO: Apply padding mask in-place to scores tensor.
         // --- YOUR CODE STARTS HERE ---
@@ -184,16 +184,16 @@ int main() {
         total++;
     }
 
-    std::cout << "\n=================================================================" << std::endl;
-    std::cout << "--- SCORECARD ---" << std::endl;
-    std::cout << "=================================================================" << std::endl;
-    std::cout << "  Passed: " << passed << " / " << total << " tests." << std::endl;
+    cout << "\n=================================================================" << endl;
+    cout << "--- SCORECARD ---" << endl;
+    cout << "=================================================================" << endl;
+    cout << "  Passed: " << passed << " / " << total << " tests." << endl;
     if (passed == total) {
-        std::cout << "\033[1;32m  [STATUS] ALL " << total << " TESTS PASSED! \033[0m" << std::endl;
+        cout << "\033[1;32m  [STATUS] ALL " << total << " TESTS PASSED! \033[0m" << endl;
     } else {
-        std::cout << "\033[1;31m  [STATUS] INCOMPLETE (" << (total - passed) << " tests failed) \033[0m" << std::endl;
+        cout << "\033[1;31m  [STATUS] INCOMPLETE (" << (total - passed) << " tests failed) \033[0m" << endl;
     }
-    std::cout << "=================================================================" << std::endl;
+    cout << "=================================================================" << endl;
 
     return (passed == total) ? 0 : 1;
 }

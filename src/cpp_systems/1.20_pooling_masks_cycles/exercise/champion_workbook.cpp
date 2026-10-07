@@ -24,23 +24,23 @@ using namespace std;
 //   ../../../output/1.20_champion
 // =========================================================================
 
-void reportStatus(const std::string& name, bool passed, double throughputGBs = -1.0) {
-    std::cout << "  " << std::left << std::setw(60) << name;
+void reportStatus(const string& name, bool passed, double throughputGBs = -1.0) {
+    cout << "  " << left << setw(60) << name;
     if (passed) {
-        std::cout << "\033[1;32m[PASSED]\033[0m";
+        cout << "\033[1;32m[PASSED]\033[0m";
         if (throughputGBs > 0.0) {
-            std::cout << " (" << std::fixed << std::setprecision(2) << throughputGBs << " GB/s)";
+            cout << " (" << fixed << setprecision(2) << throughputGBs << " GB/s)";
         }
-        std::cout << std::endl;
+        cout << endl;
     } else {
-        std::cout << "\033[1;31m[FAILED]\033[0m" << std::endl;
+        cout << "\033[1;31m[FAILED]\033[0m" << endl;
     }
 }
 
 int main() {
-    std::cout << "=================================================================" << std::endl;
-    std::cout << "--- WORKBOOK: Pooling, Masks & Cycles (Champion Masterclass) ---" << std::endl;
-    std::cout << "=================================================================" << std::endl;
+    cout << "=================================================================" << endl;
+    cout << "--- WORKBOOK: Pooling, Masks & Cycles (Champion Masterclass) ---" << endl;
+    cout << "=================================================================" << endl;
 
     int passed = 0;
     int total = 0;
@@ -62,7 +62,7 @@ int main() {
     {
         const int NUM_BLOCKS = 16;
         // Chain: 0 -> 3 -> 7 -> 11 -> 4 -> 9 -> 11 (Loop starts at 11: 11 -> 4 -> 9 -> 11)
-        std::vector<int> next_block = {
+        vector<int> next_block = {
             3,  -1, -1, 7,  9,  -1, -1, 11,
             -1, 11, -1, 4,  -1, -1, -1, -1
         };
@@ -105,22 +105,22 @@ int main() {
     // -------------------------------------------------------------------------
     {
         const int N = 1048576; // 4 MB
-        std::vector<float> data(N);
+        vector<float> data(N);
         for (int i = 0; i < N; ++i) data[i] = 1.0f;
 
         float sum_coalesced = 0.0f;
-        auto start_c = std::chrono::high_resolution_clock::now();
+        auto start_c = chrono::high_resolution_clock::now();
 
         // Pass 1: Sequential Coalesced
         for (int i = 0; i < N; ++i) sum_coalesced += data[i];
 
-        auto end_c = std::chrono::high_resolution_clock::now();
-        double elapsed_c = std::chrono::duration<double>(end_c - start_c).count();
+        auto end_c = chrono::high_resolution_clock::now();
+        double elapsed_c = chrono::duration<double>(end_c - start_c).count();
         double throughput_c = (N * sizeof(float) / elapsed_c) / 1e9;
 
         float sum_strided = 0.0f;
         const int STRIDE = 16;
-        auto start_s = std::chrono::high_resolution_clock::now();
+        auto start_s = chrono::high_resolution_clock::now();
 
         // TODO: Pass 2: Strided Traversal.
         // For s = 0 to STRIDE - 1:
@@ -130,12 +130,12 @@ int main() {
 
         // --- YOUR CODE ENDS HERE ---
 
-        auto end_s = std::chrono::high_resolution_clock::now();
-        double elapsed_s = std::chrono::duration<double>(end_s - start_s).count();
+        auto end_s = chrono::high_resolution_clock::now();
+        double elapsed_s = chrono::duration<double>(end_s - start_s).count();
         double throughput_s = (N * sizeof(float) / elapsed_s) / 1e9;
 
-        bool p2_passed = (std::abs(sum_coalesced - static_cast<float>(N)) < 1e-3f) &&
-                         (std::abs(sum_strided - static_cast<float>(N)) < 1e-3f);
+        bool p2_passed = (abs(sum_coalesced - static_cast<float>(N)) < 1e-3f) &&
+                         (abs(sum_strided - static_cast<float>(N)) < 1e-3f);
 
         reportStatus("Problem 2: Memory Bandwidth Degradation (Coalesced vs Strided)", p2_passed, throughput_c);
         if (p2_passed) passed++;
@@ -158,10 +158,10 @@ int main() {
         const int H_IN = 10, W_IN = 10;
         const int H_OUT = 4, W_OUT = 4;
 
-        std::vector<float> in_feat(H_IN * W_IN);
+        vector<float> in_feat(H_IN * W_IN);
         for (int i = 0; i < H_IN * W_IN; ++i) in_feat[i] = static_cast<float>(i + 1);
 
-        std::vector<float> out_feat(H_OUT * W_OUT, 0.0f);
+        vector<float> out_feat(H_OUT * W_OUT, 0.0f);
 
         // TODO: Compute Adaptive Average Pooling from [10, 10] to [4, 4].
         // --- YOUR CODE STARTS HERE ---
@@ -184,7 +184,7 @@ int main() {
                     }
                 }
                 float expected = sum / count;
-                if (std::abs(out_feat[oh * W_OUT + ow] - expected) > 1e-4f) {
+                if (abs(out_feat[oh * W_OUT + ow] - expected) > 1e-4f) {
                     p3_passed = false;
                     break;
                 }
@@ -196,16 +196,16 @@ int main() {
         total++;
     }
 
-    std::cout << "\n=================================================================" << std::endl;
-    std::cout << "--- SCORECARD ---" << std::endl;
-    std::cout << "=================================================================" << std::endl;
-    std::cout << "  Passed: " << passed << " / " << total << " tests." << std::endl;
+    cout << "\n=================================================================" << endl;
+    cout << "--- SCORECARD ---" << endl;
+    cout << "=================================================================" << endl;
+    cout << "  Passed: " << passed << " / " << total << " tests." << endl;
     if (passed == total) {
-        std::cout << "\033[1;32m  [STATUS] ALL " << total << " TESTS PASSED! \033[0m" << std::endl;
+        cout << "\033[1;32m  [STATUS] ALL " << total << " TESTS PASSED! \033[0m" << endl;
     } else {
-        std::cout << "\033[1;31m  [STATUS] INCOMPLETE (" << (total - passed) << " tests failed) \033[0m" << std::endl;
+        cout << "\033[1;31m  [STATUS] INCOMPLETE (" << (total - passed) << " tests failed) \033[0m" << endl;
     }
-    std::cout << "=================================================================" << std::endl;
+    cout << "=================================================================" << endl;
 
     return (passed == total) ? 0 : 1;
 }

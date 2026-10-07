@@ -25,12 +25,12 @@ using namespace std;
 //   ../../../output/1.13_champion
 // =========================================================================
 
-void reportStatus(const std::string& name, bool passed) {
-    std::cout << "  " << std::left << std::setw(60) << name;
+void reportStatus(const string& name, bool passed) {
+    cout << "  " << left << setw(60) << name;
     if (passed) {
-        std::cout << "\033[1;32m[PASSED]\033[0m" << std::endl;
+        cout << "\033[1;32m[PASSED]\033[0m" << endl;
     } else {
-        std::cout << "\033[1;31m[FAILED]\033[0m" << std::endl;
+        cout << "\033[1;31m[FAILED]\033[0m" << endl;
     }
 }
 
@@ -45,7 +45,7 @@ enum CorruptionStatus {
 class CanaryAllocator {
     static constexpr uint64_t MAGIC_HEAD = 0xDEADBEEFCAFEBABEULL;
     static constexpr uint64_t MAGIC_TAIL = 0xBADC0FFEE0DDF00DULL;
-    std::unordered_map<void*, size_t> active_allocs;
+    unordered_map<void*, size_t> active_allocs;
 
 public:
     // --- YOUR CODE STARTS HERE ---
@@ -98,9 +98,9 @@ public:
 };
 
 int main() {
-    std::cout << "=================================================================" << std::endl;
-    std::cout << "--- WORKBOOK: Null, Bounds & Alignment Checks (Champion) ---" << std::endl;
-    std::cout << "=================================================================" << std::endl;
+    cout << "=================================================================" << endl;
+    cout << "--- WORKBOOK: Null, Bounds & Alignment Checks (Champion) ---" << endl;
+    cout << "=================================================================" << endl;
 
     int passed = 0;
     int total = 0;
@@ -115,19 +115,19 @@ int main() {
     //
     // Task: Implement `generateVectorPredicates(size_t N, size_t V)`:
     //       - Computes number of tiles: num_tiles = (N + V - 1) / V.
-    //       - Returns `std::vector<uint8_t>` where each byte represents the
+    //       - Returns `vector<uint8_t>` where each byte represents the
     //         predicate bitmask for that tile:
     //         Bit `i` (0 <= i < V) is 1 if (tile * V + i < N), else 0.
     //       - Implement `maskedVectorSum(const float* data, size_t N, size_t V,
-    //                                   const std::vector<uint8_t>& masks)`:
+    //                                   const vector<uint8_t>& masks)`:
     //         Simulates vectorized addition: for each tile and each element i in [0, V),
     //         accumulates data[tile * V + i] ONLY if bit i is set in the tile's mask.
     // -------------------------------------------------------------------------
     {
-        auto generateVectorPredicates = [](size_t N, size_t V) -> std::vector<uint8_t> {
+        auto generateVectorPredicates = [](size_t N, size_t V) -> vector<uint8_t> {
             // --- YOUR CODE STARTS HERE ---
             size_t num_tiles = (N + V - 1) / V;
-            std::vector<uint8_t> masks(num_tiles, 0);
+            vector<uint8_t> masks(num_tiles, 0);
             for (size_t t = 0; t < num_tiles; ++t) {
                 uint8_t mask = 0;
                 for (size_t i = 0; i < V; ++i) {
@@ -143,7 +143,7 @@ int main() {
         };
 
         auto maskedVectorSum = [](const float* data, size_t N, size_t V,
-                                  const std::vector<uint8_t>& masks) -> float {
+                                  const vector<uint8_t>& masks) -> float {
             // --- YOUR CODE STARTS HERE ---
             float total = 0.0f;
             size_t num_tiles = (N + V - 1) / V;
@@ -161,14 +161,14 @@ int main() {
 
         const size_t N = 37;
         const size_t V = 8;
-        std::vector<float> data(N);
+        vector<float> data(N);
         float expected_sum = 0.0f;
         for (size_t i = 0; i < N; ++i) {
             data[i] = static_cast<float>(i + 1);
             expected_sum += data[i];
         }
 
-        std::vector<uint8_t> masks = generateVectorPredicates(N, V);
+        vector<uint8_t> masks = generateVectorPredicates(N, V);
         bool ok = true;
         // Total tiles: (37 + 7) / 8 = 5 tiles
         if (masks.size() != 5) ok = false;
@@ -180,7 +180,7 @@ int main() {
         if (masks[4] != 0x1F) ok = false;
 
         float computed_sum = maskedVectorSum(data.data(), N, V, masks);
-        if (std::abs(computed_sum - expected_sum) > 1e-4f) ok = false;
+        if (abs(computed_sum - expected_sum) > 1e-4f) ok = false;
 
         reportStatus("Problem 1: SIMD Predicate Bitmask Boundary Generator", ok);
         if (ok) passed++;
@@ -271,7 +271,7 @@ int main() {
             size_t out_align;
         };
 
-        auto validateKernelDispatches = [](const std::vector<DispatchJob>& jobs,
+        auto validateKernelDispatches = [](const vector<DispatchJob>& jobs,
                                            const void* pool_start, size_t pool_size) -> int {
             // --- YOUR CODE STARTS HERE ---
             uintptr_t p_start = reinterpret_cast<uintptr_t>(pool_start);
@@ -317,7 +317,7 @@ int main() {
             // --- YOUR CODE ENDS HERE ---
         };
 
-        std::vector<uint8_t> memory_pool(65536, 0);
+        vector<uint8_t> memory_pool(65536, 0);
         uint8_t* pool_base = memory_pool.data();
         // Ensure pool_base is aligned to 64 bytes
         uintptr_t raw_addr = reinterpret_cast<uintptr_t>(pool_base);
@@ -326,25 +326,25 @@ int main() {
         size_t effective_size = 65536 - pad;
 
         // Valid batch
-        std::vector<DispatchJob> valid_batch = {
+        vector<DispatchJob> valid_batch = {
             {1, aligned_pool, 512, 64, aligned_pool + 512, 512, 64},
             {2, aligned_pool + 1024, 256, 32, aligned_pool + 1536, 256, 32},
             {3, aligned_pool + 2048, 128, 16, aligned_pool + 3072, 128, 16}
         };
 
         // Self-aliasing batch (in and out overlap)
-        std::vector<DispatchJob> self_alias_batch = {
+        vector<DispatchJob> self_alias_batch = {
             {1, aligned_pool, 512, 64, aligned_pool + 256, 512, 64}
         };
 
         // Cross-dispatch output collision batch (dispatches 0 and 1 write to same output)
-        std::vector<DispatchJob> collision_batch = {
+        vector<DispatchJob> collision_batch = {
             {1, aligned_pool, 512, 64, aligned_pool + 1024, 512, 64},
             {2, aligned_pool + 512, 512, 64, aligned_pool + 1280, 512, 64} // overlaps 1024..1536
         };
 
         // Misaligned pointer batch
-        std::vector<DispatchJob> misaligned_batch = {
+        vector<DispatchJob> misaligned_batch = {
             {1, aligned_pool + 3, 512, 64, aligned_pool + 1024, 512, 64}
         };
 
@@ -359,16 +359,16 @@ int main() {
         total++;
     }
 
-    std::cout << "\n=================================================================" << std::endl;
-    std::cout << "--- SCORECARD ---" << std::endl;
-    std::cout << "=================================================================" << std::endl;
-    std::cout << "  Passed: " << passed << " / " << total << " tests." << std::endl;
+    cout << "\n=================================================================" << endl;
+    cout << "--- SCORECARD ---" << endl;
+    cout << "=================================================================" << endl;
+    cout << "  Passed: " << passed << " / " << total << " tests." << endl;
     if (passed == total) {
-        std::cout << "\033[1;32m  [STATUS] ALL " << total << " TESTS PASSED! \033[0m" << std::endl;
+        cout << "\033[1;32m  [STATUS] ALL " << total << " TESTS PASSED! \033[0m" << endl;
     } else {
-        std::cout << "\033[1;31m  [STATUS] INCOMPLETE (" << (total - passed) << " tests failed) \033[0m" << std::endl;
+        cout << "\033[1;31m  [STATUS] INCOMPLETE (" << (total - passed) << " tests failed) \033[0m" << endl;
     }
-    std::cout << "=================================================================" << std::endl;
+    cout << "=================================================================" << endl;
 
     return (passed == total) ? 0 : 1;
 }

@@ -23,19 +23,19 @@ using namespace std;
 //   ../../../output/1.5_intermediate
 // =========================================================================
 
-void reportStatus(const std::string& name, bool passed) {
-    std::cout << "  " << std::left << std::setw(60) << name;
+void reportStatus(const string& name, bool passed) {
+    cout << "  " << left << setw(60) << name;
     if (passed) {
-        std::cout << "\033[1;32m[PASSED]\033[0m" << std::endl;
+        cout << "\033[1;32m[PASSED]\033[0m" << endl;
     } else {
-        std::cout << "\033[1;31m[FAILED]\033[0m" << std::endl;
+        cout << "\033[1;31m[FAILED]\033[0m" << endl;
     }
 }
 
 int main() {
-    std::cout << "=================================================================" << std::endl;
-    std::cout << "--- WORKBOOK: Row/Col-Major Indexing (Intermediate Level) ---" << std::endl;
-    std::cout << "=================================================================" << std::endl;
+    cout << "=================================================================" << endl;
+    cout << "--- WORKBOOK: Row/Col-Major Indexing (Intermediate Level) ---" << endl;
+    cout << "=================================================================" << endl;
 
     int passed = 0;
     int total = 0;
@@ -54,14 +54,14 @@ int main() {
     // -------------------------------------------------------------------------
     {
         const int M = 4, N = 8;
-        std::vector<float> A_row(M * N);
+        vector<float> A_row(M * N);
         for (int r = 0; r < M; ++r) {
             for (int c = 0; c < N; ++c) {
                 A_row[r * N + c] = static_cast<float>(r * 10 + c + 1);
             }
         }
 
-        std::vector<float> A_col(M * N, 0.0f);
+        vector<float> A_col(M * N, 0.0f);
 
         // TODO: Marshal A_row into A_col in column-major order.
         // --- YOUR CODE STARTS HERE ---
@@ -98,7 +98,7 @@ int main() {
     // -------------------------------------------------------------------------
     {
         const int D = 4, H = 8, W = 8;
-        std::vector<float> volume(D * H * W);
+        vector<float> volume(D * H * W);
         for (int d = 0; d < D; ++d) {
             for (int h = 0; h < H; ++h) {
                 for (int w = 0; w < W; ++w) {
@@ -110,8 +110,8 @@ int main() {
         const int target_d = 2;
         const int target_h = 3;
 
-        std::vector<float> axial_slice(H * W, -1.0f);
-        std::vector<float> coronal_slice(D * W, -1.0f);
+        vector<float> axial_slice(H * W, -1.0f);
+        vector<float> coronal_slice(D * W, -1.0f);
 
         // TODO: Extract axial_slice at target_d and coronal_slice at target_h.
         // --- YOUR CODE STARTS HERE ---
@@ -150,7 +150,7 @@ int main() {
     // -------------------------------------------------------------------------
     {
         const int ROWS = 8, WIDTH = 10, PITCH_ELEMENTS = 16;
-        std::vector<float> pitched_grid(ROWS * PITCH_ELEMENTS, -1.0f);
+        vector<float> pitched_grid(ROWS * PITCH_ELEMENTS, -1.0f);
 
         // TODO: Populate valid elements in pitched_grid.
         // --- YOUR CODE STARTS HERE ---
@@ -180,16 +180,16 @@ int main() {
         total++;
     }
 
-    std::cout << "\n=================================================================" << std::endl;
-    std::cout << "--- SCORECARD ---" << std::endl;
-    std::cout << "=================================================================" << std::endl;
-    std::cout << "  Passed: " << passed << " / " << total << " tests." << std::endl;
+    cout << "\n=================================================================" << endl;
+    cout << "--- SCORECARD ---" << endl;
+    cout << "=================================================================" << endl;
+    cout << "  Passed: " << passed << " / " << total << " tests." << endl;
     if (passed == total) {
-        std::cout << "\033[1;32m  [STATUS] ALL " << total << " TESTS PASSED! \033[0m" << std::endl;
+        cout << "\033[1;32m  [STATUS] ALL " << total << " TESTS PASSED! \033[0m" << endl;
     } else {
-        std::cout << "\033[1;31m  [STATUS] INCOMPLETE (" << (total - passed) << " tests failed) \033[0m" << std::endl;
+        cout << "\033[1;31m  [STATUS] INCOMPLETE (" << (total - passed) << " tests failed) \033[0m" << endl;
     }
-    std::cout << "=================================================================" << std::endl;
+    cout << "=================================================================" << endl;
 
     return (passed == total) ? 0 : 1;
 }

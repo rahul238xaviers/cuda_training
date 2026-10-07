@@ -24,19 +24,19 @@ using namespace std;
 //   ../../../output/1.16_beginner
 // =========================================================================
 
-void reportStatus(const std::string& name, bool passed) {
-    std::cout << "  " << std::left << std::setw(60) << name;
+void reportStatus(const string& name, bool passed) {
+    cout << "  " << left << setw(60) << name;
     if (passed) {
-        std::cout << "\033[1;32m[PASSED]\033[0m" << std::endl;
+        cout << "\033[1;32m[PASSED]\033[0m" << endl;
     } else {
-        std::cout << "\033[1;31m[FAILED]\033[0m" << std::endl;
+        cout << "\033[1;31m[FAILED]\033[0m" << endl;
     }
 }
 
 int main() {
-    std::cout << "=================================================================" << std::endl;
-    std::cout << "--- WORKBOOK: Pointer Relations & Copying (Beginner Level) ---" << std::endl;
-    std::cout << "=================================================================" << std::endl;
+    cout << "=================================================================" << endl;
+    cout << "--- WORKBOOK: Pointer Relations & Copying (Beginner Level) ---" << endl;
+    cout << "=================================================================" << endl;
 
     int passed = 0;
     int total = 0;
@@ -70,7 +70,7 @@ int main() {
         };
 
         const size_t N = 16;
-        std::vector<float> buf_right(N);
+        vector<float> buf_right(N);
         for (size_t i = 0; i < N; ++i) buf_right[i] = static_cast<float>(i + 1);
 
         // Shift right by 4 positions: elements 0..7 -> 4..11
@@ -83,7 +83,7 @@ int main() {
         }
 
         // Shift left by 4 positions: elements 4..11 -> 0..7
-        std::vector<float> buf_left = buf_right;
+        vector<float> buf_left = buf_right;
         safeMemMoveFloats(buf_left.data(), buf_left.data() + 4, 8);
         for (size_t i = 0; i < 8; ++i) {
             if (buf_left[i] != static_cast<float>(i + 1)) ok = false;
@@ -126,7 +126,7 @@ int main() {
             // --- YOUR CODE ENDS HERE ---
         };
 
-        std::vector<TensorDescriptor> descriptors(32);
+        vector<TensorDescriptor> descriptors(32);
         bool ok = true;
 
         for (int i = 0; i < 32; ++i) {
@@ -164,10 +164,10 @@ int main() {
 
         const size_t NUM_SAMPLES = 100;
         const size_t STRIDE = 4;
-        std::vector<float> input(NUM_SAMPLES * STRIDE);
+        vector<float> input(NUM_SAMPLES * STRIDE);
         for (size_t i = 0; i < input.size(); ++i) input[i] = static_cast<float>(i * 0.5f);
 
-        std::vector<float> output(NUM_SAMPLES, 0.0f);
+        vector<float> output(NUM_SAMPLES, 0.0f);
         stridedGatherCopy(input.data(), output.data(), NUM_SAMPLES, STRIDE);
 
         bool ok = true;
@@ -183,16 +183,16 @@ int main() {
         total++;
     }
 
-    std::cout << "\n=================================================================" << std::endl;
-    std::cout << "--- SCORECARD ---" << std::endl;
-    std::cout << "=================================================================" << std::endl;
-    std::cout << "  Passed: " << passed << " / " << total << " tests." << std::endl;
+    cout << "\n=================================================================" << endl;
+    cout << "--- SCORECARD ---" << endl;
+    cout << "=================================================================" << endl;
+    cout << "  Passed: " << passed << " / " << total << " tests." << endl;
     if (passed == total) {
-        std::cout << "\033[1;32m  [STATUS] ALL " << total << " TESTS PASSED! \033[0m" << std::endl;
+        cout << "\033[1;32m  [STATUS] ALL " << total << " TESTS PASSED! \033[0m" << endl;
     } else {
-        std::cout << "\033[1;31m  [STATUS] INCOMPLETE (" << (total - passed) << " tests failed) \033[0m" << std::endl;
+        cout << "\033[1;31m  [STATUS] INCOMPLETE (" << (total - passed) << " tests failed) \033[0m" << endl;
     }
-    std::cout << "=================================================================" << std::endl;
+    cout << "=================================================================" << endl;
 
     return (passed == total) ? 0 : 1;
 }
