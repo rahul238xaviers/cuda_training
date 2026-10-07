@@ -10,6 +10,8 @@
 #include <atomic>
 #include <functional>
 
+using namespace std;
+
 // =========================================================================
 // CHAMPION WORKBOOK: Lifetimes, Ownership & Resize
 //

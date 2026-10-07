@@ -8,6 +8,8 @@
 #include <algorithm>
 #include <cstdint>
 
+using namespace std;
+
 // =========================================================================
 // CHAMPION WORKBOOK: 3D/4D Permute & Flatten
 //

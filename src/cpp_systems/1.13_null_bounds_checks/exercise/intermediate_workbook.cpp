@@ -8,6 +8,8 @@
 #include <algorithm>
 #include <cstdint>
 
+using namespace std;
+
 // =========================================================================
 // INTERMEDIATE WORKBOOK: Null, Bounds & Alignment Checks
 //

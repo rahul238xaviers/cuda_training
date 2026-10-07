@@ -5,37 +5,47 @@
 using namespace std;
 
 int main() {
-  {
-    const int N = 125;
-    std::vector<float> data(N);
-    float expected_sum = 0.0f;
-    for (int i = 0; i < N; ++i) {
-      data[i] = static_cast<float>(i * 0.1f + 0.5f);
-      expected_sum += data[i];
+    {
+        const int N = 64;
+        const float PIVOT = 2.0f;
+        std::vector<float> logits(N);
+        int expected_above = 0;
+        for (int i = 0; i < N; ++i) {
+            logits[i] = static_cast<float>((i % 11) - 5) * 0.75f;
+            if (logits[i] >= PIVOT) expected_above++;
+        }
+
+        int num_above = 0;
+        float* left = logits.data();
+        float* right = logits.data() + (N - 1);
+
+        while (left < right) {
+            if (*left >= PIVOT) {
+                left++;
+                num_above++;
+            }
+            if (*right < PIVOT) {
+                right--;
+            }
+
+            if (*left < PIVOT && *right >= PIVOT && left < right) {
+                cout << "swap is happening left is " << *left << " and the right is " << *right
+                     << endl;
+                swap(*left, *right);
+                num_above++;
+                left++;
+                right--;
+            }
+        }
+        bool p2_passed = (num_above == expected_above);
+        for (int i = 0; i < num_above && p2_passed; ++i) {
+            if (logits[i] < PIVOT) p2_passed = false;
+        }
+        for (int i = num_above; i < N && p2_passed; ++i) {
+            if (logits[i] >= PIVOT) p2_passed = false;
+        }
+        cout << "The test has passed " << p2_passed << endl;
+
+        return 0;
     }
-
-    // TODO: In-place tree reduction with odd-length boundary folding.
-    // --- YOUR CODE STARTS HERE ---
-
-    int oldStride = N;
-    for (int stride = N >> 1; stride > 0; stride = stride >> 1) {
-      if (stride * 2 != oldStride) {
-        data[0] = data[0] + data[oldStride - 1];
-      }
-      oldStride = stride;
-      for (int i = 0; i < stride; i++) {
-        data[i] = data[i] + data[i + stride];
-      }
-    }
-    cout << "Calculated value of the entire array after tree reduction is "
-         << data[0] << endl;
-    cout << "Expected value of the data is " << expected_sum << endl;
-    // --- YOUR CODE ENDS HERE ---
-
-    // bool p1_passed = (std::abs(data[0] - expected_sum) < 1e-2f);
-    //  std::cout << "Problem 3 Status: " << (p1_passed ? "[PASSED]" :
-    //  "[FAILED]") << std::endl;
-  }
-
-  return 0;
 }

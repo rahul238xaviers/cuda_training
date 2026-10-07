@@ -8,6 +8,8 @@
 #include <numeric>
 #include <vector>
 
+using namespace std;
+
 // =========================================================================
 // CHAMPION WORKBOOK: Strides & Indirection
 //

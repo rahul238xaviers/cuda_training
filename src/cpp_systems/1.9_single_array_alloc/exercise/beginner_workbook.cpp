@@ -8,6 +8,8 @@
 #include <algorithm>
 #include <cstdlib>
 
+using namespace std;
+
 // =========================================================================
 // BEGINNER WORKBOOK: Single & Array Allocations
 //

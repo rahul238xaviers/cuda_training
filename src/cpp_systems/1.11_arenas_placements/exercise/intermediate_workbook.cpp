@@ -9,6 +9,8 @@
 #include <cstdint>
 #include <new>
 
+using namespace std;
+
 // =========================================================================
 // INTERMEDIATE WORKBOOK: Arenas & Placements
 //

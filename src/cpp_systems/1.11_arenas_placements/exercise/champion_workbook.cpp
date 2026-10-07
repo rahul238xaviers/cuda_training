@@ -9,6 +9,8 @@
 #include <cstdint>
 #include <cstdlib>
 
+using namespace std;
+
 // =========================================================================
 // CHAMPION WORKBOOK: Arenas & Placements
 //

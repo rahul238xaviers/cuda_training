@@ -9,6 +9,8 @@
 #include <cstdint>
 #include <bit>
 
+using namespace std;
+
 // =========================================================================
 // CHAMPION WORKBOOK: Size, Padding & Type Punning
 //

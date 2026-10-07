@@ -8,6 +8,8 @@
 #include <cstring>
 #include <cstdint>
 
+using namespace std;
+
 // =========================================================================
 // CHAMPION WORKBOOK: Embeddings, Projections & Multi-Head Attention Layouts
 // 

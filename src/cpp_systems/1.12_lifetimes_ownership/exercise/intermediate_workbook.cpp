@@ -8,6 +8,8 @@
 #include <algorithm>
 #include <memory>
 
+using namespace std;
+
 // =========================================================================
 // INTERMEDIATE WORKBOOK: Lifetimes, Ownership & Resize
 //

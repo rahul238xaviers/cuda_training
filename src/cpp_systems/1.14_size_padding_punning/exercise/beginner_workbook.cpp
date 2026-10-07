@@ -10,6 +10,8 @@
 #include <bit>
 #include <cstddef>
 
+using namespace std;
+
 // =========================================================================
 // BEGINNER WORKBOOK: Size, Padding & Type Punning
 //

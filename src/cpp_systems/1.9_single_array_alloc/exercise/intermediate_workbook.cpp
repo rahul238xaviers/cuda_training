@@ -9,6 +9,8 @@
 #include <cstdlib>
 #include <unordered_map>
 
+using namespace std;
+
 // =========================================================================
 // INTERMEDIATE WORKBOOK: Single & Array Allocations
 //

@@ -7,6 +7,8 @@
 #include <cstring>
 #include <cstdint>
 
+using namespace std;
+
 // =========================================================================
 // INTERMEDIATE WORKBOOK: Basic Offsets & Pointer Arithmetic
 //

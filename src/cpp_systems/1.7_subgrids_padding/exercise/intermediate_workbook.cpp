@@ -7,6 +7,8 @@
 #include <cstring>
 #include <algorithm>
 
+using namespace std;
+
 // =========================================================================
 // INTERMEDIATE WORKBOOK: Subgrids, Padding & Diagonals
 //

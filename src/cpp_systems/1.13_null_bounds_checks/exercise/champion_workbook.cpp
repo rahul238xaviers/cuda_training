@@ -9,6 +9,8 @@
 #include <cstdint>
 #include <unordered_map>
 
+using namespace std;
+
 // =========================================================================
 // CHAMPION WORKBOOK: Null, Bounds & Alignment Checks
 //

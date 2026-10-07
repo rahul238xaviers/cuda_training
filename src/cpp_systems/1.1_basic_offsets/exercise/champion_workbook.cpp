@@ -8,6 +8,8 @@
 #include <cstdint>
 #include <algorithm>
 
+using namespace std;
+
 // =========================================================================
 // CHAMPION WORKBOOK: Basic Offsets & Pointer Arithmetic
 //

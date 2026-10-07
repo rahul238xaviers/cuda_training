@@ -8,6 +8,8 @@
 #include <algorithm>
 #include <new>
 
+using namespace std;
+
 // =========================================================================
 // BEGINNER WORKBOOK: Arenas & Placements
 //

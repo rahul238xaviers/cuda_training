@@ -8,6 +8,8 @@
 #include <algorithm>
 #include <cstdint>
 
+using namespace std;
+
 // =========================================================================
 // CHAMPION WORKBOOK: Subgrids, Padding & Diagonals
 //

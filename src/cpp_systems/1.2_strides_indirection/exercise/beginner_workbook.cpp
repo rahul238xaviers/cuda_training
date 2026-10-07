@@ -7,6 +7,8 @@
 #include <cstring>
 #include <algorithm>
 
+using namespace std;
+
 // =========================================================================
 // BEGINNER WORKBOOK: Strides & Indirection
 //

@@ -7,6 +7,8 @@
 #include <cstring>
 #include <algorithm>
 
+using namespace std;
+
 // =========================================================================
 // INTERMEDIATE WORKBOOK: 3D/4D Permute & Flatten
 //

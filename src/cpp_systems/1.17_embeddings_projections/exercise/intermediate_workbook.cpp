@@ -6,6 +6,8 @@
 #include <numeric>
 #include <cstring>
 
+using namespace std;
+
 // =========================================================================
 // INTERMEDIATE WORKBOOK: Embeddings & Projections
 //
