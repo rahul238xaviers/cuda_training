@@ -6,6 +6,8 @@ services:
     container_name: cuda_systems_lab
     ports:
       - "3000:3000"
+    stdin_open: true
+    tty: true
     volumes:
       # Mount host repository to persist student work, progress, and solutions
       - .:/workspace
@@ -15,6 +17,8 @@ services:
       - PORT=3000
       - HOSTNAME=0.0.0.0
       - NODE_ENV=development
+      - WORKSPACE_ROOT=/workspace
+
     # GPU Passthrough (Optional):
     # To run with NVIDIA GPU passthrough on Linux machines, use:
     #   docker compose -f docker-compose.yml -f docker-compose.gpu.yml up

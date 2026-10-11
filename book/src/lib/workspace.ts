@@ -7,7 +7,12 @@ import { getCanonicalProblems, getUserProblemsWithStatus } from './db';
 import { registerCanonicalExerciseProblems } from './problemParser';
 import { autoSyncWorkbookSolution } from './autoSync';
 
-export const WORKSPACE_ROOT = path.resolve(process.cwd(), '..');
+export const WORKSPACE_ROOT = process.env.WORKSPACE_ROOT
+  ? path.resolve(process.env.WORKSPACE_ROOT)
+  : (fs.existsSync(path.join(process.cwd(), 'src', 'cpp_systems'))
+      ? process.cwd()
+      : path.resolve(process.cwd(), '..'));
+
 export const SRC_DIR = path.join(WORKSPACE_ROOT, 'src');
 export const CPP_SYSTEMS_DIR = path.join(SRC_DIR, 'cpp_systems');
 export const CUDA_SYSTEMS_DIR = path.join(SRC_DIR, 'cuda_systems');

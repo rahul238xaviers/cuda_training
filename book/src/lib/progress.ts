@@ -1,7 +1,12 @@
 import fs from 'fs';
 import path from 'path';
 
-export const WORKSPACE_ROOT = path.resolve(process.cwd(), '..');
+export const WORKSPACE_ROOT = process.env.WORKSPACE_ROOT
+  ? path.resolve(process.env.WORKSPACE_ROOT)
+  : (fs.existsSync(path.join(process.cwd(), 'src', 'cpp_systems'))
+      ? process.cwd()
+      : path.resolve(process.cwd(), '..'));
+
 export const PROGRESS_FILE_PATH = path.join(WORKSPACE_ROOT, 'user_progress.json');
 
 export interface TierProgress {

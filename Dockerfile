@@ -46,6 +46,9 @@ EXPOSE 3000
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 ENV NODE_ENV=development
+ENV WORKSPACE_ROOT="/workspace"
 
 # 8. Start Development Server
 CMD ["npm", "--prefix", "book", "run", "dev"]
+
+

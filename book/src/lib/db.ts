@@ -2,7 +2,12 @@ import Database from 'better-sqlite3';
 import fs from 'fs';
 import path from 'path';
 
-export const WORKSPACE_ROOT = path.resolve(process.cwd(), '..');
+export const WORKSPACE_ROOT = process.env.WORKSPACE_ROOT
+  ? path.resolve(process.env.WORKSPACE_ROOT)
+  : (fs.existsSync(path.join(process.cwd(), 'src', 'cpp_systems'))
+      ? process.cwd()
+      : path.resolve(process.cwd(), '..'));
+
 export const USER_DATA_DIR = path.join(WORKSPACE_ROOT, '.user_data');
 export const DB_PATH = path.join(USER_DATA_DIR, 'cuda_lab.db');
 
