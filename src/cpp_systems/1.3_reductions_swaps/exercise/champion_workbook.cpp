@@ -46,7 +46,116 @@ int main() {
     int total = 0;
 
     // -------------------------------------------------------------------------
-    // PROBLEM 1: FlashAttention Online Softmax Rescaling Primitive
+    // PROBLEM 1: Block-Chunked Two-Pass Vector Reduction Benchmark
+    //
+    // Context: Large-scale reductions on GPUs cannot fit all elements in one block.
+    //          Grid-level reduction uses a two-pass kernel:
+    //            Pass 1: Each block of size B=256 reduces 256 elements into a partial sum.
+    //            Pass 2: A second kernel reduces the array of partial sums.
+    //
+    // Given:
+    //   - Array `data` of size N = 262,144 floats (1 MB).
+    //   - Chunk parameters: BLOCK_SIZE = 256, NUM_BLOCKS = 1024.
+    //   - Output buffers: `partial_sums` (size 1024) and `final_total_sum`.
+    //
+    // Goal:
+    //   - Pass 1: Reduce each 256-element chunk into `partial_sums[block_id]`.
+    //   - Pass 2: Reduce `partial_sums` into `final_total_sum`.
+    //
+    // Reference:
+    //   - See Section 3 (Hierarchy Level 3: Multi-Pass Grid-Strided Reduction) of theory.md.
+    // -------------------------------------------------------------------------
+    {
+        const int N = 262144;
+        const int BLOCK_SIZE = 256;
+        const int NUM_BLOCKS = N / BLOCK_SIZE;  // 1024
+
+        vector<float> data(N);
+        float expected_sum = 0.0f;
+        for (int i = 0; i < N; ++i) {
+            data[i] = 1.0f;
+            expected_sum += data[i];
+        }
+
+        vector<float> partial_sums(NUM_BLOCKS, 0.0f);
+        float final_total_sum = 0.0f;
+
+        auto start = chrono::high_resolution_clock::now();
+
+        // TODO: Compute two-pass reduction producing final_total_sum.
+        // --- YOUR CODE STARTS HERE ---
+
+        // --- YOUR CODE ENDS HERE ---
+
+        auto end = chrono::high_resolution_clock::now();
+        double elapsed_sec = chrono::duration<double>(end - start).count();
+        double bytes_moved = N * sizeof(float);
+        double throughput = (bytes_moved / elapsed_sec) / 1e9;
+
+        bool p1_passed = (abs(final_total_sum - expected_sum) < 1e-2f);
+        reportStatus("Problem 1: Two-Pass Block-Chunked Vector Reduction", p1_passed, throughput);
+        if (p1_passed) passed++;
+        total++;
+    }
+
+    // -------------------------------------------------------------------------
+    // PROBLEM 2: In-Place Top-K QuickSelect Partitioning (LLM Sampler)
+    //
+    // Context: In Top-K sampling for language models, finding the K largest logits
+    //          does NOT require a full O(N log N) sort. QuickSelect partitions
+    //          the top K elements into indices [0..K-1] in O(N) average time.
+    //
+    // Given:
+    //   - Array `logits` of size N = 512 floats.
+    //   - Target top element count: K = 16.
+    //   - Target boundary value: `kth_largest_val`.
+    //
+    // Goal:
+    //   - Partition `logits` in-place so that the 16 largest elements are located
+    //     in `logits[0..15]` (order within the top 16 does not matter).
+    //   - Every element in logits[0..15] must be >= every element in logits[16..511].
+    //   - Zero auxiliary memory allocations allowed.
+    //
+    // Reference:
+    //   - See Section 2B (In-Place Two-Pointer Partitioning) of theory.md.
+    // -------------------------------------------------------------------------
+    {
+        const int N = 512;
+        const int K = 16;
+        vector<float> logits(N);
+        for (int i = 0; i < N; ++i) {
+            logits[i] = static_cast<float>((i * 37) % 1000) * 0.1f;
+        }
+        vector<float> sorted_reference = logits;
+        sort(sorted_reference.rbegin(), sorted_reference.rend());
+        float kth_largest_val = sorted_reference[K - 1];
+
+        // TODO: Partition logits in-place so that all elements in [0..K-1] are >= kth_largest_val.
+        // --- YOUR CODE STARTS HERE ---
+
+        // --- YOUR CODE ENDS HERE ---
+
+        bool p2_passed = true;
+        for (int i = 0; i < K; ++i) {
+            if (logits[i] < kth_largest_val) {
+                p2_passed = false;
+                break;
+            }
+        }
+        for (int i = K; i < N; ++i) {
+            if (logits[i] > kth_largest_val) {
+                p2_passed = false;
+                break;
+            }
+        }
+
+        reportStatus("Problem 2: In-Place Top-K QuickSelect Partitioning", p2_passed);
+        if (p2_passed) passed++;
+        total++;
+    }
+
+    // -------------------------------------------------------------------------
+    // PROBLEM 3: FlashAttention Online Softmax Rescaling Primitive
     //
     // Context: In transformer attention, standard softmax takes 3 passes over memory:
     //          finding max, computing sum of exp(x - max), and normalizing.
@@ -66,7 +175,7 @@ int main() {
     //   - Verify final `running_max` and `running_sum` match ground truth.
     //
     // Reference:
-    //   - See Section 5 (Technique: Online Softmax Rescaling) of theory.md.
+    //   - See Section 4 (Technique: Online Softmax Rescaling) of theory.md.
     // -------------------------------------------------------------------------
     {
         const int N = 1024;
@@ -103,16 +212,16 @@ int main() {
         double bytes_moved = N * sizeof(float);
         double throughput = (bytes_moved / elapsed_sec) / 1e9;
 
-        bool p1_passed = (abs(running_max - gt_max) < 1e-4f) &&
+        bool p3_passed = (abs(running_max - gt_max) < 1e-4f) &&
                          (abs(running_sum - static_cast<float>(gt_sum)) / static_cast<float>(gt_sum) < 1e-4f);
 
-        reportStatus("Problem 1: FlashAttention Online Softmax Rescaling", p1_passed, throughput);
-        if (p1_passed) passed++;
+        reportStatus("Problem 3: FlashAttention Online Softmax Rescaling", p3_passed, throughput);
+        if (p3_passed) passed++;
         total++;
     }
 
     // -------------------------------------------------------------------------
-    // PROBLEM 2: Hierarchical Parallel Welford Merge (Chan's Formula)
+    // PROBLEM 4: Hierarchical Parallel Welford Merge (Chan's Formula)
     //
     // Context: In distributed or multi-warp LayerNorm / RMSNorm, independent blocks
     //          compute local (count, mean, M2) accumulators. Instead of sequential
@@ -192,127 +301,11 @@ int main() {
         double bytes_moved = NUM_BLOCKS * sizeof(WelfordAcc);
         double throughput = (bytes_moved / elapsed_sec) / 1e9;
 
-        bool p2_passed = (abs(global_mean - static_cast<float>(gt_mean)) < 1e-2f) &&
+        bool p4_passed = (abs(global_mean - static_cast<float>(gt_mean)) < 1e-2f) &&
                          (abs(global_variance - static_cast<float>(gt_var)) < 1e-4f) &&
                          (abs(global_std - static_cast<float>(gt_std)) < 1e-4f);
 
-        reportStatus("Problem 2: Hierarchical Parallel Welford Merge", p2_passed, throughput);
-        if (p2_passed) passed++;
-        total++;
-    }
-
-    // -------------------------------------------------------------------------
-    // PROBLEM 3: In-Place Top-K QuickSelect Partitioning (LLM Sampler)
-    //
-    // Context: In Top-K sampling for language models, finding the K largest logits
-    //          does NOT require a full O(N log N) sort. QuickSelect partitions
-    //          the top K elements into indices [0..K-1] in O(N) average time.
-    //
-    // Given:
-    //   - Array `logits` of size N = 512 floats.
-    //   - Target top element count: K = 16.
-    //   - Target boundary value: `kth_largest_val`.
-    //
-    // Goal:
-    //   - Partition `logits` in-place so that the 16 largest elements are located
-    //     in `logits[0..15]` (order within the top 16 does not matter).
-    //   - Every element in logits[0..15] must be >= every element in logits[16..511].
-    //   - Zero auxiliary memory allocations allowed.
-    //
-    // Reference:
-    //   - See Section 2B (In-Place Two-Pointer Partitioning) of theory.md.
-    // -------------------------------------------------------------------------
-    {
-        const int N = 512;
-        const int K = 16;
-        vector<float> logits(N);
-        for (int i = 0; i < N; ++i) {
-            logits[i] = static_cast<float>((i * 37) % 1000) * 0.1f;
-        }
-        vector<float> sorted_reference = logits;
-        sort(sorted_reference.rbegin(), sorted_reference.rend());
-        float kth_largest_val = sorted_reference[K - 1];
-
-        // TODO: Partition logits in-place so that all elements in [0..K-1] are >= kth_largest_val.
-        // --- YOUR CODE STARTS HERE ---
-
-        // --- YOUR CODE ENDS HERE ---
-
-        bool p3_passed = true;
-        for (int i = 0; i < K; ++i) {
-            if (logits[i] < kth_largest_val) {
-                p3_passed = false;
-                break;
-            }
-        }
-        for (int i = K; i < N; ++i) {
-            if (logits[i] > kth_largest_val) {
-                p3_passed = false;
-                break;
-            }
-        }
-
-        reportStatus("Problem 3: In-Place Top-K QuickSelect Partitioning", p3_passed);
-        if (p3_passed) passed++;
-        total++;
-    }
-
-    // -------------------------------------------------------------------------
-    // PROBLEM 4: Distributed Ring-AllReduce In-Place Memory Shift Simulator
-    //
-    // Context: In distributed deep learning (NCCL / Megatron-LM), Ring-AllReduce
-    //          splits data into P chunks across P GPUs arranged in a ring.
-    //          Over (P - 1) steps of Reduce-Scatter, each rank sends one chunk to its
-    //          neighbor and adds the received chunk to its local buffer.
-    //
-    // Given:
-    //   - 4 virtual GPUs (RANKS = 4), each holding 4 chunks of CHUNK_SIZE = 16 floats.
-    //   - `gpu_buffers` shape: [RANKS=4, CHUNKS=4, CHUNK_SIZE=16].
-    //
-    // Goal:
-    //   - Perform 3 steps of Reduce-Scatter in a logical ring so that each rank r
-    //     holds the global sum of chunk (r + 1) % 4.
-    //
-    // Reference:
-    //   - See Section 3 (Hierarchy Level 4: Distributed Ring-AllReduce) of theory.md.
-    // -------------------------------------------------------------------------
-    {
-        const int RANKS = 4;
-        const int CHUNKS = 4;
-        const int CHUNK_SIZE = 16;
-        const size_t total_elements = RANKS * CHUNKS * CHUNK_SIZE;
-
-        // Each GPU r has chunks initialized with (r + 1)
-        vector<float> gpu_buffers(total_elements);
-        for (int r = 0; r < RANKS; ++r) {
-            for (int c = 0; c < CHUNKS; ++c) {
-                for (int i = 0; i < CHUNK_SIZE; ++i) {
-                    gpu_buffers[(r * CHUNKS + c) * CHUNK_SIZE + i] = static_cast<float>(r + 1);
-                }
-            }
-        }
-
-        // Expected global sum across all 4 ranks for any chunk is 1 + 2 + 3 + 4 = 10.0f
-        const float expected_sum = 10.0f;
-
-        // TODO: Simulate 3 steps of Ring-AllReduce Reduce-Scatter across the 4 ranks.
-        // --- YOUR CODE STARTS HERE ---
-
-        // --- YOUR CODE ENDS HERE ---
-
-        bool p4_passed = true;
-        for (int r = 0; r < RANKS && p4_passed; ++r) {
-            int reduced_chunk = (r + 1) % CHUNKS;
-            for (int i = 0; i < CHUNK_SIZE; ++i) {
-                float val = gpu_buffers[(r * CHUNKS + reduced_chunk) * CHUNK_SIZE + i];
-                if (abs(val - expected_sum) > 1e-3f) {
-                    p4_passed = false;
-                    break;
-                }
-            }
-        }
-
-        reportStatus("Problem 4: Distributed Ring-AllReduce Memory Shift Simulation", p4_passed);
+        reportStatus("Problem 4: Hierarchical Parallel Welford Merge", p4_passed, throughput);
         if (p4_passed) passed++;
         total++;
     }

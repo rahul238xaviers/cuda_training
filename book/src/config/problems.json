@@ -161,23 +161,23 @@
       "champion": [
         {
           "problem_num": 1,
-          "title": "FlashAttention Online Softmax Rescaling Primitive",
-          "label": "Problem 1: FlashAttention Online Softmax Rescaling Primitive"
+          "title": "Block-Chunked Two-Pass Vector Reduction Benchmark",
+          "label": "Problem 1: Two-Pass Block-Chunked Vector Reduction"
         },
         {
           "problem_num": 2,
-          "title": "Hierarchical Parallel Welford Merge (Chan's Formula)",
-          "label": "Problem 2: Hierarchical Parallel Welford Merge"
+          "title": "In-Place Top-K QuickSelect Partitioning",
+          "label": "Problem 2: In-Place Top-K QuickSelect Partitioning"
         },
         {
           "problem_num": 3,
-          "title": "In-Place Top-K QuickSelect Partitioning",
-          "label": "Problem 3: In-Place Top-K QuickSelect Partitioning"
+          "title": "FlashAttention Online Softmax Rescaling Primitive",
+          "label": "Problem 3: FlashAttention Online Softmax Rescaling Primitive"
         },
         {
           "problem_num": 4,
-          "title": "Distributed Ring-AllReduce Memory Shift Simulation",
-          "label": "Problem 4: Distributed Ring-AllReduce Memory Shift Simulation"
+          "title": "Hierarchical Parallel Welford Merge (Chan's Formula)",
+          "label": "Problem 4: Hierarchical Parallel Welford Merge"
         }
       ]
     }

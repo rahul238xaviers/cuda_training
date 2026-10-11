@@ -389,22 +389,44 @@ variance_naive = (sum(x_i^2) - (sum(x_i))^2 / N) / N
 ---
 
 ### Technique: Welford's Online Algorithm (PyTorch LayerNorm / RMSNorm)
-In 1962, B. P. Welford published an online recurrence that computes the running mean and sum of squared differences (`M2`) in a single pass without ever computing large squared totals:
+In 1962, B. P. Welford published an online recurrence that computes the running mean and sum of squared differences (`M2`) in a single pass without ever computing large squared totals.
 
-| State Variable | Register Role | Mathematical Definition |
+#### The Physical Mental Model: Landmarks & Balance Beams
+To understand why Welford's recurrence works physically, consider a ruler and a grove of trees:
+- Each data point `x_i` is a **Tree**.
+- The running average `u_{n-1}` is **Landmark 1** (the exact center of mass / balance point of all trees seen so far).
+- When a new tree arrives, the balance point shifts to **Landmark 2** (`u_n`).
+
+The physical distance from any past tree to the new balance point decomposes into two simple legs:
+```formula
+Distance_New = Distance_Old + Landmark_Shift
+(x_i - u_n) = (x_i - u_{n-1}) + (u_{n-1} - u_n)
+```
+
+When measuring the squared area `(A + B)^2 = A^2 + 2*A*B + B^2`:
+- `Sum(A^2)` is the old squared spread `M2_{n-1}`.
+- `Sum(2*A*B) = 2*B * Sum(x_i - u_{n-1})`. Because Landmark 1 is the exact center of balance, the sum of deviations around it is **identically zero**. The entire middle cross-term vanishes!
+- `Sum(B^2)` is simply `(n - 1) * (u_{n-1} - u_n)^2`.
+
+When combined with the new tree's squared distance `(x_n - u_n)^2`, the total adjustment simplifies cleanly to:
+```formula
+M2_n = M2_{n-1} + (x_n - u_{n-1}) * (x_n - u_n)
+```
+
+| State Variable | Register Role | Physical Meaning |
 | :--- | :--- | :--- |
-| **`count`** (k) | Number of samples processed | k = 1, 2, ..., N |
-| **`mean`** (mu_k) | Running centroid | mu_k = (1 / k) * sum(x_i) |
-| **`M2`** | Sum of squared deviations | M2 = sum((x_i - mu_k)^2) |
+| **`count`** (k) | Samples processed | Number of trees / people in the group |
+| **`mean`** (mu_k) | Running centroid | Current center of balance / fair-share average |
+| **`M2`** | Sum of squared deviations | Total squared spread of all points around current centroid |
 
 #### Single-Pass Recurrence Equations:
 For each incoming sample `x`:
 ```formula
 count = count + 1
-delta = x - mean
-mean = mean + delta / count
+delta1 = x - mean
+mean = mean + delta1 / count
 delta2 = x - mean
-M2 = M2 + delta * delta2
+M2 = M2 + delta1 * delta2
 ```
 
 Final population statistics:
@@ -414,18 +436,48 @@ sample_variance = M2 / (count - 1)
 std_dev = sqrt(M2 / count)
 ```
 
-> [!IMPORTANT]
-> Because `M2` accumulates only small local squared differences (`delta * delta2`), it is guaranteed to remain non-negative and avoids catastrophic cancellation entirely.
+#### Verified Step-by-Step Execution Trace (`{2.0, 4.0, 6.0, 8.0}`):
+The table below traces the exact register states evaluated in `playground.cpp`:
 
-#### Parallel Welford Merge (Chan's Formula for GPU Warps & Blocks):
-When multiple parallel GPU threads or blocks reduce separate chunks A (count n_A, mean mu_A, M2_A) and B (count n_B, mean mu_B, M2_B), their states merge into a single combined state:
+| Step `i` | Element `x` | `delta1 = x - oldMean` | Updated `mean` | `delta2 = x - newMean` | `delta1 * delta2` | Updated `M2` | Running Variance |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| **0** | `2.0` | `2.0 - 0.0 = 2.0` | `2.0` | `2.0 - 2.0 = 0.0` | `0.0` | **`0.0`** | `0.0` |
+| **1** | `4.0` | `4.0 - 2.0 = 2.0` | `3.0` | `4.0 - 3.0 = 1.0` | `2.0` | **`2.0`** | `1.0` |
+| **2** | `6.0` | `6.0 - 3.0 = 3.0` | `4.0` | `6.0 - 4.0 = 2.0` | `6.0` | **`8.0`** | `2.67` |
+| **3** | `8.0` | `8.0 - 4.0 = 4.0` | `5.0` | `8.0 - 5.0 = 3.0` | `12.0` | **`20.0`** | **`5.0`** |
+
+Final results:
 ```formula
-n = n_A + n_B
-delta = mu_B - mu_A
-mu = mu_A + delta * (n_B / n)
-M2 = M2_A + M2_B + delta * delta * (n_A * n_B / n)
+mean = 5.0
+variance = M2 / count = 20.0 / 4 = 5.0
+std_dev = sqrt(5.0) = 2.23607
 ```
-This merge formula enables tree-reducing Welford states across GPU warps using `__shfl_down_sync` register instructions.
+
+> [!IMPORTANT]
+> Notice how `M2` builds up from 0 to 20 without ever squaring a raw number like `10,000^2` or revisiting earlier elements in memory. It eliminates catastrophic cancellation and cuts memory bandwidth consumption in half.
+
+---
+
+### Parallel Welford Merge (Chan's Formula for GPU Warps & Blocks)
+In 1979, Tony Chan generalized Welford's algorithm to parallel processors. Instead of adding 1 element at a time, two independent GPU blocks process separate chunks in parallel, producing two summary cards:
+- **Block A**: `{ count_A, mean_A, M2_A }`
+- **Block B**: `{ count_B, mean_B, M2_B }`
+
+Chan's formula merges these two cards into a combined household without revisiting any raw data:
+```formula
+n = count_A + count_B
+delta = mean_B - mean_A
+mean = mean_A + delta * (count_B / n)
+M2 = M2_A + M2_B + delta * delta * (count_A * count_B / n)
+```
+
+#### Universal Equivalence: 1 Element vs Block
+Notice that Welford's single-element update is merely a special case of Chan's formula where Block B is a single element (`count_B = 1`, `M2_B = 0`):
+- `delta = x - mean_A`
+- `mean = mean_A + delta * (1 / (count_A + 1))`
+- `M2 = M2_A + 0 + delta^2 * (count_A * 1 / (count_A + 1))`
+
+Chan's formula is the universal master equation for all hierarchical reductions: thread-to-warp, warp-to-block, and block-to-global grid!
 
 ---
 

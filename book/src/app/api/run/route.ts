@@ -221,11 +221,13 @@ export async function POST(request: NextRequest) {
     }> = [];
     let testsPassedCount = 0;
     let totalCanonicalTests = 0;
+    let isAllPassed = false;
+
+    const cleanStdout = outputStdout.replace(/\x1B\[[0-?]*[ -/]*[@-~]/g, '');
+    const lines = cleanStdout.split('\n');
 
     if (topicLocation && tier) {
       const volId = topicLocation.isKernel ? 'vol3' : topicLocation.isCuda ? 'vol2' : 'vol1';
-      const cleanStdout = outputStdout.replace(/\x1B\[[0-?]*[ -/]*[@-~]/g, '');
-      const lines = cleanStdout.split('\n');
 
       let canonicalProblems = getCanonicalProblems(chapterId, tier);
       if (canonicalProblems.length === 0) {
@@ -242,25 +244,38 @@ export async function POST(request: NextRequest) {
 
       for (const p of canonicalProblems) {
         let pStatus: 'passed' | 'failed' | 'pending' = 'pending';
+        let throughputGbs = -1.0;
 
-        if (runResult.status === 0) {
-          const pRegex = new RegExp(`Problem\\s+${p.problem_num}[:\\s(]`, 'i');
-          const matchingLines = lines.filter((l) => pRegex.test(l));
+        const pRegex = new RegExp(`Problem\\s+${p.problem_num}[:\\s(]`, 'i');
+        const matchingLines = lines.filter((l) => pRegex.test(l));
 
-          if (matchingLines.length > 0) {
-            const joined = matchingLines.join(' ');
-            if (joined.includes('[PASSED]') || joined.includes('PASSED')) {
-              pStatus = 'passed';
-            } else if (joined.includes('[FAILED]') || joined.includes('FAILED')) {
-              pStatus = 'failed';
-            }
+        if (matchingLines.length > 0) {
+          const joined = matchingLines.join(' ');
+          if (joined.includes('[PASSED]') || joined.includes('PASSED')) {
+            pStatus = 'passed';
+          } else if (joined.includes('[FAILED]') || joined.includes('FAILED')) {
+            pStatus = 'failed';
           }
-        } else {
-          pStatus = 'failed';
+
+          const tpMatch = joined.match(/([0-9.]+)\s*GB\/s/i);
+          if (tpMatch) {
+            throughputGbs = parseFloat(tpMatch[1]);
+          }
+        } else if (runResult.status !== 0) {
+          // If execution stopped or crashed before reaching this problem,
+          // preserve already-passed status if the user previously passed it.
+          const existingProblems = getUserProblemsWithStatus(chapterId, tier);
+          const existingRec = existingProblems.find((ep) => ep.problem_id === p.problem_id);
+          if (existingRec && existingRec.status === 'passed') {
+            pStatus = 'passed';
+            throughputGbs = existingRec.throughput_gbs ?? -1.0;
+          } else {
+            pStatus = 'failed';
+          }
         }
 
         if (pStatus !== 'pending') {
-          recordProblemStatus(p.problem_id, pStatus, durationMs);
+          recordProblemStatus(p.problem_id, pStatus, throughputGbs, durationMs);
         }
 
         problemBreakdown.push({
@@ -277,7 +292,7 @@ export async function POST(request: NextRequest) {
         ? updatedUserProblems.filter((p) => p.status === 'passed').length
         : problemBreakdown.filter((p) => p.status === 'passed').length;
 
-      const isAllPassed = runResult.status === 0 && testsPassedCount === totalCanonicalTests && totalCanonicalTests > 0;
+      isAllPassed = testsPassedCount === totalCanonicalTests && totalCanonicalTests > 0;
 
       const progressId = topicLocation.isKernel
         ? `k${topicLocation.moduleNum}.${topicLocation.displayTopicId.replace(/^K\d+\./, '')}`
@@ -286,8 +301,11 @@ export async function POST(request: NextRequest) {
       recordTierProgress(progressId, tier, isAllPassed, totalCanonicalTests, testsPassedCount);
     }
 
+    const hasScorecard = lines.some((l) => l.includes('SCORECARD') || l.includes('tests passed') || l.includes('tests failed'));
+    const isExecutionSuccessful = runResult.status === 0 || hasScorecard;
+
     return NextResponse.json({
-      success: runResult.status === 0,
+      success: isExecutionSuccessful,
       stage: 'execution',
       sandboxed: true,
       sandboxPath: relSandboxPath,
@@ -298,7 +316,7 @@ export async function POST(request: NextRequest) {
       problemBreakdown,
       testsPassed: testsPassedCount,
       testsCount: totalCanonicalTests,
-      isFullySolved: runResult.status === 0 && testsPassedCount === totalCanonicalTests && totalCanonicalTests > 0,
+      isFullySolved: isAllPassed,
     });
   } catch (err: any) {
     return NextResponse.json(

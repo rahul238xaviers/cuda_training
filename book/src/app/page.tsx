@@ -334,6 +334,7 @@ export default function BookPlatform() {
             newProblemsCount: Math.max(0, (result.testsCount ?? prev.testsCount) - (result.testsPassed ?? prev.testsPassed)),
           };
         });
+        loadTree();
       }
 
       if (result.success) {
