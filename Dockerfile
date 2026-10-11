@@ -25,7 +25,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # 2. Install Node.js 20 LTS
 RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
     && apt-get install -y --no-install-recommends nodejs \
-    && npm install -g npm@latest \
     && rm -rf /var/lib/apt/lists/*
 
 # 3. Setup Workspace

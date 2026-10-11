@@ -119,16 +119,16 @@ export async function POST(request: NextRequest) {
       const hasNvcc = whichNvcc.status === 0;
 
       if (!hasNvcc) {
-        // macOS Host without NVIDIA GPU & nvcc
+        // Host without NVIDIA GPU & nvcc
         const relSandboxPath = path.relative(WORKSPACE_ROOT, sandboxSourceFile);
         return NextResponse.json({
-          success: true,
+          success: false,
           stage: 'execution',
-          exitCode: 0,
+          exitCode: 1,
           sandboxed: true,
           sandboxPath: relSandboxPath,
-          stdout: `📦 [EXECUTED IN SANDBOX: ${relSandboxPath}]\n✅ Source staged and validated for execution.\n\nℹ️  Hardware Notice (macOS Host Environment):\nThe NVIDIA 'nvcc' compiler is not present on this local macOS machine.\nCUDA device code (.cu) requires an NVIDIA GPU (e.g. RTX, A100, H100).\n\n🚀 To run automated validation on your GPU instance:\n   ./src/compile_and_run_cuda.sh ${topicLocation ? topicLocation.moduleFolder : 'playground'} ${tier || 'test'}\n\nDirect nvcc sandbox command:\n   cd ${path.relative(WORKSPACE_ROOT, runDir)} && nvcc -O3 -std=c++17 --extended-lambda ${sourceFileName} -o ./bin && ./bin\n`,
-          stderr: '',
+          stdout: `📦 [VALIDATED IN SANDBOX: ${relSandboxPath}]\n\n❌ [ERROR] No NVIDIA GPU found on this system.\n\nHardware Requirements:\n• CUDA device code (.cu) requires an NVIDIA GPU (GeForce RTX, A100, H100) and NVIDIA drivers.\n• You can write, inspect, and practice CUDA code on this machine, but running kernels requires an NVIDIA GPU.\n`,
+          stderr: 'No NVIDIA GPU found on this system.',
           durationMs: Date.now() - startTime,
         });
       }
@@ -154,6 +154,25 @@ export async function POST(request: NextRequest) {
           durationMs: Date.now() - startTime,
         });
       }
+
+      // Check whether a physical NVIDIA GPU is available to execute device kernels
+      const gpuCheck = spawnSync('nvidia-smi', [], { timeout: 3000 });
+      const hasGpu = gpuCheck.status === 0;
+
+      if (!hasGpu) {
+        const relSandboxPath = path.relative(WORKSPACE_ROOT, sandboxSourceFile);
+        return NextResponse.json({
+          success: false,
+          stage: 'execution',
+          exitCode: 1,
+          sandboxed: true,
+          sandboxPath: relSandboxPath,
+          stdout: `📦 [COMPILED IN SANDBOX: ${relSandboxPath}]\n✅ NVCC Compilation Successful: CUDA syntax & device code compiled without errors!\n\n❌ [ERROR] No NVIDIA GPU found on this system.\n\nHardware Notice:\n• CUDA kernel execution (.cu) requires a physical NVIDIA GPU (GeForce RTX, A100, H100) with NVIDIA drivers.\n• On macOS / CPU-only environments, you can write and compile CUDA code to verify correctness, but kernel execution requires an NVIDIA GPU.\n• On Linux or Windows WSL2 with an NVIDIA GPU, kernels will run directly on the GPU hardware.\n`,
+          stderr: 'No NVIDIA GPU found on this system.',
+          durationMs: Date.now() - startTime,
+        });
+      }
+
     } else {
       // Clang++ C++ Compilation inside Sandbox
       const compileResult = spawnSync(

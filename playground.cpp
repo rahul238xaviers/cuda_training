@@ -1,7 +1,10 @@
 #include <iostream>
 #include <vector>
+#include <cmath>
+#include <chrono>
 
 using namespace std;
+
 
 struct WelfordAcc {
   int count = 0;
@@ -11,42 +14,93 @@ struct WelfordAcc {
 
 int main() {
   {
-    vector<float> blockA = {2.0, 4.0, 6.0, 8.0};
-    vector<WelfordAcc> welfordAcc(4);
+    const int N = 1024;
+    const int BLOCK_SIZE = 256;
+    const int NUM_BLOCKS = N / BLOCK_SIZE;
 
-    float mean = 0.0f;
-    int count = 0;
+    vector<float> activations(N);
+    double gt_sum = 0.0;
+    for (int i = 0; i < N; ++i) {
+      activations[i] = 10000.0f + static_cast<float>((i % 7) - 3) * 0.125f;
+      gt_sum += activations[i];
+    }
+
+    double gt_mean = gt_sum / N;
+    double gt_var = 0.0;
+    for (int i = 0; i < N; ++i) {
+      double diff = activations[i] - gt_mean;
+      gt_var += diff * diff;
+    }
+    gt_var /= N;
+    double gt_std = sqrt(gt_var);
+
+    struct WelfordAcc {
+      int count = 0;
+      float mean = 0.0f;
+      float M2 = 0.0f;
+    };
+
+    // Each block pre-computes its local Welford statistics
+    vector<WelfordAcc> block_accs(NUM_BLOCKS);
+    for (int b = 0; b < NUM_BLOCKS; ++b) {
+      int count = 0;
+      float mean = 0.0f;
+      float M2 = 0.0f;
+      for (int i = 0; i < BLOCK_SIZE; ++i) {
+        float x = activations[b * BLOCK_SIZE + i];
+        count++;
+        float delta1 = x - mean;
+        mean += delta1 / count;
+        float delta2 = x - mean;
+        M2 += delta1 * delta2;
+      }
+      block_accs[b] = {count, mean, M2};
+    }
+
+    float global_mean = 0.0f;
+    float global_variance = 0.0f;
+    float global_std = 0.0f;
+
+    auto start = chrono::high_resolution_clock::now();
+
+    // TODO: Merge the 4 block_accs into a single global accumulator using
+    // Chan's merge formula.
+    // --- YOUR CODE STARTS HERE ---
+
+    int global_count = 0;
     float M2 = 0.0f;
-    float oldMean = 0.0f;
-    for (int i = 0; i < (int)blockA.size(); i++) {
-      float a = blockA[i];
-      mean = ((mean * count) + a) / (count + 1);
-      M2 = M2 + (a - oldMean) * (a - mean);
-      count++;
-      welfordAcc[i].count = count;
-      welfordAcc[i].mean = mean;
-      welfordAcc[i].M2 = M2;
-      oldMean = mean;
+    float globalM2 = 0.0f;
+
+    for (int i = 0; i < NUM_BLOCKS; i++) {
+      WelfordAcc welfordAcc = block_accs[i];
+      int current_count = welfordAcc.count;
+      float current_mean = welfordAcc.mean;
+      float curren_M2 = welfordAcc.M2;
+      global_count += current_count;
+
+      float delta = current_mean - global_mean;
+
+      global_mean = global_mean + (delta * current_count / global_count);
+
+      globalM2 = (globalM2 + curren_M2 +
+                  ((delta * delta) * (global_count - current_count) *
+                   current_count / global_count));
     }
+    global_variance = globalM2 / global_count;
+    global_std = sqrt(global_variance);
 
-    cout << "Calculated mean is " << mean << endl;
-    cout << "Calculated M2 is " << M2 << endl;
+    // --- YOUR CODE ENDS HERE ---
 
-    for (int i = 0; i < (int)welfordAcc.size(); i++) {
+    auto end = chrono::high_resolution_clock::now();
+    double elapsed_sec = chrono::duration<double>(end - start).count();
+    double bytes_moved = NUM_BLOCKS * sizeof(WelfordAcc);
+    double throughput = (bytes_moved / elapsed_sec) / 1e9;
 
-      WelfordAcc current_welfordAcc = welfordAcc[i];
+    bool p4_passed =
+        (abs(global_mean - static_cast<float>(gt_mean)) < 1e-2f) &&
+        (abs(global_variance - static_cast<float>(gt_var)) < 1e-4f) &&
+        (abs(global_std - static_cast<float>(gt_std)) < 1e-4f);
 
-      cout << "The count at step  " << i << " is " << current_welfordAcc.count
-           << endl;
-      cout << "The mean at step " << i << " is " << current_welfordAcc.mean
-           << endl;
-      cout << "The M2 at step " << i << " is " << current_welfordAcc.M2 << endl;
-    }
-
-    float variance = M2 / count;
-    float standard_deviation = sqrt(variance);
-
-    cout << "The variance is " << variance << endl;
-    cout << "The standard deviation is  " << standard_deviation << endl;
+    cout << "The case status is " << p4_passed << endl;
   }
 }

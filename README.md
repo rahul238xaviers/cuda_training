@@ -62,127 +62,72 @@ The curriculum is structured across three primary volumes plus an open practice 
 
 ## 🛠️ Prerequisites
 
-### Hardware Requirements
-- **NVIDIA GPU** (For CUDA Kernels & Benchmarks):
-  - Supported Architectures: Turing (`sm_75`), Ampere (`sm_80`, `sm_86`), Ada Lovelace (`sm_89`), Hopper (`sm_90`), or Blackwell (`sm_100`).
-  - Recommended VRAM: 8 GB or higher (RTX 3070+, RTX 4080+, A10/A100/H100).
-- **CPU-Only Mode** (macOS / Systems without NVIDIA GPUs):
-  - You can fully compile and run all **Volume 1 (C++ Systems, Module 1)** workbooks and run the **Digital Textbook Web App** locally.
+The only prerequisite required on your host machine is **Docker Desktop** (or Docker Engine on Linux):
 
-### Software Prerequisites (Host System)
-| Software / Package | Minimum Version | Recommended | Purpose |
-| :--- | :--- | :--- | :--- |
-| **NVIDIA Driver** | >= 525.60.13 | >= 535 or 550+ | GPU kernel execution |
-| **CUDA Toolkit** | 11.8+ | 12.4+ | `nvcc` GPU compiler and runtime |
-| **C++ Compiler** | GCC 9+ / Clang 14+ | Clang 16+ / GCC 12+ | C++17 / C++20 language features |
-| **Node.js** | 18.x LTS | 20.x LTS | Digital Textbook web frontend & server |
-| **npm** | 9.x+ | 10.x+ | Package manager for book application |
-| **Docker Engine** | 20.10+ | 24.0+ | (Optional) Containerized execution |
-| **Docker Compose** | 2.0+ | 2.20+ | (Optional) Multi-service lab runner |
-| **NVIDIA Container Toolkit** | 1.13+ | Latest | (Optional) GPU passthrough inside Docker |
-
----
-
-## 🐳 Quickstart with Docker (Recommended)
-
-Docker provides an isolated, pre-configured environment containing **Ubuntu 22.04**, **NVIDIA CUDA 12.4.1 Devel**, **Clang**, **Build-Essential**, and **Node.js 20 LTS**.
-
-### 1. Install Docker & NVIDIA Container Toolkit (Ubuntu/Debian)
-
-If you haven't installed the NVIDIA Container Toolkit yet:
-
-```bash
-# 1. Configure NVIDIA Container Toolkit repository
-curl -fsSL https://nvidia.github.io/libnvidia-container/gpgkey | sudo gpg --dearmor -o /usr/share/keyrings/nvidia-container-toolkit-keyring.gpg
-curl -s -L https://nvidia.github.io/libnvidia-container/stable/deb/nvidia-container-toolkit.list | \
-  sed 's#deb https://#deb [signed-by=/usr/share/keyrings/nvidia-container-toolkit-keyring.gpg] https://#g' | \
-  sudo tee /etc/apt/sources.list.d/nvidia-container-toolkit.list
-
-# 2. Install nvidia-container-toolkit
-sudo apt-get update
-sudo apt-get install -y nvidia-container-toolkit
-
-# 3. Configure Docker runtime for NVIDIA GPUs and restart daemon
-sudo nvidia-ctk runtime configure --runtime=docker
-sudo systemctl restart docker
-```
-
-Verify GPU availability in Docker:
-```bash
-docker run --rm --gpus all nvidia/cuda:12.4.1-base-ubuntu22.04 nvidia-smi
-```
-
----
-
-### 2. Launch the Lab with Docker Compose
-
-Run the following command from the repository root:
-
-```bash
-# Build and run containerized lab (Digital Book + CUDA development environment)
-docker compose up --build
-```
-
-- **Open the Digital Textbook & Web Lab**: Open `http://localhost:3000` in your browser.
-- **Persistent Progress**: Your local repository files are mounted into `/workspace`. Any code you write in `exercise/`, `solution/`, or `playground.cpp` is saved immediately to your host machine.
-
-To run in the background (detached mode):
-```bash
-docker compose up -d
-```
-
-To stop the container:
-```bash
-docker compose down
-```
+- **Windows**: Install [Docker Desktop for Windows](https://docs.docker.com/desktop/setup/install/windows-install/) (works with PowerShell or Command Prompt).
+- **macOS**: Install [Docker Desktop for Mac](https://docs.docker.com/desktop/setup/install/mac-install/) (Apple Silicon M1/M2/M3/M4 or Intel).
+- **Linux**: Install [Docker Engine](https://docs.docker.com/engine/install/) & Docker Compose.
 
 > [!NOTE]
-> **Running on macOS or Non-GPU Machines:**
-> If running Docker on macOS or a machine without an NVIDIA GPU, edit `docker-compose.yml` to comment out lines 20-26 (the `deploy.resources.reservations.devices` block), or use the CPU-only command below.
+> **Zero Manual Toolchain Installation Required**:
+> You do **not** need to install Node.js, npm, Clang, GCC, or the CUDA Toolkit on your host computer. The Docker container includes the entire environment pre-installed:
+> - **OS**: Ubuntu 22.04 LTS
+> - **C++ Systems Toolchain**: Clang, Clang-Format, LLVM, build-essential (C++20 compliant)
+> - **NVIDIA CUDA Toolkit**: CUDA 12.4.1 (`nvcc`, `ncu` profiler, `compute-sanitizer`, `cuda-gdb`)
+> - **Digital Textbook Runtime**: Node.js 20 LTS & Next.js web application
 
 ---
 
-### 3. Alternative: Running Directly with Docker CLI
+## 🐳 Quickstart: Launching the Lab
 
-You can also build and run the image directly without Docker Compose:
+Open your terminal (**PowerShell / CMD** on Windows, **Terminal** on macOS, or **Bash** on Linux) in the repository root and run:
 
 ```bash
-# Build image
-docker build -t cuda-systems-lab .
-
-# Run with full GPU passthrough (Linux with NVIDIA GPU):
-docker run --gpus all -it --rm \
-  -p 3000:3000 \
-  -v $(pwd):/workspace \
-  --name cuda_lab \
-  cuda-systems-lab
-
-# Run on CPU-only machines (macOS / Intel / Apple Silicon):
-docker run -it --rm \
-  -p 3000:3000 \
-  -v $(pwd):/workspace \
-  --name cuda_lab_cpu \
-  cuda-systems-lab
+docker compose up
 ```
+
+Once the container starts, open your browser and go to:
+👉 **[http://localhost:3000](http://localhost:3000)**
+
+### What to Expect by Platform:
+
+1. **On macOS, Windows (without GPU), & CPU-only Machines:**
+   - **C++ Systems & Memory Curricula (Volume 1)**: Fully operational. All workbooks, solutions, and `playground.cpp` compile with `clang++` and execute directly in the isolated sandbox with real-time benchmarks.
+   - **CUDA Kernels (`.cu` files & `playground.cu`)**: You can freely write, edit, and inspect CUDA code in the editor. When you click **Run**, the system validates your syntax with `nvcc` and cleanly displays:
+     ```text
+     ✅ NVCC Compilation Successful: CUDA syntax & device code compiled without errors!
+     ❌ [ERROR] No NVIDIA GPU found on this system.
+     ```
+     *(CUDA kernel execution requires an NVIDIA GPU, but all C++ systems and curriculum code work 100%).*
+
+2. **On Windows or Linux with an NVIDIA GPU:**
+   - If your machine has an NVIDIA GPU with the [NVIDIA Container Toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html) installed, you can pass through the GPU hardware:
+     ```bash
+     docker compose -f docker-compose.yml -f docker-compose.gpu.yml up
+     ```
+   - CUDA kernels will compile and run directly on your GPU hardware.
 
 ---
 
-### 4. Opening an Interactive Shell Inside Docker
+### Handy Docker Commands
 
-To compile and test workbooks inside the running container:
+- **Run in Background (Detached Mode):**
+  ```bash
+  docker compose up -d
+  ```
 
-```bash
-# Open an interactive bash session
-docker exec -it cuda_systems_lab bash
+- **Open the Integrated Shell inside the Container:**
+  ```bash
+  docker exec -it cuda_systems_lab bash
+  ```
 
-# Inside the container, compile any workbook with nvcc or clang:
-nvcc -O3 -std=c++17 -arch=sm_80 src/cuda_systems/module3/3.1_threads_registers/exercise/beginner_workbook.cu -o output/test && ./output/test
-
-# Run automated batch evaluation:
-bash src/compile_and_run_cuda.sh all
-```
+- **Stop the Lab:**
+  ```bash
+  docker compose down
+  ```
 
 ---
+
 
 ## 💻 Native Host Installation (Without Docker)
 
