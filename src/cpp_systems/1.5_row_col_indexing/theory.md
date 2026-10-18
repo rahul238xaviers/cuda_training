@@ -18,15 +18,25 @@ A 2D matrix `M[Rows][Cols]` is stored as a flat array of `Rows * Cols` elements.
 
 Elements of the same row are adjacent in memory. Moving along a row (incrementing `col`) moves by 1 element. Moving to the next row (incrementing `row`) moves by `Cols` elements.
 
-```text
-Matrix M[3][4] (3 rows, 4 columns):
+### Matrix M[3][4] Physical Memory Layout (Row-Major)
 
-Logical view:        Physical memory layout (row-major):
-M[0][0] M[0][1] M[0][2] M[0][3]     Index:  0  1  2  3  4  5  6  7  8  9 10 11
-M[1][0] M[1][1] M[1][2] M[1][3]     Value: 00 01 02 03 10 11 12 13 20 21 22 23
-M[2][0] M[2][1] M[2][2] M[2][3]
-                                     Address formula:
-                                     flat_index = row * Cols + col
+| Flat Index | Logical Element | Address Calculation (`row * Cols + col`) |
+| :---: | :---: | :---: |
+| `0` | `M[0][0]` | `0 * 4 + 0 = 0` |
+| `1` | `M[0][1]` | `0 * 4 + 1 = 1` |
+| `2` | `M[0][2]` | `0 * 4 + 2 = 2` |
+| `3` | `M[0][3]` | `0 * 4 + 3 = 3` |
+| `4` | `M[1][0]` | `1 * 4 + 0 = 4` |
+| `5` | `M[1][1]` | `1 * 4 + 1 = 5` |
+| `6` | `M[1][2]` | `1 * 4 + 2 = 6` |
+| `7` | `M[1][3]` | `1 * 4 + 3 = 7` |
+| `8` | `M[2][0]` | `2 * 4 + 0 = 8` |
+| `9` | `M[2][1]` | `2 * 4 + 1 = 9` |
+| `10` | `M[2][2]` | `2 * 4 + 2 = 10` |
+| `11` | `M[2][3]` | `2 * 4 + 3 = 11` |
+
+```formula
+flat_index = row * Cols + col
 ```
 
 Verification:
@@ -58,14 +68,25 @@ __global__ void kernel_2d(float* M, int Rows, int Cols) {
 
 Elements of the same column are adjacent in memory. Moving along a column (incrementing `row`) moves by 1 element. Moving to the next column (incrementing `col`) moves by `Rows` elements.
 
-```text
-Matrix M[3][4] in column-major:
+### Matrix M[3][4] Physical Memory Layout (Column-Major)
 
-Physical memory:    Index:  0  1  2  3  4  5  6  7  8  9 10 11
-                    Value: 00 10 20 01 11 21 02 12 22 03 13 23
+| Flat Index | Logical Element | Address Calculation (`col * Rows + row`) |
+| :---: | :---: | :---: |
+| `0` | `M[0][0]` | `0 * 3 + 0 = 0` |
+| `1` | `M[1][0]` | `0 * 3 + 1 = 1` |
+| `2` | `M[2][0]` | `0 * 3 + 2 = 2` |
+| `3` | `M[0][1]` | `1 * 3 + 0 = 3` |
+| `4` | `M[1][1]` | `1 * 3 + 1 = 4` |
+| `5` | `M[2][1]` | `1 * 3 + 2 = 5` |
+| `6` | `M[0][2]` | `2 * 3 + 0 = 6` |
+| `7` | `M[1][2]` | `2 * 3 + 1 = 7` |
+| `8` | `M[2][2]` | `2 * 3 + 2 = 8` |
+| `9` | `M[0][3]` | `3 * 3 + 0 = 9` |
+| `10` | `M[1][3]` | `3 * 3 + 1 = 10` |
+| `11` | `M[2][3]` | `3 * 3 + 2 = 11` |
 
-                    Address formula:
-                    flat_index = col * Rows + row
+```formula
+flat_index = col * Rows + row
 ```
 
 cuBLAS and CUBLAS-XT expect column-major matrices. When interfacing PyTorch row-major tensors with cuBLAS, you must either transpose (expensive) or exploit the mathematical equivalence: `(A @ B)^T = B^T @ A^T` to avoid physically transposing.

@@ -10,18 +10,20 @@ Padding is tiling's necessary companion: hardware memory buses and shared memory
 
 A tile is a rectangular sub-region of a 2D matrix that a single thread block processes. The matrix is logically divided into a grid of tiles, and each tile is assigned to exactly one block.
 
-```text
-Global matrix M[8][8] divided into 2×2 tiles of size 4×4:
+### Matrix M[8][8] 2×2 Tile Grid Mapping (Tile Size 4×4)
 
-Block (0,0) processes:    Block (1,0) processes:    Block (0,1) processes:    Block (1,1) processes:
-M[0..3][0..3]             M[0..3][4..7]             M[4..7][0..3]             M[4..7][4..7]
+| CUDA Thread Block (`blockIdx.y, blockIdx.x`) | Matrix Sub-region Processed | Number of Floats Staged into SRAM |
+| :---: | :---: | :---: |
+| **Block `(0, 0)`** | `M[0..3][0..3]` | 16 elements (64 Bytes) |
+| **Block `(0, 1)`** | `M[0..3][4..7]` | 16 elements (64 Bytes) |
+| **Block `(1, 0)`** | `M[4..7][0..3]` | 16 elements (64 Bytes) |
+| **Block `(1, 1)`** | `M[4..7][4..7]` | 16 elements (64 Bytes) |
 
-Each block:
-  - Declares __shared__ float tile[4][4]
-  - Loads 4×4 = 16 elements from global memory into shared memory
-  - Computes on the 16 elements using fast SRAM
-  - Writes results back to global memory
-```
+Each thread block executes the standardized 4-step shared memory staging cycle:
+1. **Allocate**: Declares `__shared__ float tile[4][4]` in fast on-chip SRAM.
+2. **Cooperative Load**: Reads $4 \times 4 = 16$ floats from slow DRAM into `tile`.
+3. **Barrier**: Executes `__syncthreads()` to ensure all warps have completed loads.
+4. **Compute**: Performs arithmetic at full register/SRAM throughput and stores results.
 
 ### The Arithmetic Intensity Benefit
 

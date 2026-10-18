@@ -1,0 +1,124 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 840 280" width="100%" height="100%">
+  <defs>
+    <linearGradient id="pipeBg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stopColor="#0d1117" />
+      <stop offset="100%" stopColor="#070a0e" />
+    </linearGradient>
+    <marker id="pipeArrowSky" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+      <path d="M0,0.5 L0,5.5 L6,3 z" fill="#38bdf8" />
+    </marker>
+    <marker id="pipeArrowEmerald" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+      <path d="M0,0.5 L0,5.5 L6,3 z" fill="#10b981" />
+    </marker>
+    <marker id="pipeArrowRose" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+      <path d="M0,0.5 L0,5.5 L6,3 z" fill="#f43f5e" />
+    </marker>
+  </defs>
+
+  <!-- Background Canvas -->
+  <rect width="840" height="280" rx="12" fill="url(#pipeBg)" stroke="#21262d" stroke-width="1.5" />
+
+  <!-- ==================== TOP: UNFUSED PIPELINE ==================== -->
+  <g transform="translate(24, 20)">
+    <circle cx="6" cy="6" r="4" fill="#f43f5e" />
+    <text x="18" y="10" fill="#fb7185" font-size="11" font-weight="bold" font-family="ui-monospace, monospace" letter-spacing="1">
+      1. UNFUSED PIPELINE (2 KERNELS · 20 BYTES DRAM TRAFFIC)
+    </text>
+
+    <!-- DRAM Inputs -->
+    <g transform="translate(20, 26)">
+      <rect width="110" height="42" rx="6" fill="#1e293b" stroke="#475569" stroke-width="1" />
+      <text x="55" y="18" text-anchor="middle" fill="#94a3b8" font-size="9" font-family="ui-monospace, monospace">DRAM: Inputs</text>
+      <text x="55" y="32" text-anchor="middle" fill="#f1f5f9" font-size="10.5" font-weight="bold" font-family="ui-monospace, monospace">X &amp; Residual</text>
+    </g>
+
+    <!-- Arrow to Kernel 1 -->
+    <path d="M 130 47 L 180 47" fill="none" stroke="#38bdf8" stroke-width="2" marker-end="url(#pipeArrowSky)" />
+    <text x="155" y="40" text-anchor="middle" fill="#38bdf8" font-size="8.5" font-family="ui-monospace, monospace">8B Read</text>
+
+    <!-- Kernel 1 (Add) -->
+    <g transform="translate(186, 26)">
+      <rect width="120" height="42" rx="6" fill="#0f172a" stroke="#38bdf8" stroke-width="1.5" />
+      <text x="60" y="18" text-anchor="middle" fill="#38bdf8" font-size="9" font-family="ui-monospace, monospace">Kernel 1 (Add)</text>
+      <text x="60" y="32" text-anchor="middle" fill="#e2e8f0" font-size="10.5" font-weight="bold" font-family="ui-monospace, monospace">Temp = X + Res</text>
+    </g>
+
+    <!-- Arrow to Temp Buffer (DRAM WRITE) -->
+    <path d="M 306 47 L 356 47" fill="none" stroke="#f43f5e" stroke-width="2" marker-end="url(#pipeArrowRose)" />
+    <text x="331" y="40" text-anchor="middle" fill="#f43f5e" font-size="8.5" font-weight="bold" font-family="ui-monospace, monospace">4B Write</text>
+
+    <!-- DRAM Temp Buffer -->
+    <g transform="translate(362, 26)">
+      <rect width="120" height="42" rx="6" fill="#4c0519" stroke="#f43f5e" stroke-width="1.5" stroke-dasharray="3 2" />
+      <text x="60" y="18" text-anchor="middle" fill="#fca5a5" font-size="9" font-family="ui-monospace, monospace">DRAM: Temp Buffer</text>
+      <text x="60" y="32" text-anchor="middle" fill="#ffffff" font-size="10.5" font-weight="bold" font-family="ui-monospace, monospace">Temp[ i ]</text>
+    </g>
+
+    <!-- Arrow to Kernel 2 (DRAM READ) -->
+    <path d="M 482 47 L 532 47" fill="none" stroke="#f59e0b" stroke-width="2" marker-end="url(#pipeArrowSky)" />
+    <text x="507" y="40" text-anchor="middle" fill="#f59e0b" font-size="8.5" font-weight="bold" font-family="ui-monospace, monospace">4B Read</text>
+
+    <!-- Kernel 2 (GeLU) -->
+    <g transform="translate(538, 26)">
+      <rect width="110" height="42" rx="6" fill="#0f172a" stroke="#f59e0b" stroke-width="1.5" />
+      <text x="55" y="18" text-anchor="middle" fill="#f59e0b" font-size="9" font-family="ui-monospace, monospace">Kernel 2 (GeLU)</text>
+      <text x="55" y="32" text-anchor="middle" fill="#e2e8f0" font-size="10.5" font-weight="bold" font-family="ui-monospace, monospace">Y = GeLU(Temp)</text>
+    </g>
+
+    <!-- Arrow to DRAM Output -->
+    <path d="M 648 47 L 690 47" fill="none" stroke="#10b981" stroke-width="2" marker-end="url(#pipeArrowEmerald)" />
+    <text x="669" y="40" text-anchor="middle" fill="#10b981" font-size="8.5" font-family="ui-monospace, monospace">4B Store</text>
+
+    <!-- DRAM Output -->
+    <g transform="translate(696, 26)">
+      <rect width="90" height="42" rx="6" fill="#064e3b" stroke="#10b981" stroke-width="1" />
+      <text x="45" y="18" text-anchor="middle" fill="#a7f3d0" font-size="9" font-family="ui-monospace, monospace">DRAM</text>
+      <text x="45" y="32" text-anchor="middle" fill="#ffffff" font-size="11" font-weight="bold" font-family="ui-monospace, monospace">Output Y</text>
+    </g>
+  </g>
+
+  <!-- Divider Line -->
+  <line x1="24" y1="125" x2="816" y2="125" stroke="#21262d" stroke-width="1" stroke-dasharray="4 4" />
+
+  <!-- ==================== BOTTOM: FUSED PIPELINE ==================== -->
+  <g transform="translate(24, 140)">
+    <circle cx="6" cy="6" r="4" fill="#10b981" />
+    <text x="18" y="10" fill="#34d399" font-size="11" font-weight="bold" font-family="ui-monospace, monospace" letter-spacing="1">
+      2. FUSED PIPELINE (1 KERNEL · 12 BYTES DRAM TRAFFIC · 40% BANDWIDTH SAVINGS!)
+    </text>
+
+    <!-- DRAM Inputs -->
+    <g transform="translate(20, 30)">
+      <rect width="120" height="52" rx="6" fill="#1e293b" stroke="#475569" stroke-width="1" />
+      <text x="60" y="22" text-anchor="middle" fill="#94a3b8" font-size="9.5" font-family="ui-monospace, monospace">DRAM: Inputs</text>
+      <text x="60" y="40" text-anchor="middle" fill="#f1f5f9" font-size="12" font-weight="bold" font-family="ui-monospace, monospace">X &amp; Residual</text>
+    </g>
+
+    <!-- Stream arrow -->
+    <path d="M 140 56 L 240 56" fill="none" stroke="#38bdf8" stroke-width="2.5" marker-end="url(#pipeArrowSky)" />
+    <text x="190" y="46" text-anchor="middle" fill="#38bdf8" font-size="10" font-weight="bold" font-family="ui-monospace, monospace">Read 8 Bytes (Once!)</text>
+
+    <!-- Fused Arithmetic Core -->
+    <g transform="translate(246, 22)">
+      <rect width="360" height="68" rx="8" fill="#042f2e" stroke="#10b981" stroke-width="2" />
+      <text x="180" y="22" text-anchor="middle" fill="#34d399" font-size="10.5" font-weight="bold" font-family="ui-monospace, monospace">
+        FUSED COMPUTE CORE (Add + GeLU in Single Loop)
+      </text>
+      <rect x="20" y="32" width="320" height="26" rx="4" fill="#0f172a" stroke="#14b8a6" stroke-width="1" />
+      <text x="180" y="49" text-anchor="middle" fill="#ccfbf1" font-size="10.5" font-family="ui-monospace, monospace">
+        float val = x[i] + res[i];  y[i] = gelu(val); // In Register!
+      </text>
+    </g>
+
+    <!-- Store Arrow -->
+    <path d="M 606 56 L 688 56" fill="none" stroke="#10b981" stroke-width="2.5" marker-end="url(#pipeArrowEmerald)" />
+    <text x="647" y="46" text-anchor="middle" fill="#10b981" font-size="10" font-weight="bold" font-family="ui-monospace, monospace">Write 4B</text>
+
+    <!-- DRAM Output -->
+    <g transform="translate(694, 30)">
+      <rect width="92" height="52" rx="6" fill="#064e3b" stroke="#10b981" stroke-width="1.5" />
+      <text x="46" y="22" text-anchor="middle" fill="#a7f3d0" font-size="9.5" font-family="ui-monospace, monospace">DRAM</text>
+      <text x="46" y="40" text-anchor="middle" fill="#ffffff" font-size="12" font-weight="bold" font-family="ui-monospace, monospace">Output Y</text>
+    </g>
+  </g>
+</svg>

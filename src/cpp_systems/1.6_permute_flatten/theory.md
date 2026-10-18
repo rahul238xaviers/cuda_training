@@ -10,17 +10,14 @@ This chapter is the bridge between raw pointer arithmetic and PyTorch/NumPy tens
 
 A tensor is not just a flat array. It is a pair: `(data_pointer, stride_tuple)`.
 
-```text
-Tensor A of shape [3, 4] stored in row-major:
-  data_ptr: points to 12 floats in memory
-  strides: (4, 1)     ← advance 4 elements to move along dim 0 (row), 1 to move along dim 1 (col)
+| Tensor Dimension | Logical Size (Shape) | Physical Stride (Step in Memory) |
+| :--- | :---: | :---: |
+| **Dimension 0 (Row)** | `3` | `4 elements` (advance 16 bytes) |
+| **Dimension 1 (Column)** | `4` | `1 element` (advance 4 bytes) |
 
-To access A[i][j]: data_ptr[ i * 4 + j * 1 ]
-```
-
-This is the general formula: for an N-dimensional tensor with strides `(s_0, s_1, ..., s_{N-1})`:
-```
-flat_index = sum over all dimensions: index_d * stride_d
+```formula
+Address(A[i][j]) = data_ptr + i * 4 + j * 1
+flat_index = sum(index_d * stride_d)
 ```
 
 Any operation that only changes strides — without touching the data — is a **zero-copy view operation**.
@@ -31,13 +28,10 @@ Any operation that only changes strides — without touching the data — is a *
 
 Transposing a matrix `A[R][C]` (shape R×C, strides (C, 1)) to `A^T[C][R]` simply swaps the stride tuple:
 
-```text
-Original A:       shape=(3,4), strides=(4, 1)
-Transposed A^T:   shape=(4,3), strides=(1, 4)
-
-A[i][j]   accesses:  data_ptr[ i*4 + j*1 ]
-A^T[j][i] accesses:  data_ptr[ j*1 + i*4 ]  ← same data, same formula, different index meaning
-```
+| Matrix State | Shape | Stride Tuple | Element Address | Physical Data Moved |
+| :--- | :---: | :---: | :--- | :---: |
+| **Original Matrix `A`** | `[3, 4]` | `(4, 1)` | `data_ptr + i * 4 + j * 1` | None |
+| **Transposed Matrix `A^T`** | `[4, 3]` | `(1, 4)` | `data_ptr + j * 1 + i * 4` | **0 Bytes (Zero-Copy)** |
 
 No data is moved. The transposed tensor points to the **same physical memory** with different strides. This is why `torch.t()` and `torch.transpose()` are zero-copy.
 

@@ -19,7 +19,7 @@ A **stride** defines the number of elements (or bytes) you must skip in physical
 * **Column Stride**: The offset required to move to the next column: `col_stride = 1`
 
 ### Flat Address Mapping Formula:
-```text
+```formula
 Address(row, col) = BaseAddress + (row * Stride_Row + col * Stride_Col) * sizeof(T)
 ```
 
@@ -245,37 +245,39 @@ We use the **50% Working Set Rule**:
 #### Case 1: Out-of-Place Transpose (2 Active Buffers: `src` and `dst`)
 Both the source tile and the destination tile reside in L1 cache simultaneously:
 
-```text
+```formula
 Memory Footprint = 2 * (T * T * S) <= alpha * C_L1
-
 T <= sqrt( (alpha * C_L1) / (2 * S) )
 ```
 
 Plugging in real hardware parameters (`C_L1 = 65,536 bytes`, `S = 4 bytes`, `alpha = 0.25`):
-```text
+
+```formula
 T <= sqrt( (0.25 * 65,536) / (2 * 4) )
 T <= sqrt( 16,384 / 8 )
 T <= sqrt( 2,048 )
 T <= 45.2 elements -> Rounded down to power-of-2: T = 32
 ```
+
 **Golden Result for Out-of-Place**: **`T = 32`** (`32 x 32` floats = 4 KB per buffer, 8 KB total = 12.5% of L1).
 
 #### Case 2: In-Place Transpose (1 Active Buffer: In-Place Swap)
 Only a single matrix buffer exists in memory. Elements are swapped in-place using `std::swap(A[r * N + c], A[c * N + r])`:
 
-```text
+```formula
 Memory Footprint = T * T * S <= alpha * C_L1
-
 T <= sqrt( (alpha * C_L1) / S )
 ```
 
 Plugging in real hardware parameters (`C_L1 = 65,536 bytes`, `S = 4 bytes`, `alpha = 0.25`):
-```text
+
+```formula
 T <= sqrt( (0.25 * 65,536) / 4 )
 T <= sqrt( 16,384 / 4 )
 T <= sqrt( 4,096 )
 T <= 64 elements
 ```
+
 **Golden Result for In-Place**: **`T = 64`** (`64 x 64` floats = 16 KB total = 25% of L1).
 
 ---

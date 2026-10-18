@@ -1,0 +1,99 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 240" width="100%" height="100%">
+  <defs>
+    <linearGradient id="aliasingBg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stopColor="#0d1117" />
+      <stop offset="100%" stopColor="#070a0e" />
+    </linearGradient>
+    <linearGradient id="hazardGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stopColor="#7f1d1d" stopOpacity="0.4" />
+      <stop offset="100%" stopColor="#450a0a" stopOpacity="0.1" />
+    </linearGradient>
+    <marker id="aliasArrowSky" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+      <path d="M0,0.5 L0,5.5 L6,3 z" fill="#38bdf8" />
+    </marker>
+    <marker id="aliasArrowAmber" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+      <path d="M0,0.5 L0,5.5 L6,3 z" fill="#f59e0b" />
+    </marker>
+  </defs>
+
+  <!-- Background Canvas -->
+  <rect width="800" height="240" rx="12" fill="url(#aliasingBg)" stroke="#21262d" stroke-width="1.5" />
+
+  <!-- Header -->
+  <g transform="translate(24, 28)">
+    <circle cx="6" cy="6" r="4" fill="#ef4444" />
+    <text x="18" y="10" fill="#f87171" font-size="11" font-weight="bold" font-family="ui-monospace, monospace" letter-spacing="1">
+      POINTER ALIASING HAZARD: OVERLAPPING BUFFER MEMORY
+    </text>
+    <text x="18" y="24" fill="#94a3b8" font-size="10" font-family="system-ui, sans-serif">
+      float* x = &amp;buffer[0];  float* y = &amp;buffer[1];  // Array windows overlap by 1 element
+    </text>
+  </g>
+
+  <!-- Memory Cells Container -->
+  <!-- 5 Cells: buffer[0] to buffer[4], each width 110, height 50, gap 12. startX = 100, y = 75 -->
+  <!-- Hazard Highlight on Cell 1 -->
+  <rect x="222" y="70" width="110" height="60" rx="8" fill="url(#hazardGrad)" stroke="#ef4444" stroke-width="2" stroke-dasharray="4 2" />
+  <text x="277" y="62" text-anchor="middle" fill="#f87171" font-size="9.5" font-weight="bold" font-family="ui-monospace, monospace">
+    HAZARD OVERLAP
+  </text>
+
+  <!-- Cell 0 -->
+  <g transform="translate(100, 75)">
+    <rect width="110" height="50" rx="6" fill="#0d1520" stroke="#1e3046" stroke-width="1.5" />
+    <text x="55" y="18" text-anchor="middle" fill="#64748b" font-size="9.5" font-family="ui-monospace, monospace">buffer[0]</text>
+    <text x="55" y="38" text-anchor="middle" fill="#f1f5f9" font-size="13" font-weight="bold" font-family="ui-monospace, monospace">10.0</text>
+  </g>
+
+  <!-- Cell 1 (Collision) -->
+  <g transform="translate(222, 75)">
+    <rect width="110" height="50" rx="6" fill="#241416" stroke="#f87171" stroke-width="2" />
+    <text x="55" y="18" text-anchor="middle" fill="#fca5a5" font-size="9.5" font-weight="bold" font-family="ui-monospace, monospace">buffer[1]</text>
+    <text x="55" y="38" text-anchor="middle" fill="#ffffff" font-size="13" font-weight="bold" font-family="ui-monospace, monospace">20.0</text>
+  </g>
+
+  <!-- Cell 2 -->
+  <g transform="translate(344, 75)">
+    <rect width="110" height="50" rx="6" fill="#0d1520" stroke="#1e3046" stroke-width="1.5" />
+    <text x="55" y="18" text-anchor="middle" fill="#64748b" font-size="9.5" font-family="ui-monospace, monospace">buffer[2]</text>
+    <text x="55" y="38" text-anchor="middle" fill="#f1f5f9" font-size="13" font-weight="bold" font-family="ui-monospace, monospace">30.0</text>
+  </g>
+
+  <!-- Cell 3 -->
+  <g transform="translate(466, 75)">
+    <rect width="110" height="50" rx="6" fill="#0d1520" stroke="#1e3046" stroke-width="1.5" />
+    <text x="55" y="18" text-anchor="middle" fill="#64748b" font-size="9.5" font-family="ui-monospace, monospace">buffer[3]</text>
+    <text x="55" y="38" text-anchor="middle" fill="#f1f5f9" font-size="13" font-weight="bold" font-family="ui-monospace, monospace">40.0</text>
+  </g>
+
+  <!-- Cell 4 -->
+  <g transform="translate(588, 75)">
+    <rect width="110" height="50" rx="6" fill="#0d1520" stroke="#1e3046" stroke-width="1.5" />
+    <text x="55" y="18" text-anchor="middle" fill="#64748b" font-size="9.5" font-family="ui-monospace, monospace">buffer[4]</text>
+    <text x="55" y="38" text-anchor="middle" fill="#f1f5f9" font-size="13" font-weight="bold" font-family="ui-monospace, monospace">50.0</text>
+  </g>
+
+  <!-- Pointer X: Points to buffer[0] -->
+  <g transform="translate(100, 165)">
+    <rect width="110" height="30" rx="6" fill="#0c2a4a" stroke="#38bdf8" stroke-width="1.5" />
+    <text x="55" y="19" text-anchor="middle" fill="#38bdf8" font-size="11" font-weight="bold" font-family="ui-monospace, monospace">x[0] (x_ptr)</text>
+    <line x1="55" y1="0" x2="55" y2="-30" stroke="#38bdf8" stroke-width="2" marker-end="url(#aliasArrowSky)" />
+  </g>
+
+  <!-- Pointer Y: Points to buffer[1] -->
+  <g transform="translate(222, 165)">
+    <rect width="110" height="30" rx="6" fill="#2a1a04" stroke="#f59e0b" stroke-width="1.5" />
+    <text x="55" y="19" text-anchor="middle" fill="#fcd34d" font-size="11" font-weight="bold" font-family="ui-monospace, monospace">y[0] (y_ptr)</text>
+    <line x1="55" y1="0" x2="55" y2="-30" stroke="#f59e0b" stroke-width="2" marker-end="url(#aliasArrowAmber)" />
+  </g>
+
+  <!-- Subtitle note on alias collision -->
+  <g transform="translate(350, 172)">
+    <text x="0" y="12" fill="#e2e8f0" font-size="11" font-family="system-ui, sans-serif">
+      <tspan fill="#38bdf8" font-weight="bold" font-family="ui-monospace, monospace">x[1]</tspan> and <tspan fill="#f59e0b" font-weight="bold" font-family="ui-monospace, monospace">y[0]</tspan> both resolve to the <tspan fill="#ef4444" font-weight="bold">exact same address</tspan> (&amp;buffer[1]).
+    </text>
+    <text x="0" y="28" fill="#94a3b8" font-size="10.5" font-family="system-ui, sans-serif">
+      Writing to y[0] silently alters the value of x[1] for the next iteration!
+    </text>
+  </g>
+</svg>

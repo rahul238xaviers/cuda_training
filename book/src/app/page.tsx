@@ -22,6 +22,8 @@ export default function BookPlatform() {
   const [activeCode, setActiveCode] = useState<string>('');
   const [target, setTarget] = useState<'solution' | 'exercise'>('solution');
   const [isLoadingNode, setIsLoadingNode] = useState<boolean>(true);
+  const [isHydrated, setIsHydrated] = useState<boolean>(false);
+
 
   // Live Disk Save State
   const [saveStatus, setSaveStatus] = useState<'saved' | 'saving' | 'unsaved'>('saved');
@@ -85,19 +87,76 @@ export default function BookPlatform() {
     const saved = getStoredTheme();
     applyTheme(saved);
     loadTree();
+
+    // Hydrate activeNode and target from URL query params or localStorage
+    try {
+      const searchParams = new URLSearchParams(window.location.search);
+      const urlType = searchParams.get('type') as any;
+
+      if (urlType) {
+        const nodeFromUrl: ActiveNode = {
+          type: urlType,
+          chapterId: searchParams.get('chapter') || undefined,
+          volumeId: searchParams.get('volumeId') || 'vol1',
+          tier: (searchParams.get('tier') as any) || undefined,
+          kernelId: searchParams.get('kernelId') ? parseInt(searchParams.get('kernelId')!, 10) : undefined,
+          playgroundType: (searchParams.get('playgroundType') as any) || undefined,
+          practiceKernel: searchParams.get('practiceKernel') || undefined,
+        };
+        setActiveNode(nodeFromUrl);
+      } else {
+        const savedNode = localStorage.getItem('active_node');
+        if (savedNode) {
+          const parsed = JSON.parse(savedNode);
+          if (parsed && parsed.type) {
+            setActiveNode(parsed);
+          }
+        }
+      }
+
+      const savedTarget = localStorage.getItem('active_target');
+      if (savedTarget === 'solution' || savedTarget === 'exercise') {
+        setTarget(savedTarget);
+      }
+    } catch {}
+
+    setIsHydrated(true);
   }, []);
+
+  // Persist activeNode and sync with browser URL
+  useEffect(() => {
+    if (!isHydrated || !activeNode) return;
+    try {
+      localStorage.setItem('active_node', JSON.stringify(activeNode));
+
+      const params = new URLSearchParams();
+      params.set('type', activeNode.type);
+      if (activeNode.chapterId) params.set('chapter', activeNode.chapterId);
+      if (activeNode.volumeId) params.set('volumeId', activeNode.volumeId);
+      if (activeNode.tier) params.set('tier', activeNode.tier);
+      if (activeNode.kernelId) params.set('kernelId', String(activeNode.kernelId));
+      if (activeNode.playgroundType) params.set('playgroundType', activeNode.playgroundType);
+      if (activeNode.practiceKernel) params.set('practiceKernel', activeNode.practiceKernel);
+
+      const newUrl = `${window.location.pathname}?${params.toString()}`;
+      window.history.replaceState(null, '', newUrl);
+    } catch {}
+  }, [activeNode, isHydrated]);
+
+  // Persist target preference
+  useEffect(() => {
+    if (!isHydrated) return;
+    try {
+      localStorage.setItem('active_target', target);
+    } catch {}
+  }, [target, isHydrated]);
+
 
   // Fetch node content whenever activeNode changes
   const fetchNodeContent = useCallback(async (node: ActiveNode, currentTarget: 'solution' | 'exercise') => {
     setIsLoadingNode(true);
     setRunStatus('idle');
     setSaveStatus('saved');
-
-    if (node.type === 'guide') {
-      setIsLoadingNode(false);
-      setNodeData({ title: 'Curriculum Orientation & Roadmap' });
-      return;
-    }
 
     try {
       const params = new URLSearchParams();
@@ -152,8 +211,10 @@ export default function BookPlatform() {
   }, []);
 
   useEffect(() => {
+    if (!isHydrated) return;
     fetchNodeContent(activeNode, target);
-  }, [activeNode, fetchNodeContent, target]);
+  }, [activeNode, fetchNodeContent, target, isHydrated]);
+
 
   const handleTargetChange = async (newTarget: 'solution' | 'exercise') => {
     if (newTarget === target) return;
@@ -483,9 +544,12 @@ export default function BookPlatform() {
             </div>
           ) : (
             <>
-              {/* Orientation & Learning Guide View */}
+              {/* Orientation & Learning Guide View (Dynamic AST Pipeline) */}
               {activeNode.type === 'guide' && (
-                <OrientationGuide onNavigate={(node) => setActiveNode(node)} />
+                <OrientationGuide
+                  onNavigate={(node) => setActiveNode(node)}
+                  content={nodeData?.content}
+                />
               )}
 
               {/* Theory or Cheat Sheet Reader View */}

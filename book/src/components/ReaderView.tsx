@@ -1,19 +1,21 @@
 'use client';
 
-import React, { useMemo, useEffect, useState, useRef } from 'react';
-import { marked } from 'marked';
-import hljs from 'highlight.js';
-import { BookOpen, Bookmark, Highlighter, Sparkles, Check, Share2, Layers } from 'lucide-react';
-import { GenericDiagramRenderer } from './TextbookDiagrams';
+import React, { useEffect, useState, useRef } from 'react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import { BookOpen, Bookmark, Highlighter } from 'lucide-react';
+
 import { HighlightPalette } from './HighlightPalette';
 import { AnnotationsDrawer } from './AnnotationsDrawer';
+import { CalloutBlock } from './reader/CalloutBlock';
+import { AdaptiveAsset } from './reader/AdaptiveAsset';
+import { CodeBlock } from './reader/CodeBlock';
 import {
   getBookmarks,
   getHighlights,
   isChapterBookmarked,
   toggleChapterBookmark,
   ChapterHighlight,
-  MarkerColor,
 } from '../lib/annotations';
 
 interface ReaderViewProps {
@@ -23,20 +25,6 @@ interface ReaderViewProps {
   type: 'theory' | 'cheat_sheet';
   onNavigateChapter?: (chapterId: string) => void;
 }
-
-interface ContentChunk {
-  type: 'markdown' | 'diagram';
-  content?: string;
-  diagramType?: string;
-  payload?: string;
-}
-
-const MARKER_COLOR_CLASSES: Record<MarkerColor, string> = {
-  yellow: 'bg-amber-400/25 border-b-2 border-amber-400 text-amber-100',
-  emerald: 'bg-emerald-400/25 border-b-2 border-emerald-400 text-emerald-100',
-  purple: 'bg-purple-400/25 border-b-2 border-purple-400 text-purple-100',
-  cyan: 'bg-sky-400/25 border-b-2 border-sky-400 text-sky-100',
-};
 
 export function ReaderView({ title, content, chapterId = '1.1', type, onNavigateChapter }: ReaderViewProps) {
   const [isBookmarked, setIsBookmarked] = useState(false);
@@ -61,133 +49,6 @@ export function ReaderView({ title, content, chapterId = '1.1', type, onNavigate
     const newState = toggleChapterBookmark(chapterId, title);
     setIsBookmarked(newState);
   };
-
-  // Configure marked renderer for IDE-grade code blocks
-  const markedRenderer = useMemo(() => {
-    const renderer = new marked.Renderer();
-
-    renderer.code = function ({ text, lang }: { text: string; lang?: string }) {
-      const cleanLang = (lang || '').toLowerCase().trim();
-
-      // Case 1: Mathematical Formula or Memory Addressing Card (No line numbers)
-      if (cleanLang === 'formula' || cleanLang === 'math') {
-        const safeText = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-        const formulaLines = safeText
-          .split('\n')
-          .filter((l) => l.trim().length > 0)
-          .map((line) => `<div class="py-1 tracking-wide">${line}</div>`)
-          .join('');
-        return `<div class="formula-card my-6 rounded-xl border border-sky-500/30 bg-[#0e1420] shadow-lg overflow-hidden select-text"><div class="formula-card-header flex items-center justify-between px-4 py-2 bg-[#141b2a] border-b border-[#212b3d] text-xs select-none"><span class="formula-card-title text-[11px] font-mono text-sky-400 font-semibold tracking-wider uppercase flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-sky-400"></span> Mathematical Definition & Address Scaling</span><span class="formula-card-subtitle text-[10px] text-slate-400 font-mono">Systems Arithmetic</span></div><div class="formula-card-body p-4 text-center font-mono text-[13px] md:text-sm text-sky-100 font-medium overflow-x-auto">${formulaLines}</div></div>`;
-      }
-
-      // Case 2: Plain Monospace Text or Memory Timeline (No line numbers)
-      if (!cleanLang || cleanLang === 'text') {
-        const lines = text.split('\n');
-        const highlightedLines = lines
-          .map((line) => {
-            const safe = line
-              .replace(/&/g, '&amp;')
-              .replace(/</g, '&lt;')
-              .replace(/>/g, '&gt;');
-            return `<div class="schematic-line font-mono text-xs leading-relaxed whitespace-pre">${safe || '&nbsp;'}</div>`;
-          })
-          .join('');
-
-        return `<div class="schematic-card my-6 rounded-xl border border-[#2d3748] bg-[#0b0f19] shadow-lg overflow-hidden select-text"><div class="schematic-card-header flex items-center justify-between px-3.5 py-1.5 bg-[#121824] border-b border-[#1f2937] text-xs select-none"><div class="flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-indigo-400"></span><span class="schematic-card-title text-[11px] font-mono text-indigo-300 font-semibold tracking-wider uppercase">System Architecture & Schematic</span></div><button class="copy-btn px-2.5 py-1 rounded text-[11px] font-medium text-slate-400 hover:text-slate-100 bg-[#1a212e] hover:bg-[#232c3d] transition-all cursor-pointer flex items-center gap-1 border border-[#30363d]" data-code="${encodeURIComponent(text)}">Copy</button></div><div class="schematic-card-body p-4 overflow-x-auto">${highlightedLines}</div></div>`;
-      }
-
-      // Case 3: Executable Programming Code (IDE-grade with line-number gutter)
-      const language = hljs.getLanguage(cleanLang) ? cleanLang : undefined;
-      const highlighted = language
-        ? hljs.highlight(text, { language }).value
-        : hljs.highlightAuto(text).value;
-
-      const lines = highlighted.split('\n');
-      if (lines.length > 1 && lines[lines.length - 1].trim() === '') {
-        lines.pop();
-      }
-
-      const codeLinesHtml = lines
-        .map((line, idx) => {
-          const lineNumber = idx + 1;
-          const content = line || '&nbsp;';
-          return `<div class="code-line flex items-baseline hover:bg-white/[0.03] px-3.5 py-[1.5px] transition-colors"><span class="line-gutter select-none text-[11px] font-mono text-[#484f58] pr-3 mr-3 border-r border-[#262d3d] text-right w-8 shrink-0">${lineNumber}</span><span class="line-code font-mono text-xs leading-relaxed flex-1 whitespace-pre">${content}</span></div>`;
-        })
-        .join('');
-
-      const displayLang = cleanLang.toUpperCase();
-
-      return `<div class="code-block-wrapper my-6 rounded-xl overflow-hidden border border-[#2a3241] bg-[#090d14] shadow-xl"><div class="code-block-header flex items-center justify-between px-3.5 py-1.5 bg-[#121620] border-b border-[#21262d] text-xs select-none"><div class="flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-sky-400"></span><span class="font-mono text-[11px] text-slate-300 font-semibold tracking-wider">${displayLang}</span></div><button class="copy-btn px-2.5 py-1 rounded text-[11px] font-medium text-slate-400 hover:text-slate-100 bg-[#1a212e] hover:bg-[#232c3d] transition-all cursor-pointer flex items-center gap-1 border border-[#30363d]" data-code="${encodeURIComponent(text)}">Copy</button></div><div class="py-2.5 overflow-x-auto"><div class="code-lines font-mono text-xs">${codeLinesHtml}</div></div></div>`;
-    };
-
-    marked.setOptions({
-      gfm: true,
-      breaks: true,
-      renderer,
-    });
-
-    return renderer;
-  }, []);
-
-  // Split content into Markdown chunks and Special Diagram tag blocks
-  const chunks = useMemo(() => {
-    if (!content) return [];
-
-    const DIAGRAM_REGEX = /```diagram:([a-zA-Z0-9_-]+)\s*\n([\s\S]*?)```/g;
-    const result: ContentChunk[] = [];
-    let lastIndex = 0;
-    let match: RegExpExecArray | null;
-
-    while ((match = DIAGRAM_REGEX.exec(content)) !== null) {
-      if (match.index > lastIndex) {
-        result.push({
-          type: 'markdown',
-          content: content.slice(lastIndex, match.index),
-        });
-      }
-      result.push({
-        type: 'diagram',
-        diagramType: match[1],
-        payload: match[2],
-      });
-      lastIndex = match.index + match[0].length;
-    }
-
-    if (lastIndex < content.length) {
-      result.push({
-        type: 'markdown',
-        content: content.slice(lastIndex),
-      });
-    }
-
-    return result;
-  }, [content]);
-
-  // Handle Copy Button clicks inside rendered HTML
-  useEffect(() => {
-    const handleCopy = (e: MouseEvent) => {
-      const target = e.target as HTMLElement;
-      const btn = target.closest('.copy-btn') as HTMLButtonElement | null;
-      if (!btn) return;
-
-      const rawCode = btn.getAttribute('data-code');
-      if (rawCode) {
-        const decoded = decodeURIComponent(rawCode);
-        navigator.clipboard.writeText(decoded).then(() => {
-          const originalText = btn.innerText;
-          btn.innerText = 'Copied! ✓';
-          btn.classList.add('text-emerald-400', 'bg-emerald-950/40');
-          setTimeout(() => {
-            btn.innerText = originalText;
-            btn.classList.remove('text-emerald-400', 'bg-emerald-950/40');
-          }, 2000);
-        });
-      }
-    };
-
-    document.addEventListener('click', handleCopy);
-    return () => document.removeEventListener('click', handleCopy);
-  }, []);
 
   return (
     <div
@@ -262,26 +123,63 @@ export function ReaderView({ title, content, chapterId = '1.1', type, onNavigate
           </div>
         </div>
 
-        {/* Content Chunks: Alternating between Markdown prose and Embedded SVG Diagrams */}
-        <div className="space-y-6">
-          {chunks.map((chunk, idx) => {
-            if (chunk.type === 'diagram' && chunk.diagramType && chunk.payload) {
-              return (
-                <div key={idx} className="my-6">
-                  <GenericDiagramRenderer type={chunk.diagramType} payload={chunk.payload} />
+        {/* Dynamic Markdown AST Pipeline */}
+        <div className="prose-dark leading-relaxed select-text space-y-4">
+          <ReactMarkdown
+            remarkPlugins={[remarkGfm]}
+            components={{
+              blockquote: ({ children }) => <CalloutBlock>{children}</CalloutBlock>,
+              img: ({ src, alt, title: imgTitle }: any) => (
+                <AdaptiveAsset
+                  src={typeof src === 'string' ? src : ''}
+                  alt={alt}
+                  title={imgTitle}
+                  chapterId={chapterId}
+                />
+              ),
+              code: ({ className, children, ...props }: any) => (
+                <CodeBlock inline={props.inline || !className} className={className}>
+                  {children}
+                </CodeBlock>
+              ),
+              table: ({ children }) => (
+                <div className="my-6 overflow-x-auto rounded-xl border border-[var(--border-subtle)] bg-[#0c1017] shadow-lg">
+                  <table className="w-full text-left text-xs md:text-sm border-collapse font-sans">
+                    {children}
+                  </table>
                 </div>
-              );
-            }
-
-            const html = marked.parse(chunk.content || '', { renderer: markedRenderer }) as string;
-            return (
-              <div
-                key={idx}
-                className="prose-dark leading-relaxed select-text"
-                dangerouslySetInnerHTML={{ __html: html }}
-              />
-            );
-          })}
+              ),
+              thead: ({ children }) => (
+                <thead className="bg-[#141b28] border-b border-[#212c3f] text-slate-200 font-mono text-[11px] uppercase tracking-wider">
+                  {children}
+                </thead>
+              ),
+              th: ({ children }) => <th className="px-4 py-3 font-semibold">{children}</th>,
+              td: ({ children }) => <td className="px-4 py-3 border-b border-[#1c2433] text-slate-300">{children}</td>,
+              h1: ({ children }) => (
+                <h1 className="text-2xl md:text-3xl font-extrabold text-[var(--text-primary)] mt-8 mb-4 tracking-tight">
+                  {children}
+                </h1>
+              ),
+              h2: ({ children }) => (
+                <h2 className="text-xl md:text-2xl font-bold text-[var(--text-primary)] mt-8 mb-3.5 tracking-tight border-b border-[var(--border-subtle)] pb-2">
+                  {children}
+                </h2>
+              ),
+              h3: ({ children }) => (
+                <h3 className="text-lg md:text-xl font-bold text-[var(--text-primary)] mt-6 mb-2.5 tracking-tight">
+                  {children}
+                </h3>
+              ),
+              p: ({ children }) => <div className="my-3.5 leading-relaxed text-slate-300">{children}</div>,
+              ul: ({ children }) => <ul className="my-3.5 pl-6 list-disc space-y-1.5 text-slate-300">{children}</ul>,
+              ol: ({ children }) => <ol className="my-3.5 pl-6 list-decimal space-y-1.5 text-slate-300">{children}</ol>,
+              li: ({ children }) => <li className="leading-relaxed">{children}</li>,
+              hr: () => <hr className="my-8 border-[var(--border-subtle)]" />,
+            }}
+          >
+            {content}
+          </ReactMarkdown>
         </div>
       </div>
     </div>

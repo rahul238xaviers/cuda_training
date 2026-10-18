@@ -25,6 +25,21 @@ export async function GET(request: NextRequest) {
   const playgroundType = (searchParams.get('playgroundType') || searchParams.get('subType') || 'cpp') as PlaygroundType;
   const practiceKernel = searchParams.get('practiceKernel') || searchParams.get('file') || searchParams.get('filename') || 'gpu_check.cu';
 
+  // 0. Curriculum Orientation & Roadmap Guide
+  if (type === 'guide') {
+    const guidePath = path.join(WORKSPACE_ROOT, 'src', 'curriculum_orientation.md');
+    const content = fs.existsSync(guidePath)
+      ? fs.readFileSync(guidePath, 'utf-8')
+      : '# Curriculum Orientation\n\n*Orientation guide coming soon.*';
+    return NextResponse.json({
+      type: 'guide',
+      title: 'Curriculum Orientation & Roadmap',
+      content,
+      readTimeMin: 5,
+      relPath: path.relative(WORKSPACE_ROOT, guidePath),
+    });
+  }
+
   // 1. Open Practice Kernels Support (kernels/practice/*.cu)
   if (type === 'practice') {
     const info = getPracticeKernelInfo(practiceKernel);

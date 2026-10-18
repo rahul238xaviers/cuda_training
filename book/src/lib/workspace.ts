@@ -124,14 +124,29 @@ export const PRACTICE_KERNEL_METADATA: Record<string, { title: string; subtitle:
   },
 };
 
+export function loadPracticeKernelsManifest(): Record<string, { title: string; subtitle: string }> {
+  const manifestPath = path.join(PRACTICE_DIR, 'manifest.json');
+  if (fs.existsSync(manifestPath)) {
+    try {
+      const data = JSON.parse(fs.readFileSync(manifestPath, 'utf-8'));
+      if (data && data.kernels) {
+        return data.kernels;
+      }
+    } catch {}
+  }
+  return PRACTICE_KERNEL_METADATA;
+}
+
 export function scanPracticeKernels(): PracticeKernelMeta[] {
   if (!fs.existsSync(PRACTICE_DIR)) return [];
 
   const files = fs.readdirSync(PRACTICE_DIR).filter((f) => f.endsWith('.cu'));
   files.sort();
 
+  const manifest = loadPracticeKernelsManifest();
+
   return files.map((filename) => {
-    const meta = PRACTICE_KERNEL_METADATA[filename] || {
+    const meta = manifest[filename] || PRACTICE_KERNEL_METADATA[filename] || {
       title: filename.replace('.cu', '').replace(/[_-]/g, ' '),
       subtitle: 'Open CUDA practice and logic experimentation kernel',
     };
@@ -153,7 +168,8 @@ export function getPracticeKernelInfo(fileOrId: string): PracticeKernelMeta | nu
   const filePath = path.join(PRACTICE_DIR, filename);
   if (!fs.existsSync(filePath)) return null;
 
-  const meta = PRACTICE_KERNEL_METADATA[filename] || {
+  const manifest = loadPracticeKernelsManifest();
+  const meta = manifest[filename] || PRACTICE_KERNEL_METADATA[filename] || {
     title: filename.replace('.cu', '').replace(/[_-]/g, ' '),
     subtitle: 'Open CUDA practice and logic experimentation kernel',
   };

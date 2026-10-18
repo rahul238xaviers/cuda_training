@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Layers, Database, Cpu, Info, CheckCircle2, AlertTriangle } from 'lucide-react';
+import { Layers, Database, Cpu, Info, CheckCircle2, AlertTriangle, Activity, Zap, Gauge, HardDrive } from 'lucide-react';
 
 // ============================================================================
 // Stride Layout Diagram — Chapter 1.2: 2D logical grid → flat 1D memory strip
@@ -1032,15 +1032,15 @@ export function StridedAccessDiagram({ data }: { data: any }) {
               </text>
             </g>
           ))}
-          {/* Pointer x_ptr arrow */}
-          <rect x="30" y="80" width="80" height="28" rx="6" fill="#1c2233" stroke="#38bdf8" strokeWidth="1.5" />
-          <text x="70" y="98" textAnchor="middle" fill="#7dd3fc" fontSize="10" fontFamily="ui-monospace, monospace">x_ptr →</text>
-          <line x1="110" y1="94" x2="52" y2="71" stroke="#38bdf8" strokeWidth="1.5" strokeDasharray="4 2" markerEnd="url(#arrowSky)" />
+          {/* Pointer x_ptr arrow — perfectly aligned vertical pointer into x[0] */}
+          <rect x="30" y="82" width={cellW} height="26" rx="6" fill="#0c2a4a" stroke="#38bdf8" strokeWidth="1.5" />
+          <text x={startX + cellW / 2} y="99" textAnchor="middle" fill="#38bdf8" fontSize="11" fontWeight="bold" fontFamily="ui-monospace, monospace">x_ptr</text>
+          <line x1={startX + cellW / 2} y1="82" x2={startX + cellW / 2} y2="72" stroke="#38bdf8" strokeWidth="2" markerEnd="url(#arrowSky)" />
 
           {/* === Array Y === */}
-          <text x={startX} y="140" fill="#f59e0b" fontSize="11" fontWeight="bold" fontFamily="ui-monospace, monospace">READ+WRITE: y[ ] — Base 0x4000</text>
+          <text x={startX} y="138" fill="#f59e0b" fontSize="11" fontWeight="bold" fontFamily="ui-monospace, monospace">READ+WRITE: y[ ] — Base 0x4000</text>
           {[...Array(numCells)].map((_, i) => (
-            <g key={`y${i}`} transform={`translate(${startX + i * (cellW + gutter)}, 148)`}>
+            <g key={`y${i}`} transform={`translate(${startX + i * (cellW + gutter)}, 146)`}>
               <rect width={cellW} height="40" rx="6" fill={i === 0 ? '#2a1a04' : '#0d1520'} stroke={i === 0 ? '#f59e0b' : '#362a10'} strokeWidth={i === 0 ? 2 : 1} />
               <text x={cellW / 2} y="17" textAnchor="middle" fill="#94a3b8" fontSize="9" fontFamily="ui-monospace, monospace">y[{i}]</text>
               <text x={cellW / 2} y="30" textAnchor="middle" fill={i === 0 ? '#fcd34d' : '#475569'} fontSize="10" fontWeight={i === 0 ? 'bold' : 'normal'} fontFamily="ui-monospace, monospace">
@@ -1048,39 +1048,709 @@ export function StridedAccessDiagram({ data }: { data: any }) {
               </text>
             </g>
           ))}
-          {/* Pointer y_ptr arrow */}
-          <rect x="30" y="198" width="80" height="28" rx="6" fill="#1c2233" stroke="#f59e0b" strokeWidth="1.5" />
-          <text x="70" y="216" textAnchor="middle" fill="#fcd34d" fontSize="10" fontFamily="ui-monospace, monospace">y_ptr →</text>
-          <line x1="110" y1="212" x2="52" y2="189" stroke="#f59e0b" strokeWidth="1.5" strokeDasharray="4 2" markerEnd="url(#arrowAmber)" />
+          {/* Pointer y_ptr arrow — perfectly aligned vertical pointer into y[0] */}
+          <rect x="30" y="198" width={cellW} height="26" rx="6" fill="#2a1a04" stroke="#f59e0b" strokeWidth="1.5" />
+          <text x={startX + cellW / 2} y="215" textAnchor="middle" fill="#fcd34d" fontSize="11" fontWeight="bold" fontFamily="ui-monospace, monospace">y_ptr</text>
+          <line x1={startX + cellW / 2} y1="198" x2={startX + cellW / 2} y2="188" stroke="#f59e0b" strokeWidth="2" markerEnd="url(#arrowAmber)" />
 
           {/* FMA operation box */}
-          <rect x="490" y="85" width="240" height="58" rx="10" fill="#0d1a28" stroke="#1d4ed8" strokeWidth="1.5" />
-          <text x="610" y="107" textAnchor="middle" fill="#93c5fd" fontSize="11" fontWeight="bold" fontFamily="ui-monospace, monospace">y[i] = α·x[i] + y[i]</text>
-          <text x="610" y="124" textAnchor="middle" fill="#60a5fa" fontSize="10" fontFamily="ui-monospace, monospace">2 FLOPs / 12 bytes = 0.17 FLOPs/B</text>
+          <rect x="490" y="82" width="240" height="64" rx="10" fill="#0d1a28" stroke="#1d4ed8" strokeWidth="1.5" />
+          <text x="610" y="104" textAnchor="middle" fill="#93c5fd" fontSize="11" fontWeight="bold" fontFamily="ui-monospace, monospace">y[i] = α·x[i] + y[i]</text>
+          <text x="610" y="122" textAnchor="middle" fill="#60a5fa" fontSize="10" fontFamily="ui-monospace, monospace">2 FLOPs / 12 bytes = 0.17 FLOPs/B</text>
           <text x="610" y="137" textAnchor="middle" fill="#3b82f6" fontSize="9" fontFamily="ui-monospace, monospace">→ Memory Bandwidth Bound</text>
 
           <defs>
-            <marker id="arrowSky" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto">
-              <path d="M0,0 L0,6 L7,3 z" fill="#38bdf8" />
+            <marker id="arrowSky" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+              <path d="M0,0.5 L0,5.5 L6,3 z" fill="#38bdf8" />
             </marker>
-            <marker id="arrowAmber" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto">
-              <path d="M0,0 L0,6 L7,3 z" fill="#f59e0b" />
+            <marker id="arrowAmber" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+              <path d="M0,0.5 L0,5.5 L6,3 z" fill="#f59e0b" />
             </marker>
           </defs>
         </svg>
 
-        <div className="mt-3 grid grid-cols-3 gap-3 text-xs">
-          <div className="p-2.5 rounded-lg bg-sky-950/30 border border-sky-500/20 text-sky-300 font-mono text-center">
-            <div className="font-bold mb-0.5">Load x[i]</div>
-            <div className="text-[10px] text-sky-400 opacity-80">4 bytes / element</div>
+        <div className="mt-4 grid grid-cols-3 gap-3 text-xs">
+          <div className="p-3 rounded-xl bg-sky-500/10 border border-sky-500/25 text-sky-300 font-mono text-center">
+            <div className="font-bold text-[11px] text-sky-200 mb-0.5">Load x[i]</div>
+            <div className="text-[10px] text-sky-400">4 bytes / element (Read)</div>
           </div>
-          <div className="p-2.5 rounded-lg bg-amber-950/30 border border-amber-500/20 text-amber-300 font-mono text-center">
-            <div className="font-bold mb-0.5">Load + Store y[i]</div>
-            <div className="text-[10px] text-amber-400 opacity-80">8 bytes / element</div>
+          <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/25 text-amber-300 font-mono text-center">
+            <div className="font-bold text-[11px] text-amber-200 mb-0.5">Load + Store y[i]</div>
+            <div className="text-[10px] text-amber-400">8 bytes / element (Read+Write)</div>
           </div>
-          <div className="p-2.5 rounded-lg bg-rose-950/30 border border-rose-500/20 text-rose-300 font-mono text-center">
-            <div className="font-bold mb-0.5">Total Bus Traffic</div>
-            <div className="text-[10px] text-rose-400 opacity-80">12 bytes for 2 FLOPs</div>
+          <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/25 text-rose-300 font-mono text-center">
+            <div className="font-bold text-[11px] text-rose-200 mb-0.5">Total Bus Traffic</div>
+            <div className="text-[10px] text-rose-400">12 bytes for 2 FLOPs</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ============================================================================
+// Roofline Diagram — Chapter 1.4: Hardware Arithmetic Intensity & Machine Balance
+// ============================================================================
+export function RooflineDiagram({ data }: { data: any }) {
+  const [targetArch, setTargetArch] = useState<'rtx5090' | 'ryzen9950x'>('rtx5090');
+  const [selectedWorkload, setSelectedWorkload] = useState<'saxpy' | 'fused' | 'gemm'>('saxpy');
+
+  const title = data?.title || 'Hardware Roofline Model: Memory Bound vs Compute Bound';
+  const subtitle = data?.subtitle || 'Interactive plot mapping arithmetic intensity against physical hardware ceilings on RTX 5090 and Ryzen 9 9950X.';
+
+  // Architectural hardware limits
+  const archs = {
+    rtx5090: {
+      id: 'rtx5090',
+      name: 'NVIDIA RTX 5090',
+      chip: 'Blackwell GB202',
+      tech: '512-bit GDDR7 @ 28 Gbps',
+      peakComputeTflops: 105.0,
+      bandwidthGBs: 1792,
+      ridgePoint: 58.6,
+      peakComputeStr: '105.0 TFLOPS FP32',
+      bandwidthStr: '1,792 GB/s',
+      color: '#38bdf8',
+    },
+    ryzen9950x: {
+      id: 'ryzen9950x',
+      name: 'AMD Ryzen 9 9950X',
+      chip: 'Zen 5 (16 Cores / 32 Threads)',
+      tech: 'Dual-Channel DDR5-6000 CL30',
+      peakComputeTflops: 3.5,
+      bandwidthGBs: 96,
+      ridgePoint: 36.5,
+      peakComputeStr: '3.5 TFLOPS (3,500 GFLOPS)',
+      bandwidthStr: '96 GB/s',
+      color: '#f59e0b',
+    },
+  };
+
+  const currentArch = archs[targetArch];
+
+  // Workload definitions
+  const workloads = {
+    saxpy: {
+      id: 'saxpy',
+      name: 'SAXPY Vector Traversal',
+      tag: 'BLAS Level 1 · Element-wise',
+      expr: 'y[i] = α · x[i] + y[i]',
+      intensity: 0.167,
+      intensityDisplay: '0.167 FLOPs / Byte',
+      busTraffic: '12 Bytes per 2 FLOPs',
+      badgeColor: 'sky',
+      isMemoryBound: true,
+      diagnosis: 'Severe Memory Wall Choke',
+      explanation: 'Streams 4B x[i] and 8B y[i] over the memory bus for every 2 FLOPs. Over 99% of compute cores sit completely idle waiting for DRAM.',
+    },
+    fused: {
+      id: 'fused',
+      name: 'Fused GeLU + Residual',
+      tag: 'Deep Learning Activation Block',
+      expr: 'y[i] = GeLU(x[i] + res[i])',
+      intensity: 0.80,
+      intensityDisplay: '0.80 FLOPs / Byte',
+      busTraffic: '10 Bytes per 8 FLOPs',
+      badgeColor: 'amber',
+      isMemoryBound: true,
+      diagnosis: 'Bandwidth Bound (4.8x Intensity Boost)',
+      explanation: 'Operator fusion keeps intermediate results in registers, eliminating redundant round-trips to DRAM and speeding up execution by ~4x.',
+    },
+    gemm: {
+      id: 'gemm',
+      name: 'Tiled Matrix Multiply (GEMM)',
+      tag: 'BLAS Level 3 · Dense Linear Algebra',
+      expr: 'C = α · A · B + β · C',
+      intensity: 120.0,
+      intensityDisplay: '120.0 FLOPs / Byte',
+      busTraffic: 'Shared Memory Tile Reuse O(N)',
+      badgeColor: 'emerald',
+      isMemoryBound: false,
+      diagnosis: 'Compute Bound (Full Saturation)',
+      explanation: 'High tile reuse inside SRAM/registers enables every loaded byte to be reused dozens of times, reaching 100% of theoretical compute peak.',
+    },
+  };
+
+  const activeWl = workloads[selectedWorkload];
+
+  // Attainable calculations: min(Peak, Intensity * Bandwidth)
+  const calcThroughputTflops = (intensity: number) => {
+    const memThroughput = (intensity * currentArch.bandwidthGBs) / 1000;
+    return Math.min(currentArch.peakComputeTflops, memThroughput);
+  };
+
+  const activeThroughput = calcThroughputTflops(activeWl.intensity);
+  const activeThroughputDisplay =
+    currentArch.id === 'ryzen9950x'
+      ? `${(activeThroughput * 1000).toFixed(1)} GFLOPS`
+      : activeThroughput < 1.0
+      ? `${(activeThroughput * 1000).toFixed(0)} GFLOPS`
+      : `${activeThroughput.toFixed(1)} TFLOPS`;
+
+  const activeSaturationPct = ((activeThroughput / currentArch.peakComputeTflops) * 100).toFixed(2);
+  const activeStalledPct = (100 - parseFloat(activeSaturationPct)).toFixed(2);
+
+  // SVG Coordinates (Log scale X: 0.0625 to 256 -> 12 octaves)
+  const plotLeft = 85;
+  const plotRight = 710;
+  const plotWidth = plotRight - plotLeft;
+  const minLog = -4; // 2^-4 = 0.0625
+  const logSpan = 12;
+
+  const getX = (intensity: number) => {
+    const logVal = Math.log2(intensity);
+    const ratio = Math.max(0, Math.min(1, (logVal - minLog) / logSpan));
+    return plotLeft + ratio * plotWidth;
+  };
+
+  const ceilingY = 52;
+  const axisY = 240;
+  const slopeLeftY = axisY - 15; // Point at intensity = 0.0625
+  const ridgeX = getX(currentArch.ridgePoint);
+
+  const getY = (intensity: number) => {
+    if (intensity >= currentArch.ridgePoint) return ceilingY;
+    const x = getX(intensity);
+    const slope = (slopeLeftY - ceilingY) / (ridgeX - plotLeft);
+    return ceilingY + (ridgeX - x) * slope;
+  };
+
+  // Grid tick markers for X axis
+  const xTicks = [
+    { val: 0.1, label: '0.1' },
+    { val: 0.5, label: '0.5' },
+    { val: 1.0, label: '1.0' },
+    { val: 4.0, label: '4.0' },
+    { val: 16.0, label: '16' },
+    { val: 64.0, label: '64' },
+    { val: 256.0, label: '256' },
+  ];
+
+  return (
+    <div className="my-8 rounded-2xl border border-[#30363d] bg-[#0c1017] shadow-2xl overflow-hidden select-none">
+      {/* Header */}
+      <div className="flex flex-wrap items-center justify-between gap-3 px-5 py-3.5 bg-[#141923] border-b border-[#21262d]">
+        <div className="flex items-center gap-2.5">
+          <span className="p-1.5 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+            <Activity className="w-4 h-4" />
+          </span>
+          <div>
+            <h4 className="text-xs font-bold text-slate-100 tracking-wide uppercase font-mono">{title}</h4>
+            <p className="text-[11px] text-slate-400 font-sans mt-0.5">{subtitle}</p>
+          </div>
+        </div>
+
+        {/* Hardware Architecture Selector */}
+        <div className="flex items-center gap-1.5 p-1 rounded-xl bg-[#090d14] border border-[#21262d]">
+          <button
+            onClick={() => setTargetArch('rtx5090')}
+            className={`px-3 py-1 rounded-lg text-xs font-mono transition-all flex items-center gap-1.5 ${
+              targetArch === 'rtx5090'
+                ? 'bg-sky-500/20 text-sky-300 border border-sky-500/40 font-semibold shadow-sm'
+                : 'text-slate-400 hover:text-slate-200'
+            }`}
+          >
+            <Cpu className="w-3.5 h-3.5" />
+            <span>RTX 5090 (GDDR7)</span>
+          </button>
+          <button
+            onClick={() => setTargetArch('ryzen9950x')}
+            className={`px-3 py-1 rounded-lg text-xs font-mono transition-all flex items-center gap-1.5 ${
+              targetArch === 'ryzen9950x'
+                ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40 font-semibold shadow-sm'
+                : 'text-slate-400 hover:text-slate-200'
+            }`}
+          >
+            <Cpu className="w-3.5 h-3.5" />
+            <span>Ryzen 9 9950X (DDR5)</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Workload Filter Tabs */}
+      <div className="px-5 py-2.5 bg-[#0e131d] border-b border-[#1b2230] flex flex-wrap items-center justify-between gap-2 text-xs">
+        <div className="flex items-center gap-2">
+          <span className="text-[11px] text-slate-400 font-mono uppercase font-semibold">Inspect Workload:</span>
+          <div className="flex items-center gap-1.5">
+            {(['saxpy', 'fused', 'gemm'] as const).map((wId) => {
+              const w = workloads[wId];
+              const isSelected = selectedWorkload === wId;
+              return (
+                <button
+                  key={wId}
+                  onClick={() => setSelectedWorkload(wId)}
+                  className={`px-2.5 py-1 rounded-lg font-mono text-[11px] transition-all flex items-center gap-1.5 ${
+                    isSelected
+                      ? wId === 'saxpy'
+                        ? 'bg-sky-500/20 text-sky-300 border border-sky-500/50 font-bold'
+                        : wId === 'fused'
+                        ? 'bg-amber-500/20 text-amber-300 border border-amber-500/50 font-bold'
+                        : 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/50 font-bold'
+                      : 'bg-[#151c28] text-slate-400 border border-[#212b3d] hover:text-slate-200'
+                  }`}
+                >
+                  <span
+                    className={`w-1.5 h-1.5 rounded-full ${
+                      wId === 'saxpy' ? 'bg-sky-400' : wId === 'fused' ? 'bg-amber-400' : 'bg-emerald-400'
+                    }`}
+                  />
+                  <span>{w.name.split(' ')[0]}</span>
+                  <span className="text-[10px] opacity-75">({w.intensity})</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Machine Balance Indicator */}
+        <div className="flex items-center gap-2 font-mono text-[11px] text-slate-300">
+          <span className="text-slate-400">Ridge Point:</span>
+          <span className="px-2 py-0.5 rounded bg-purple-500/15 text-purple-300 border border-purple-500/30 font-bold">
+            {currentArch.ridgePoint} FLOPs / Byte
+          </span>
+        </div>
+      </div>
+
+      {/* SVG Canvas */}
+      <div className="p-6 bg-[#090d14]">
+        <svg viewBox="0 0 760 300" className="w-full" aria-label="Hardware Roofline Model Diagram">
+          <defs>
+            {/* Shaded Gradients */}
+            <linearGradient id="memBoundGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#38bdf8" stopOpacity="0.14" />
+              <stop offset="100%" stopColor="#38bdf8" stopOpacity="0.01" />
+            </linearGradient>
+            <linearGradient id="computeBoundGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#10b981" stopOpacity="0.14" />
+              <stop offset="100%" stopColor="#10b981" stopOpacity="0.01" />
+            </linearGradient>
+
+            {/* Pulsing Dot Filters */}
+            <filter id="glowSky" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+          </defs>
+
+          {/* Background Shaded Regions */}
+          {/* Memory Bandwidth Bound Zone */}
+          <polygon
+            points={`${plotLeft},${axisY} ${plotLeft},${slopeLeftY} ${ridgeX},${ceilingY} ${ridgeX},${axisY}`}
+            fill="url(#memBoundGrad)"
+          />
+          {/* Compute Bound Zone */}
+          <polygon
+            points={`${ridgeX},${axisY} ${ridgeX},${ceilingY} ${plotRight},${ceilingY} ${plotRight},${axisY}`}
+            fill="url(#computeBoundGrad)"
+          />
+
+          {/* Region Text Labels */}
+          <text
+            x={(plotLeft + ridgeX) / 2}
+            y="120"
+            textAnchor="middle"
+            fill="#38bdf8"
+            fontSize="10"
+            fontWeight="bold"
+            fontFamily="ui-monospace, monospace"
+            opacity="0.6"
+            letterSpacing="1"
+          >
+            MEMORY BANDWIDTH BOUND REGIME
+          </text>
+          <text
+            x={(plotLeft + ridgeX) / 2}
+            y="134"
+            textAnchor="middle"
+            fill="#94a3b8"
+            fontSize="8.5"
+            fontFamily="ui-monospace, monospace"
+            opacity="0.6"
+          >
+            P = Arithmetic_Intensity × Memory_Bandwidth
+          </text>
+
+          <text
+            x={(ridgeX + plotRight) / 2}
+            y="120"
+            textAnchor="middle"
+            fill="#10b981"
+            fontSize="10"
+            fontWeight="bold"
+            fontFamily="ui-monospace, monospace"
+            opacity="0.6"
+            letterSpacing="1"
+          >
+            COMPUTE BOUND REGIME
+          </text>
+          <text
+            x={(ridgeX + plotRight) / 2}
+            y="134"
+            textAnchor="middle"
+            fill="#94a3b8"
+            fontSize="8.5"
+            fontFamily="ui-monospace, monospace"
+            opacity="0.6"
+          >
+            P = Peak_Compute (ALUs 100% Saturated)
+          </text>
+
+          {/* Grid lines for X-axis */}
+          {xTicks.map((t) => {
+            const tx = getX(t.val);
+            return (
+              <g key={`xtick-${t.val}`}>
+                <line x1={tx} y1={ceilingY} x2={tx} y2={axisY} stroke="#1b2230" strokeWidth="1" strokeDasharray="3 3" />
+                <line x1={tx} y1={axisY} x2={tx} y2={axisY + 4} stroke="#475569" strokeWidth="1" />
+                <text x={tx} y={axisY + 16} textAnchor="middle" fill="#64748b" fontSize="9" fontFamily="ui-monospace, monospace">
+                  {t.label}
+                </text>
+              </g>
+            );
+          })}
+
+          {/* Y Axis line */}
+          <line x1={plotLeft} y1={ceilingY - 15} x2={plotLeft} y2={axisY} stroke="#334155" strokeWidth="1.5" />
+          {/* X Axis line */}
+          <line x1={plotLeft} y1={axisY} x2={plotRight + 15} y2={axisY} stroke="#334155" strokeWidth="1.5" />
+
+          {/* Y Axis Label */}
+          <text
+            x={plotLeft - 10}
+            y={ceilingY - 20}
+            textAnchor="start"
+            fill="#94a3b8"
+            fontSize="9"
+            fontWeight="bold"
+            fontFamily="ui-monospace, monospace"
+          >
+            Attainable Throughput (GFLOPS / TFLOPS)
+          </text>
+
+          {/* X Axis Label */}
+          <text
+            x={(plotLeft + plotRight) / 2}
+            y={axisY + 36}
+            textAnchor="middle"
+            fill="#94a3b8"
+            fontSize="9.5"
+            fontWeight="bold"
+            fontFamily="ui-monospace, monospace"
+          >
+            Arithmetic Intensity (FLOPs / Byte — Log Scale)
+          </text>
+
+          {/* Dashed reference line for Peak Compute extending across the whole plot */}
+          <line
+            x1={plotLeft}
+            y1={ceilingY}
+            x2={ridgeX}
+            y2={ceilingY}
+            stroke="#10b981"
+            strokeWidth="1"
+            strokeDasharray="3 3"
+            opacity="0.4"
+          />
+
+          {/* The Roofline Slope: Memory Bandwidth Line */}
+          <line
+            x1={plotLeft}
+            y1={slopeLeftY}
+            x2={ridgeX}
+            y2={ceilingY}
+            stroke="#38bdf8"
+            strokeWidth="3"
+            strokeLinecap="round"
+          />
+
+          {/* The Roofline Flat: Peak Compute Ceiling */}
+          <line
+            x1={ridgeX}
+            y1={ceilingY}
+            x2={plotRight}
+            y2={ceilingY}
+            stroke="#10b981"
+            strokeWidth="3"
+            strokeLinecap="round"
+          />
+
+          {/* Peak Ceiling Value on Y-axis */}
+          <text
+            x={plotLeft - 8}
+            y={ceilingY + 3.5}
+            textAnchor="end"
+            fill="#34d399"
+            fontSize="9.5"
+            fontWeight="bold"
+            fontFamily="ui-monospace, monospace"
+          >
+            {currentArch.peakComputeStr}
+          </text>
+          <line x1={plotLeft - 4} y1={ceilingY} x2={plotLeft} y2={ceilingY} stroke="#10b981" strokeWidth="1.5" />
+
+          {/* Bandwidth Slope Label Tag — placed in open upper-left quadrant */}
+          <g transform={`translate(${plotLeft + 16}, 72)`}>
+            <rect width="136" height="22" rx="5" fill="#082f49" stroke="#38bdf8" strokeWidth="1" />
+            <text x="68" y="15" textAnchor="middle" fill="#bae6fd" fontSize="9.5" fontWeight="bold" fontFamily="ui-monospace, monospace">
+              Slope: {currentArch.bandwidthStr}
+            </text>
+          </g>
+
+          {/* Ridge Point Guide Line */}
+          <line
+            x1={ridgeX}
+            y1={ceilingY}
+            x2={ridgeX}
+            y2={axisY}
+            stroke="#c084fc"
+            strokeWidth="1.5"
+            strokeDasharray="4 3"
+          />
+
+          {/* Ridge Point Marker */}
+          <circle cx={ridgeX} cy={ceilingY} r="7" fill="#7c3aed" opacity="0.3" />
+          <circle cx={ridgeX} cy={ceilingY} r="4.5" fill="#a855f7" stroke="#ffffff" strokeWidth="1.5" />
+
+          {/* Ridge Point Pill on X-axis */}
+          <g transform={`translate(${ridgeX - 52}, ${axisY + 4})`}>
+            <rect width="104" height="18" rx="4" fill="#3b0764" stroke="#a855f7" strokeWidth="1" />
+            <text x="52" y="13" textAnchor="middle" fill="#e9d5ff" fontSize="8.5" fontWeight="bold" fontFamily="ui-monospace, monospace">
+              Ridge: {currentArch.ridgePoint} FLOPs/B
+            </text>
+          </g>
+
+          {/* Plotted Workload Points */}
+          {/* Workload 1: SAXPY */}
+          {(() => {
+            const sx = getX(workloads.saxpy.intensity);
+            const sy = getY(workloads.saxpy.intensity);
+            const isSel = selectedWorkload === 'saxpy';
+            return (
+              <g
+                key="point-saxpy"
+                className="cursor-pointer transition-transform"
+                onClick={() => setSelectedWorkload('saxpy')}
+              >
+                {/* Vertical drop to X axis */}
+                <line x1={sx} y1={sy} x2={sx} y2={axisY} stroke="#38bdf8" strokeWidth="1" strokeDasharray="2 2" opacity="0.6" />
+                {/* Pulsing ring if selected */}
+                {isSel && <circle cx={sx} cy={sy} r="10" fill="#38bdf8" opacity="0.3" />}
+                <circle cx={sx} cy={sy} r="5.5" fill="#0284c7" stroke="#38bdf8" strokeWidth="2" filter="url(#glowSky)" />
+                <circle cx={sx} cy={sy} r="2" fill="#ffffff" />
+                {/* Workload Label Tag */}
+                <g transform={`translate(${sx - 35}, ${sy - 28})`}>
+                  <rect
+                    width="70"
+                    height="20"
+                    rx="5"
+                    fill={isSel ? '#0c2a4a' : '#090d14'}
+                    stroke={isSel ? '#38bdf8' : '#1e3046'}
+                    strokeWidth={isSel ? '1.5' : '1'}
+                  />
+                  <text
+                    x="35"
+                    y="13.5"
+                    textAnchor="middle"
+                    fill={isSel ? '#7dd3fc' : '#94a3b8'}
+                    fontSize="9"
+                    fontWeight="bold"
+                    fontFamily="ui-monospace, monospace"
+                  >
+                    ★ SAXPY
+                  </text>
+                </g>
+              </g>
+            );
+          })()}
+
+          {/* Workload 2: Fused GeLU */}
+          {(() => {
+            const fx = getX(workloads.fused.intensity);
+            const fy = getY(workloads.fused.intensity);
+            const isSel = selectedWorkload === 'fused';
+            return (
+              <g
+                key="point-fused"
+                className="cursor-pointer transition-transform"
+                onClick={() => setSelectedWorkload('fused')}
+              >
+                <line x1={fx} y1={fy} x2={fx} y2={axisY} stroke="#f59e0b" strokeWidth="1" strokeDasharray="2 2" opacity="0.6" />
+                {isSel && <circle cx={fx} cy={fy} r="10" fill="#f59e0b" opacity="0.3" />}
+                <circle cx={fx} cy={fy} r="5.5" fill="#d97706" stroke="#f59e0b" strokeWidth="2" />
+                <circle cx={fx} cy={fy} r="2" fill="#ffffff" />
+                <g transform={`translate(${fx - 40}, ${fy - 28})`}>
+                  <rect
+                    width="80"
+                    height="20"
+                    rx="5"
+                    fill={isSel ? '#2a1a04' : '#090d14'}
+                    stroke={isSel ? '#f59e0b' : '#362a10'}
+                    strokeWidth={isSel ? '1.5' : '1'}
+                  />
+                  <text
+                    x="40"
+                    y="13.5"
+                    textAnchor="middle"
+                    fill={isSel ? '#fcd34d' : '#94a3b8'}
+                    fontSize="9"
+                    fontWeight="bold"
+                    fontFamily="ui-monospace, monospace"
+                  >
+                    Fused GeLU
+                  </text>
+                </g>
+              </g>
+            );
+          })()}
+
+          {/* Workload 3: Tiled GEMM */}
+          {(() => {
+            const gx = getX(workloads.gemm.intensity);
+            const gy = getY(workloads.gemm.intensity);
+            const isSel = selectedWorkload === 'gemm';
+            return (
+              <g
+                key="point-gemm"
+                className="cursor-pointer transition-transform"
+                onClick={() => setSelectedWorkload('gemm')}
+              >
+                <line x1={gx} y1={gy} x2={gx} y2={axisY} stroke="#10b981" strokeWidth="1" strokeDasharray="2 2" opacity="0.6" />
+                {isSel && <circle cx={gx} cy={gy} r="10" fill="#10b981" opacity="0.3" />}
+                <circle cx={gx} cy={gy} r="5.5" fill="#059669" stroke="#10b981" strokeWidth="2" />
+                <circle cx={gx} cy={gy} r="2" fill="#ffffff" />
+                <g transform={`translate(${gx - 42}, ${gy - 28})`}>
+                  <rect
+                    width="84"
+                    height="20"
+                    rx="5"
+                    fill={isSel ? '#064e3b' : '#090d14'}
+                    stroke={isSel ? '#10b981' : '#1e3a2e'}
+                    strokeWidth={isSel ? '1.5' : '1'}
+                  />
+                  <text
+                    x="42"
+                    y="13.5"
+                    textAnchor="middle"
+                    fill={isSel ? '#6ee7b7' : '#94a3b8'}
+                    fontSize="9"
+                    fontWeight="bold"
+                    fontFamily="ui-monospace, monospace"
+                  >
+                    Tiled GEMM
+                  </text>
+                </g>
+              </g>
+            );
+          })()}
+        </svg>
+
+        {/* Dynamic Architectural Inspector Panel */}
+        <div className="mt-4 p-4 rounded-xl bg-[#101622] border border-[#212c3f]">
+          <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-[#1c2637]">
+            <div className="flex items-center gap-2.5">
+              <span
+                className={`p-1.5 rounded-lg border ${
+                  activeWl.id === 'saxpy'
+                    ? 'bg-sky-500/10 text-sky-400 border-sky-500/30'
+                    : activeWl.id === 'fused'
+                    ? 'bg-amber-500/10 text-amber-400 border-amber-500/30'
+                    : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
+                }`}
+              >
+                <Gauge className="w-4 h-4" />
+              </span>
+              <div>
+                <div className="flex items-center gap-2">
+                  <h5 className="text-xs font-bold text-slate-100 font-mono">{activeWl.name}</h5>
+                  <span
+                    className={`text-[10px] font-mono px-2 py-0.5 rounded font-semibold ${
+                      activeWl.isMemoryBound
+                        ? 'bg-rose-500/15 text-rose-300 border border-rose-500/30'
+                        : 'bg-emerald-500/15 text-emerald-300 border border-emerald-500/30'
+                    }`}
+                  >
+                    {activeWl.diagnosis}
+                  </span>
+                </div>
+                <p className="text-[11px] text-slate-400 font-mono mt-0.5">
+                  Formula: <span className="text-slate-200">{activeWl.expr}</span> · {activeWl.busTraffic}
+                </p>
+              </div>
+            </div>
+
+            {/* Performance Stats */}
+            <div className="flex items-center gap-4 text-xs font-mono">
+              <div className="text-right">
+                <div className="text-[10px] text-slate-400 uppercase">Attainable Speed</div>
+                <div className="text-sm font-bold text-sky-300">{activeThroughputDisplay}</div>
+              </div>
+              <div className="text-right border-l border-[#243044] pl-4">
+                <div className="text-[10px] text-slate-400 uppercase">Core Saturation</div>
+                <div
+                  className={`text-sm font-bold ${
+                    parseFloat(activeSaturationPct) >= 90
+                      ? 'text-emerald-400'
+                      : parseFloat(activeSaturationPct) >= 10
+                      ? 'text-amber-400'
+                      : 'text-rose-400'
+                  }`}
+                >
+                  {activeSaturationPct}%
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Saturation Progress Bar */}
+          <div className="mt-3">
+            <div className="flex items-center justify-between text-[10px] font-mono mb-1 text-slate-400">
+              <span>ALU Utilization: {activeSaturationPct}% Active</span>
+              <span className="text-rose-400">{activeStalledPct}% Stalled on Memory Bus</span>
+            </div>
+            <div className="w-full h-2 rounded-full bg-[#1c2433] overflow-hidden flex">
+              <div
+                className={`h-full transition-all duration-300 ${
+                  activeWl.id === 'gemm' ? 'bg-emerald-400' : activeWl.id === 'fused' ? 'bg-amber-400' : 'bg-sky-400'
+                }`}
+                style={{ width: `${Math.max(1, parseFloat(activeSaturationPct))}%` }}
+              />
+              <div
+                className="h-full bg-rose-500/40"
+                style={{ width: `${parseFloat(activeStalledPct)}%` }}
+              />
+            </div>
+          </div>
+
+          <p className="text-xs text-slate-300 mt-2.5 font-sans leading-relaxed">
+            <strong className="text-slate-100 font-semibold">Architectural Takeaway:</strong> {activeWl.explanation}
+          </p>
+        </div>
+
+        {/* 3 Metric Cards */}
+        <div className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+          <div className="p-3 rounded-xl bg-sky-500/10 border border-sky-500/25 text-sky-300 font-mono text-center">
+            <div className="font-bold text-[11px] text-sky-200 mb-0.5">SAXPY Intensity</div>
+            <div className="text-sm font-bold text-sky-400 mb-0.5">0.167 FLOPs / Byte</div>
+            <div className="text-[10px] text-slate-400">12 bytes DRAM traffic per 2 FLOPs</div>
+          </div>
+
+          <div className="p-3 rounded-xl bg-purple-500/10 border border-purple-500/25 text-purple-300 font-mono text-center">
+            <div className="font-bold text-[11px] text-purple-200 mb-0.5">
+              {currentArch.id === 'rtx5090' ? 'RTX 5090 Ridge Point' : '9950X Ridge Point'}
+            </div>
+            <div className="text-sm font-bold text-purple-400 mb-0.5">{currentArch.ridgePoint} FLOPs / Byte</div>
+            <div className="text-[10px] text-slate-400">Ratio = Peak Compute / Memory Bandwidth</div>
+          </div>
+
+          <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/25 text-rose-300 font-mono text-center">
+            <div className="font-bold text-[11px] text-rose-200 mb-0.5">Hardware Efficiency</div>
+            <div className="text-sm font-bold text-rose-400 mb-0.5">
+              {currentArch.id === 'rtx5090' ? '0.28% Core Utilization' : '0.46% Core Utilization'}
+            </div>
+            <div className="text-[10px] text-slate-400">&gt; 99% ALUs waiting for memory</div>
           </div>
         </div>
       </div>
@@ -1987,6 +2657,11 @@ export function GenericDiagramRenderer({ type, payload }: { type: string; payloa
   // Dual-stream / SAXPY / strided access (Chapter 1.4)
   if (cleanType.includes('strided') || cleanType.includes('saxpy') || cleanType.includes('dual-stream') || cleanType.includes('multistream')) {
     return <StridedAccessDiagram data={parsed} />;
+  }
+
+  // Hardware Roofline Model & Arithmetic Intensity (Chapter 1.4)
+  if (cleanType.includes('roofline') || cleanType.includes('machine-balance') || cleanType.includes('arithmetic-intensity')) {
+    return <RooflineDiagram data={parsed} />;
   }
 
   // Stride / 2D-to-flat layout (Chapter 1.2) — shows 2D grid folding to flat strip

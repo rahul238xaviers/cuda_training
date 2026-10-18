@@ -1,0 +1,85 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 240" width="100%" height="100%">
+  <defs>
+    <linearGradient id="overwriteBg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stopColor="#0d1117" />
+      <stop offset="100%" stopColor="#070a0e" />
+    </linearGradient>
+    <linearGradient id="overwrittenCellGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stopColor="#450a0a" />
+      <stop offset="100%" stopColor="#1e0505" />
+    </linearGradient>
+    <marker id="owArrowSky" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+      <path d="M0,0.5 L0,5.5 L6,3 z" fill="#38bdf8" />
+    </marker>
+    <marker id="owArrowRed" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+      <path d="M0,0.5 L0,5.5 L6,3 z" fill="#ef4444" />
+    </marker>
+  </defs>
+
+  <!-- Background Canvas -->
+  <rect width="800" height="240" rx="12" fill="url(#overwriteBg)" stroke="#21262d" stroke-width="1.5" />
+
+  <!-- Header -->
+  <g transform="translate(24, 28)">
+    <circle cx="6" cy="6" r="4" fill="#f59e0b" />
+    <text x="18" y="10" fill="#fbbf24" font-size="11" font-weight="bold" font-family="ui-monospace, monospace" letter-spacing="1">
+      MUTATION HAZARD: BUFFER STATE AFTER ITERATION i = 0
+    </text>
+    <text x="18" y="24" fill="#94a3b8" font-size="10" font-family="system-ui, sans-serif">
+      y[0] = 2.0 * x[0] + y[0]  ==>  2.0 * 10.0 + 20.0 = 40.0 (Written into buffer[1])
+    </text>
+  </g>
+
+  <!-- Cell 0 -->
+  <g transform="translate(100, 75)">
+    <rect width="110" height="50" rx="6" fill="#0d1520" stroke="#1e3046" stroke-width="1.5" />
+    <text x="55" y="18" text-anchor="middle" fill="#64748b" font-size="9.5" font-family="ui-monospace, monospace">buffer[0]</text>
+    <text x="55" y="38" text-anchor="middle" fill="#94a3b8" font-size="13" font-family="ui-monospace, monospace">10.0</text>
+  </g>
+
+  <!-- Cell 1 (MUTATED VALUE) -->
+  <g transform="translate(222, 75)">
+    <rect width="110" height="50" rx="6" fill="url(#overwrittenCellGrad)" stroke="#ef4444" stroke-width="2" />
+    <text x="55" y="18" text-anchor="middle" fill="#fca5a5" font-size="9.5" font-weight="bold" font-family="ui-monospace, monospace">buffer[1] (MUTATED!)</text>
+    <text x="55" y="38" text-anchor="middle" fill="#ef4444" font-size="14" font-weight="bold" font-family="ui-monospace, monospace">40.0</text>
+  </g>
+
+  <!-- Cell 2 -->
+  <g transform="translate(344, 75)">
+    <rect width="110" height="50" rx="6" fill="#0d1520" stroke="#1e3046" stroke-width="1.5" />
+    <text x="55" y="18" text-anchor="middle" fill="#64748b" font-size="9.5" font-family="ui-monospace, monospace">buffer[2]</text>
+    <text x="55" y="38" text-anchor="middle" fill="#f1f5f9" font-size="13" font-weight="bold" font-family="ui-monospace, monospace">30.0</text>
+  </g>
+
+  <!-- Cell 3 -->
+  <g transform="translate(466, 75)">
+    <rect width="110" height="50" rx="6" fill="#0d1520" stroke="#1e3046" stroke-width="1.5" />
+    <text x="55" y="18" text-anchor="middle" fill="#64748b" font-size="9.5" font-family="ui-monospace, monospace">buffer[3]</text>
+    <text x="55" y="38" text-anchor="middle" fill="#f1f5f9" font-size="13" font-weight="bold" font-family="ui-monospace, monospace">40.0</text>
+  </g>
+
+  <!-- Cell 4 -->
+  <g transform="translate(588, 75)">
+    <rect width="110" height="50" rx="6" fill="#0d1520" stroke="#1e3046" stroke-width="1.5" />
+    <text x="55" y="18" text-anchor="middle" fill="#64748b" font-size="9.5" font-family="ui-monospace, monospace">buffer[4]</text>
+    <text x="55" y="38" text-anchor="middle" fill="#f1f5f9" font-size="13" font-weight="bold" font-family="ui-monospace, monospace">50.0</text>
+  </g>
+
+  <!-- Iteration 1 read indicator -->
+  <g transform="translate(222, 165)">
+    <rect width="110" height="30" rx="6" fill="#1c1012" stroke="#ef4444" stroke-width="1.5" />
+    <text x="55" y="19" text-anchor="middle" fill="#f87171" font-size="11" font-weight="bold" font-family="ui-monospace, monospace">x[1] Read</text>
+    <line x1="55" y1="0" x2="55" y2="-30" stroke="#ef4444" stroke-width="2" marker-end="url(#owArrowRed)" />
+  </g>
+
+  <!-- Explanation note -->
+  <g transform="translate(350, 162)">
+    <rect width="410" height="50" rx="8" fill="#161b22" stroke="#30363d" stroke-width="1" />
+    <text x="14" y="20" fill="#f1f5f9" font-size="10.5" font-family="system-ui, sans-serif">
+      <tspan fill="#f87171" font-weight="bold">If compiler cached x[1] in register</tspan>: reads old 20.0 (Produces 70.0 ✗)
+    </text>
+    <text x="14" y="36" fill="#a7f3d0" font-size="10.5" font-family="system-ui, sans-serif">
+      <tspan fill="#34d399" font-weight="bold">If compiler reloads from DRAM</tspan>: reads mutated 40.0 (Produces 110.0 ✓)
+    </text>
+  </g>
+</svg>
