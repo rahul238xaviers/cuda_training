@@ -3,6 +3,8 @@
 import React, { useState } from 'react';
 import hljs from 'highlight.js';
 import { Copy, Check, Terminal, Code2 } from 'lucide-react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { DynamicDiagramEngine } from '../diagrams/DynamicDiagramEngine';
 import { FormulaCard } from './FormulaCard';
 
@@ -38,6 +40,41 @@ export function CodeBlock({ inline, className, children }: CodeBlockProps) {
   // Case 2: Formula Card: ```formula or ```math
   if (langToken === 'formula' || langToken === 'math') {
     return <FormulaCard code={codeString} />;
+  }
+
+  // Case 2.5: Table Block: ```table or ```table:<title>
+  if (langToken.startsWith('table')) {
+    return (
+      <div className="my-6 overflow-x-auto rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-card)] shadow-md">
+        <ReactMarkdown
+          remarkPlugins={[remarkGfm]}
+          components={{
+            table: ({ children: tableChildren }) => (
+              <table className="w-full text-left text-xs md:text-sm border-collapse font-sans">
+                {tableChildren}
+              </table>
+            ),
+            thead: ({ children: theadChildren }) => (
+              <thead className="bg-[var(--bg-card-hover)] border-b border-[var(--border-subtle)] text-[var(--text-primary)] font-mono text-[11px] uppercase tracking-wider">
+                {theadChildren}
+              </thead>
+            ),
+            th: ({ children: thChildren }) => (
+              <th className="px-4 py-3 font-semibold text-[var(--text-primary)] border border-[var(--border-subtle)]">
+                {thChildren}
+              </th>
+            ),
+            td: ({ children: tdChildren }) => (
+              <td className="px-4 py-3 border border-[var(--border-subtle)] text-[var(--text-primary)]">
+                {tdChildren}
+              </td>
+            ),
+          }}
+        >
+          {codeString}
+        </ReactMarkdown>
+      </div>
+    );
   }
 
   // Case 3: Executable Programming Code (C++, CUDA, Python, Shell)

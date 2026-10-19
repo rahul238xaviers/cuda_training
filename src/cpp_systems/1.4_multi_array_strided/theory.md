@@ -317,7 +317,6 @@ Now look at what happens when your algorithm traverses memory with different str
 * **Carton Utilization**: You bought a 16-egg carton, ate 1 egg, and threw 15 eggs in the trash.
 * **Bus Efficiency**: `4 / 64 = 6.25%`.
 
-```table:stride_efficiency
 | Stride | Elements Requested | Bytes Consumed | Hardware Bytes Hauled | Bus Efficiency | Memory Bandwidth Penalty |
 | :---: | :---: | :---: | :---: | :---: | :---: |
 | **`stride = 1`** | `X[0], X[1], X[2], ... X[15]` | 64 Bytes | 64 Bytes | **100.0%** | **1.0x (Peak Speed)** |
@@ -325,7 +324,6 @@ Now look at what happens when your algorithm traverses memory with different str
 | **`stride = 4`** | `X[0], X[4], X[8], X[12]` | 16 Bytes | 64 Bytes | **25.0%** | **4.0x Slower** |
 | **`stride = 8`** | `X[0], X[8]` | 8 Bytes | 64 Bytes | **12.5%** | **8.0x Slower** |
 | **`stride = 16`** | `X[0]` | 4 Bytes | 64 Bytes | **6.25%** | **16.0x Slower** |
-```
 
 > [!CAUTION]
 > If a strided traversal has `stride >= 16`, your code will run **16 times slower** on memory bandwidth alone, even if the total number of FLOPs executed is identical!
