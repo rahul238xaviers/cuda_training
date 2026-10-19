@@ -100,8 +100,8 @@ export function ReaderView({ title, content, chapterId = '1.1', type, onNavigate
               onClick={handleToggleBookmark}
               className={`reader-action-btn flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-medium transition-all ${
                 isBookmarked
-                  ? 'bg-amber-500/10 text-amber-300 border-amber-500/30 hover:bg-amber-500/20'
-                  : 'bg-[#161b22] text-slate-300 border-[#30363d] hover:bg-[#21262d] hover:text-white'
+                  ? 'bg-amber-500/10 text-amber-600 dark:text-amber-300 border-amber-500/30 hover:bg-amber-500/20'
+                  : 'bg-[var(--bg-card)] text-[var(--text-secondary)] border-[var(--border-subtle)] hover:bg-[var(--bg-card-hover)] hover:text-[var(--text-primary)]'
               }`}
             >
               <Bookmark className={`w-3.5 h-3.5 ${isBookmarked ? 'fill-amber-400 text-amber-400' : ''}`} />
@@ -110,12 +110,12 @@ export function ReaderView({ title, content, chapterId = '1.1', type, onNavigate
 
             <button
               onClick={() => setIsDrawerOpen(true)}
-              className="reader-action-btn flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#161b22] hover:bg-[#21262d] border border-[#30363d] text-xs font-medium text-slate-300 hover:text-white transition-all"
+              className="reader-action-btn flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[var(--bg-card)] hover:bg-[var(--bg-card-hover)] border border-[var(--border-subtle)] text-xs font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-all"
             >
-              <Highlighter className="w-3.5 h-3.5 text-amber-400" />
+              <Highlighter className="w-3.5 h-3.5 text-amber-500 dark:text-amber-400" />
               <span>Notes</span>
               {highlights.length > 0 && (
-                <span className="px-1.5 py-0.2 rounded-full bg-amber-500/20 text-amber-300 text-[10px] font-mono border border-amber-500/30">
+                <span className="px-1.5 py-0.2 rounded-full bg-amber-500/20 text-amber-700 dark:text-amber-300 text-[10px] font-mono border border-amber-500/30">
                   {highlights.length}
                 </span>
               )}
@@ -143,19 +143,19 @@ export function ReaderView({ title, content, chapterId = '1.1', type, onNavigate
                 </CodeBlock>
               ),
               table: ({ children }) => (
-                <div className="my-6 overflow-x-auto rounded-xl border border-[var(--border-subtle)] bg-[#0c1017] shadow-lg">
+                <div className="my-6 overflow-x-auto rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-card)] shadow-md">
                   <table className="w-full text-left text-xs md:text-sm border-collapse font-sans">
                     {children}
                   </table>
                 </div>
               ),
               thead: ({ children }) => (
-                <thead className="bg-[#141b28] border-b border-[#212c3f] text-slate-200 font-mono text-[11px] uppercase tracking-wider">
+                <thead className="bg-[var(--bg-card-hover)] border-b border-[var(--border-subtle)] text-[var(--text-primary)] font-mono text-[11px] uppercase tracking-wider">
                   {children}
                 </thead>
               ),
-              th: ({ children }) => <th className="px-4 py-3 font-semibold">{children}</th>,
-              td: ({ children }) => <td className="px-4 py-3 border-b border-[#1c2433] text-slate-300">{children}</td>,
+              th: ({ children }) => <th className="px-4 py-3 font-semibold text-[var(--text-primary)] border border-[var(--border-subtle)]">{children}</th>,
+              td: ({ children }) => <td className="px-4 py-3 border border-[var(--border-subtle)] text-[var(--text-primary)]">{children}</td>,
               h1: ({ children }) => (
                 <h1 className="text-2xl md:text-3xl font-extrabold text-[var(--text-primary)] mt-8 mb-4 tracking-tight">
                   {children}
@@ -171,10 +171,10 @@ export function ReaderView({ title, content, chapterId = '1.1', type, onNavigate
                   {children}
                 </h3>
               ),
-              p: ({ children }) => <div className="my-3.5 leading-relaxed text-slate-300">{children}</div>,
-              ul: ({ children }) => <ul className="my-3.5 pl-6 list-disc space-y-1.5 text-slate-300">{children}</ul>,
-              ol: ({ children }) => <ol className="my-3.5 pl-6 list-decimal space-y-1.5 text-slate-300">{children}</ol>,
-              li: ({ children }) => <li className="leading-relaxed">{children}</li>,
+              p: ({ children }) => <div className="reader-paragraph my-3.5 leading-relaxed text-[var(--text-primary)]">{children}</div>,
+              ul: ({ children }) => <ul className="my-3.5 pl-6 list-disc space-y-1.5 text-[var(--text-primary)]">{children}</ul>,
+              ol: ({ children }) => <ol className="my-3.5 pl-6 list-decimal space-y-1.5 text-[var(--text-primary)]">{children}</ol>,
+              li: ({ children }) => <li className="leading-relaxed text-[var(--text-primary)]">{children}</li>,
               hr: () => <hr className="my-8 border-[var(--border-subtle)]" />,
             }}
           >

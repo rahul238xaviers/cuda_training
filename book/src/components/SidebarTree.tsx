@@ -1840,9 +1840,9 @@ export function SidebarTree({
       </div>
 
       {/* Sidebar Footer with Theme Selector */}
-      <div className="p-2 border-t border-[#1a202c] bg-[#0b0e14] flex items-center justify-between shrink-0">
+      <div className="p-2 border-t border-[var(--border-subtle)] bg-[var(--bg-sidebar)] flex items-center justify-between shrink-0">
         <ThemeToggle variant="sidebar" />
-        <span className="text-[10px] font-mono text-slate-500">⌘S format+save</span>
+        <span className="text-[10px] font-mono text-[var(--text-muted)]">⌘S format+save</span>
       </div>
     </aside>
   );

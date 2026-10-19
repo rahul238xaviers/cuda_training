@@ -1,6 +1,127 @@
 @import "tailwindcss";
 @import "highlight.js/styles/tokyo-night-dark.css";
 
+@custom-variant dark (&:where([data-theme="default"], [data-theme="cuda-night"], .dark, .dark *));
+
+/* Theme-Aware Callout Alert Cards */
+.callout-card-note {
+  background-color: rgba(14, 165, 233, 0.1);
+  border: 1px solid rgba(14, 165, 233, 0.35);
+  color: #e0f2fe;
+}
+.callout-card-warning {
+  background-color: rgba(245, 158, 11, 0.1);
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  color: #fef3c7;
+}
+.callout-card-important {
+  background-color: rgba(16, 185, 129, 0.1);
+  border: 1px solid rgba(16, 185, 129, 0.35);
+  color: #d1fae5;
+}
+.callout-card-caution {
+  background-color: rgba(244, 63, 94, 0.1);
+  border: 1px solid rgba(244, 63, 94, 0.35);
+  color: #ffe4e6;
+}
+.callout-card-tip {
+  background-color: rgba(168, 85, 247, 0.1);
+  border: 1px solid rgba(168, 85, 247, 0.35);
+  color: #f3e8ff;
+}
+
+html[data-theme="next-light"] .callout-card-note {
+  background-color: #f0f9ff !important;
+  border: 1px solid #7dd3fc !important;
+  color: #0369a1 !important;
+}
+html[data-theme="next-light"] .callout-card-warning {
+  background-color: #fffbeb !important;
+  border: 1px solid #fcd34d !important;
+  color: #b45309 !important;
+}
+html[data-theme="next-light"] .callout-card-important {
+  background-color: #ecfdf5 !important;
+  border: 1px solid #6ee7b7 !important;
+  color: #047857 !important;
+}
+html[data-theme="next-light"] .callout-card-caution {
+  background-color: #fff1f2 !important;
+  border: 1px solid #fda4af !important;
+  color: #be123c !important;
+}
+html[data-theme="next-light"] .callout-card-tip {
+  background-color: #faf5ff !important;
+  border: 1px solid #d8b4fe !important;
+  color: #7e22ce !important;
+}
+
+.reader-paragraph {
+  color: var(--text-primary);
+}
+
+/* Hardware Architectural Blueprint Viewports (Always dark, high-contrast silicon schematics) */
+.hardware-diagram-viewport {
+  background-color: #090d14 !important;
+  border-color: #1e293b !important;
+  color: #f1f5f9 !important;
+}
+
+html[data-theme="next-light"] .hardware-diagram-viewport,
+html[data-theme="next-light"] .hardware-diagram-viewport [class*="bg-[#090d14]"],
+html[data-theme="next-light"] .hardware-diagram-viewport [class*="bg-[#0a0d14]"],
+html[data-theme="next-light"] .hardware-diagram-viewport [class*="bg-[#0c1017]"],
+html[data-theme="next-light"] .hardware-diagram-viewport [class*="bg-[#101622]"],
+html[data-theme="next-light"] .hardware-diagram-viewport [class*="bg-[#141923]"] {
+  background-color: #0a0e17 !important;
+}
+
+html[data-theme="next-light"] .hardware-diagram-viewport .diagram-header,
+html[data-theme="next-light"] .hardware-diagram-viewport [class*="bg-[#0e1422]"] {
+  background-color: #0f1523 !important;
+  border-color: #1e293b !important;
+}
+
+html[data-theme="next-light"] .hardware-diagram-viewport [class*="text-slate-100"],
+html[data-theme="next-light"] .hardware-diagram-viewport [class*="text-slate-200"],
+html[data-theme="next-light"] .hardware-diagram-viewport [class*="text-[#f0f6fc]"] {
+  color: #f1f5f9 !important;
+}
+
+html[data-theme="next-light"] .hardware-diagram-viewport [class*="text-slate-300"] {
+  color: #cbd5e1 !important;
+}
+
+html[data-theme="next-light"] .hardware-diagram-viewport [class*="text-slate-400"],
+html[data-theme="next-light"] .hardware-diagram-viewport [class*="text-[#8b949e]"] {
+  color: #94a3b8 !important;
+}
+
+html[data-theme="next-light"] .hardware-diagram-viewport [class*="text-sky-200"],
+html[data-theme="next-light"] .hardware-diagram-viewport [class*="text-sky-300"] {
+  color: #7dd3fc !important;
+}
+
+html[data-theme="next-light"] .hardware-diagram-viewport [class*="text-amber-200"],
+html[data-theme="next-light"] .hardware-diagram-viewport [class*="text-amber-300"] {
+  color: #fcd34d !important;
+}
+
+html[data-theme="next-light"] .hardware-diagram-viewport [class*="text-rose-200"],
+html[data-theme="next-light"] .hardware-diagram-viewport [class*="text-rose-300"] {
+  color: #fda4af !important;
+}
+
+html[data-theme="next-light"] .hardware-diagram-viewport [class*="text-purple-200"],
+html[data-theme="next-light"] .hardware-diagram-viewport [class*="text-purple-300"] {
+  color: #d8b4fe !important;
+}
+
+html[data-theme="next-light"] .hardware-diagram-viewport [class*="border-[#"] {
+  border-color: #1e293b !important;
+}
+
+
 @layer base {
   :root {
     --bg-app: #080b11;

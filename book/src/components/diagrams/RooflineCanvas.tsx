@@ -138,21 +138,21 @@ export function RooflineCanvas({ payload }: RooflineCanvasProps) {
   ];
 
   return (
-    <div className="my-8 rounded-2xl border border-[var(--border-subtle)] bg-[var(--bg-canvas)] shadow-2xl overflow-hidden select-none">
+    <div className="my-8 rounded-2xl border border-[var(--border-subtle)] bg-[var(--bg-card)] shadow-md overflow-hidden select-none hardware-diagram-viewport">
       {/* Header */}
       <div className="flex flex-wrap items-center justify-between gap-3 px-5 py-3.5 bg-[var(--bg-card)] border-b border-[var(--border-subtle)]">
         <div className="flex items-center gap-2.5">
-          <span className="p-1.5 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+          <span className="p-1.5 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
             <Activity className="w-4 h-4" />
           </span>
           <div>
-            <h4 className="text-xs font-bold text-slate-100 tracking-wide uppercase font-mono">{payload.title}</h4>
-            <p className="text-[11px] text-slate-400 font-sans mt-0.5">{payload.subtitle}</p>
+            <h4 className="text-xs font-bold text-[var(--text-primary)] tracking-wide uppercase font-mono">{payload.title}</h4>
+            <p className="text-[11px] text-[var(--text-secondary)] font-sans mt-0.5">{payload.subtitle}</p>
           </div>
         </div>
 
         {/* Hardware Selector Tabs */}
-        <div className="flex items-center gap-1.5 p-1 rounded-xl bg-[#090d14] border border-[#21262d]">
+        <div className="flex items-center gap-1.5 p-1 rounded-xl bg-[var(--bg-app)] border border-[var(--border-subtle)]">
           {archKeys.map((key) => {
             const arch = archs[key];
             const isSelected = activeArchKey === key;
@@ -160,10 +160,10 @@ export function RooflineCanvas({ payload }: RooflineCanvasProps) {
               <button
                 key={key}
                 onClick={() => setActiveArchKey(key)}
-                className={`px-3 py-1 rounded-lg text-xs font-mono transition-all flex items-center gap-1.5 ${
+                className={`px-3 py-1 rounded-lg text-xs font-mono transition-all flex items-center gap-1.5 cursor-pointer ${
                   isSelected
-                    ? 'bg-sky-500/20 text-sky-300 border border-sky-500/40 font-semibold shadow-sm'
-                    : 'text-slate-400 hover:text-slate-200'
+                    ? 'bg-sky-500/15 text-sky-700 dark:text-sky-300 border border-sky-500/40 font-semibold shadow-xs'
+                    : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
                 }`}
               >
                 <Cpu className="w-3.5 h-3.5" />
@@ -175,9 +175,9 @@ export function RooflineCanvas({ payload }: RooflineCanvasProps) {
       </div>
 
       {/* Workload Filter Bar */}
-      <div className="px-5 py-2.5 bg-[#0e131d] border-b border-[#1b2230] flex flex-wrap items-center justify-between gap-2 text-xs">
+      <div className="px-5 py-2.5 bg-[var(--bg-card-hover)] border-b border-[var(--border-subtle)] flex flex-wrap items-center justify-between gap-2 text-xs">
         <div className="flex items-center gap-2">
-          <span className="text-[11px] text-slate-400 font-mono uppercase font-semibold">Inspect Workload:</span>
+          <span className="text-[11px] text-[var(--text-secondary)] font-mono uppercase font-semibold">Inspect Workload:</span>
           <div className="flex items-center gap-1.5">
             {workloads.map((w) => {
               const isSelected = selectedWorkloadId === w.id;
@@ -186,14 +186,14 @@ export function RooflineCanvas({ payload }: RooflineCanvasProps) {
                 <button
                   key={w.id}
                   onClick={() => setSelectedWorkloadId(w.id)}
-                  className={`px-2.5 py-1 rounded-lg font-mono text-[11px] transition-all flex items-center gap-1.5 ${
+                  className={`px-2.5 py-1 rounded-lg font-mono text-[11px] transition-all flex items-center gap-1.5 cursor-pointer ${
                     isSelected
                       ? color === 'sky'
-                        ? 'bg-sky-500/20 text-sky-300 border border-sky-500/50 font-bold'
+                        ? 'bg-sky-500/20 text-sky-700 dark:text-sky-300 border border-sky-500/50 font-bold'
                         : color === 'amber'
-                        ? 'bg-amber-500/20 text-amber-300 border border-amber-500/50 font-bold'
-                        : 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/50 font-bold'
-                      : 'bg-[#151c28] text-slate-400 border border-[#212b3d] hover:text-slate-200'
+                        ? 'bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-500/50 font-bold'
+                        : 'bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-500/50 font-bold'
+                      : 'bg-[var(--bg-card)] text-[var(--text-secondary)] border border-[var(--border-subtle)] hover:text-[var(--text-primary)]'
                   }`}
                 >
                   <span
@@ -522,20 +522,20 @@ export function RooflineCanvas({ payload }: RooflineCanvasProps) {
 
         {/* 3 Metric Cards */}
         <div className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
-          <div className="p-3 rounded-xl bg-sky-500/10 border border-sky-500/25 text-sky-300 font-mono text-center">
-            <div className="font-bold text-[11px] text-sky-200 mb-0.5">{activeWl.name.split(' ')[0]} Intensity</div>
+          <div className="p-3 rounded-xl bg-sky-500/10 border border-sky-500/35 text-sky-300 font-mono text-center">
+            <div className="font-bold text-[11px] text-sky-300 mb-0.5">{activeWl.name.split(' ')[0]} Intensity</div>
             <div className="text-sm font-bold text-sky-400 mb-0.5">{activeWl.intensity} FLOPs / Byte</div>
             <div className="text-[10px] text-slate-400">{activeWl.busTraffic || 'Memory bus traffic ratio'}</div>
           </div>
 
-          <div className="p-3 rounded-xl bg-purple-500/10 border border-purple-500/25 text-purple-300 font-mono text-center">
-            <div className="font-bold text-[11px] text-purple-200 mb-0.5">{currentArch.name} Ridge Point</div>
+          <div className="p-3 rounded-xl bg-purple-500/10 border border-purple-500/35 text-purple-300 font-mono text-center">
+            <div className="font-bold text-[11px] text-purple-300 mb-0.5">{currentArch.name} Ridge Point</div>
             <div className="text-sm font-bold text-purple-400 mb-0.5">{currentArch.ridgePoint} FLOPs / Byte</div>
             <div className="text-[10px] text-slate-400">Ratio = Peak Compute / Memory Bandwidth</div>
           </div>
 
-          <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/25 text-rose-300 font-mono text-center">
-            <div className="font-bold text-[11px] text-rose-200 mb-0.5">Hardware Efficiency</div>
+          <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/35 text-rose-300 font-mono text-center">
+            <div className="font-bold text-[11px] text-rose-300 mb-0.5">Hardware Efficiency</div>
             <div className="text-sm font-bold text-rose-400 mb-0.5">{activeSaturationPct}% Core Utilization</div>
             <div className="text-[10px] text-slate-400">{activeStalledPct}% ALUs waiting for memory</div>
           </div>

@@ -45,19 +45,19 @@ export function MemoryArrayCanvas({ payload }: MemoryArrayCanvasProps) {
   const metrics = payload.metrics && payload.metrics.length > 0 ? payload.metrics : defaultMetrics;
 
   return (
-    <div className="my-8 rounded-2xl border border-[var(--border-subtle)] bg-[var(--bg-canvas)] shadow-2xl overflow-hidden select-none">
+    <div className="my-8 rounded-2xl border border-[#1e293b] bg-[#090d14] shadow-2xl overflow-hidden select-none hardware-diagram-viewport">
       {/* Header */}
-      <div className="flex items-center justify-between px-5 py-3.5 bg-[var(--bg-card)] border-b border-[var(--border-subtle)]">
-        <div className="flex items-center gap-2.5">
-          <span className="p-1.5 rounded-lg bg-sky-500/10 text-sky-400 border border-sky-500/20">
+      <div className="flex items-center justify-between px-5 py-3.5 bg-[#0e1422] border-b border-[#1e293b] gap-3">
+        <div className="flex items-center gap-2.5 min-w-0">
+          <span className="p-1.5 rounded-lg bg-sky-500/10 text-sky-400 border border-sky-500/20 shrink-0">
             <Database className="w-4 h-4" />
           </span>
-          <div>
-            <h4 className="text-xs font-bold text-slate-100 tracking-wide uppercase font-mono">{payload.title}</h4>
-            <p className="text-[11px] text-slate-400 font-sans mt-0.5">{payload.subtitle}</p>
+          <div className="min-w-0">
+            <h4 className="text-xs font-bold text-slate-100 tracking-wide uppercase font-mono truncate">{payload.title}</h4>
+            <p className="text-[11px] text-slate-400 font-sans mt-0.5 truncate">{payload.subtitle}</p>
           </div>
         </div>
-        <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-sky-500/10 text-sky-400 border border-sky-500/20 font-semibold uppercase">
+        <span className="text-[10px] font-mono px-2.5 py-0.5 rounded bg-sky-500/15 text-sky-300 border border-sky-500/30 font-semibold uppercase shrink-0 whitespace-nowrap">
           {fma.regime}
         </span>
       </div>
@@ -132,14 +132,14 @@ export function MemoryArrayCanvas({ payload }: MemoryArrayCanvasProps) {
         <div className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
           {metrics.map((m, idx) => {
             const cardBg = m.color === 'amber'
-              ? 'bg-amber-500/10 border-amber-500/25 text-amber-300'
+              ? 'bg-amber-500/10 border-amber-500/30 text-amber-300'
               : m.color === 'rose'
-              ? 'bg-rose-500/10 border-rose-500/25 text-rose-300'
+              ? 'bg-rose-500/10 border-rose-500/30 text-rose-300'
               : m.color === 'emerald'
-              ? 'bg-emerald-500/10 border-emerald-500/25 text-emerald-300'
-              : 'bg-sky-500/10 border-sky-500/25 text-sky-300';
-            const titleColor = m.color === 'amber' ? 'text-amber-200' : m.color === 'rose' ? 'text-rose-200' : 'text-sky-200';
-            const valColor = m.color === 'amber' ? 'text-amber-400' : m.color === 'rose' ? 'text-rose-400' : 'text-sky-400';
+              ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300'
+              : 'bg-sky-500/10 border-sky-500/30 text-sky-300';
+            const titleColor = m.color === 'amber' ? 'text-amber-300' : m.color === 'rose' ? 'text-rose-300' : m.color === 'emerald' ? 'text-emerald-300' : 'text-sky-300';
+            const valColor = m.color === 'amber' ? 'text-amber-400' : m.color === 'rose' ? 'text-rose-400' : m.color === 'emerald' ? 'text-emerald-400' : 'text-sky-400';
 
             return (
               <div key={idx} className={`p-3 rounded-xl border font-mono text-center ${cardBg}`}>

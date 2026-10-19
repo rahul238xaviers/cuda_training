@@ -62,6 +62,10 @@ export function DynamicDiagramEngine({ type, payload }: DynamicDiagramEngineProp
   }
 
   // 4. Fallback to existing registered diagram primitives in TextbookDiagrams
-  return <GenericDiagramRenderer type={type} payload={typeof payload === 'string' ? payload : JSON.stringify(payload)} />;
+  return (
+    <div className="hardware-diagram-viewport rounded-2xl overflow-hidden">
+      <GenericDiagramRenderer type={type} payload={typeof payload === 'string' ? payload : JSON.stringify(payload)} />
+    </div>
+  );
 }
 

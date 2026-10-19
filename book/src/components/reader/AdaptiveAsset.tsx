@@ -25,20 +25,20 @@ export function AdaptiveAsset({ src = '', alt = '', title, chapterId = '1.1', vo
   const caption = title || alt;
 
   return (
-    <div role="figure" aria-label={alt || 'System Architectural Schematic'} className="my-8 rounded-2xl border border-[var(--border-subtle)] bg-[var(--bg-canvas)] overflow-hidden shadow-xl select-none">
+    <div role="figure" aria-label={alt || 'System Architectural Schematic'} className="my-8 rounded-2xl border border-[var(--border-subtle)] bg-[var(--bg-card)] overflow-hidden shadow-xl select-none">
       {/* Header bar */}
       <div className="flex items-center justify-between px-4 py-2.5 bg-[var(--bg-card)] border-b border-[var(--border-subtle)] text-xs">
         <div className="flex items-center gap-2">
-          <span className="p-1 rounded-md bg-sky-500/10 text-sky-400 border border-sky-500/20">
+          <span className="p-1 rounded-md bg-sky-500/10 text-sky-600 dark:text-sky-400 border border-sky-500/20">
             <ImageIcon className="w-3.5 h-3.5" />
           </span>
-          <span className="font-mono text-[11px] font-semibold text-slate-200 tracking-wide uppercase">
+          <span className="font-mono text-[11px] font-semibold text-[var(--text-primary)] tracking-wide uppercase">
             {alt || 'System Architectural Schematic'}
           </span>
         </div>
         <button
           onClick={() => setIsZoomed(true)}
-          className="flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-mono text-slate-400 hover:text-white bg-[#151b26] hover:bg-[#202736] border border-[#263143] transition-colors"
+          className="flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-mono text-[var(--text-secondary)] hover:text-[var(--text-primary)] bg-[var(--bg-card-hover)] hover:bg-[var(--border-subtle)] border border-[var(--border-subtle)] transition-colors cursor-pointer"
           title="Zoom View"
         >
           <ZoomIn className="w-3 h-3" />
@@ -47,7 +47,7 @@ export function AdaptiveAsset({ src = '', alt = '', title, chapterId = '1.1', vo
       </div>
 
       {/* Asset Render Area */}
-      <div className="p-6 flex items-center justify-center bg-[#090d14] overflow-x-auto">
+      <div className="p-6 flex items-center justify-center bg-[var(--diag-bg,#090d14)] overflow-x-auto">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={resolvedUrl}
@@ -59,7 +59,7 @@ export function AdaptiveAsset({ src = '', alt = '', title, chapterId = '1.1', vo
 
       {/* Caption footer if alt or title provided */}
       {caption && (
-        <div role="caption" className="px-5 py-2.5 bg-[var(--bg-card)] border-t border-[var(--border-subtle)] text-center text-xs text-slate-400 font-sans">
+        <div role="caption" className="px-5 py-2.5 bg-[var(--bg-card)] border-t border-[var(--border-subtle)] text-center text-xs text-[var(--text-secondary)] font-sans">
           {caption}
         </div>
       )}
