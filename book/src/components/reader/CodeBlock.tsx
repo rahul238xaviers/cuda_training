@@ -22,7 +22,7 @@ export function CodeBlock({ inline, className, children }: CodeBlockProps) {
   // Handle inline code: `x_ptr`
   if (inline) {
     return (
-      <code className="px-1.5 py-0.5 rounded-md font-mono text-[11px] md:text-xs bg-[#161c27] text-sky-300 border border-[#273244] select-text">
+      <code className="px-1.5 py-0.5 rounded-md font-mono text-[11px] md:text-xs font-bold select-text transition-colors bg-sky-50 dark:bg-[#131b28] text-[#082f49] dark:text-sky-300 border border-sky-300 dark:border-sky-500/30">
         {codeString}
       </code>
     );

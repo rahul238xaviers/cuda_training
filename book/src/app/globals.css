@@ -1286,15 +1286,53 @@ html[data-theme="next-light"] .prose-dark th {
 
 html[data-theme="next-light"] .prose-dark td {
   background-color: #ffffff !important;
-  color: #1f2937 !important;
-  border: 1px solid #e5e7eb !important;
+  color: #0f172a !important;
+  border: 1px solid #e2e8f0 !important;
 }
 
-html[data-theme="next-light"] .prose-dark code:not(pre code) {
-  background-color: #f3f4f6 !important;
-  color: #0284c7 !important;
-  border: 1px solid #e5e7eb !important;
-  font-weight: 500 !important;
+html[data-theme="next-light"] .prose-dark code:not(pre code),
+html[data-theme="next-light"] code:not(pre code) {
+  background-color: #f0f7ff !important;
+  color: #0c4a6e !important;
+  border: 1px solid #bae6fd !important;
+  font-weight: 600 !important;
+}
+
+html[data-theme="next-light"] td code,
+html[data-theme="next-light"] td * code,
+html[data-theme="next-light"] .prose-dark td code,
+html[data-theme="next-light"] .prose-dark td * code,
+html[data-theme="next-light"] td strong code,
+html[data-theme="next-light"] .prose-dark td strong code {
+  background-color: #f0f7ff !important;
+  color: #082f49 !important;
+  border: 1px solid #7dd3fc !important;
+  font-weight: 700 !important;
+  padding: 0.15rem 0.45rem !important;
+  border-radius: 0.375rem !important;
+  display: inline-block !important;
+}
+
+html[data-theme="default"] td code,
+html[data-theme="default"] .prose-dark td code {
+  background-color: #0c1524 !important;
+  color: #38bdf8 !important;
+  border: 1px solid #1e3a5f !important;
+  font-weight: 700 !important;
+  padding: 0.15rem 0.45rem !important;
+  border-radius: 0.375rem !important;
+  display: inline-block !important;
+}
+
+html[data-theme="cuda-night"] td code,
+html[data-theme="cuda-night"] .prose-dark td code {
+  background-color: #05140b !important;
+  color: #00ff88 !important;
+  border: 1px solid #0d381e !important;
+  font-weight: 700 !important;
+  padding: 0.15rem 0.45rem !important;
+  border-radius: 0.375rem !important;
+  display: inline-block !important;
 }
 
 html[data-theme="next-light"] .prose-dark pre {

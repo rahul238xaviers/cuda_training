@@ -35,15 +35,19 @@ export function CalloutBlock({ children }: CalloutBlockProps) {
   // Filter out the [!TYPE] string from children
   const cleanChildren = (node: any): any => {
     if (typeof node === 'string') {
-      return node.replace(/^\[!(NOTE|WARNING|IMPORTANT|CAUTION|TIP)\]\s*/i, '');
+      return node.replace(/^\s*\[!(NOTE|WARNING|IMPORTANT|CAUTION|TIP)\]\s*/i, '');
     }
     if (Array.isArray(node)) {
       return node.map((child, idx) => (idx === 0 ? cleanChildren(child) : child));
     }
-    if (node?.props?.children) {
-      return React.cloneElement(node, {
-        children: cleanChildren(node.props.children),
-      });
+    if (React.isValidElement(node)) {
+      const childProps = node.props as any;
+      if (childProps && childProps.children) {
+        return React.cloneElement(node, {
+          ...childProps,
+          children: cleanChildren(childProps.children),
+        });
+      }
     }
     return node;
   };
