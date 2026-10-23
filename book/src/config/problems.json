@@ -180,6 +180,59 @@
           "label": "Problem 4: Hierarchical Parallel Welford Merge"
         }
       ]
+    },
+    "1.4": {
+      "beginner": [
+        {
+          "problem_num": 1,
+          "title": "BLAS Level-1 SAXPY Vector Stream",
+          "label": "Problem 1: BLAS Level-1 SAXPY Vector Stream"
+        },
+        {
+          "problem_num": 2,
+          "title": "Strided Hadamard Element-Wise Product",
+          "label": "Problem 2: Strided Hadamard Element-Wise Product"
+        },
+        {
+          "problem_num": 3,
+          "title": "Dual-Vector Cosine Similarity",
+          "label": "Problem 3: Dual-Vector Cosine Similarity"
+        }
+      ],
+      "intermediate": [
+        {
+          "problem_num": 1,
+          "title": "BLAS Level-2 GEMV (y = alpha*A*x + beta*y)",
+          "label": "Problem 1: BLAS Level-2 GEMV (y = alpha*A*x + beta*y)"
+        },
+        {
+          "problem_num": 2,
+          "title": "Fused Scale-Add-ReLU Memory Pass",
+          "label": "Problem 2: Fused Scale-Add-ReLU Memory Pass"
+        },
+        {
+          "problem_num": 3,
+          "title": "4-Channel Parallel Zip-Sum Reduction",
+          "label": "Problem 3: 4-Channel Parallel Zip-Sum Reduction"
+        }
+      ],
+      "champion": [
+        {
+          "problem_num": 1,
+          "title": "Batched GEMV Memory Throughput Benchmark",
+          "label": "Problem 1: Batched GEMV Memory Throughput Benchmark"
+        },
+        {
+          "problem_num": 2,
+          "title": "On-The-Fly Transposed Addition (C = A + B^T)",
+          "label": "Problem 2: On-The-Fly Transposed Addition (C = A + B^T)"
+        },
+        {
+          "problem_num": 3,
+          "title": "Planar to Interleaved RGB Image Packing",
+          "label": "Problem 3: Planar to Interleaved RGB Image Packing"
+        }
+      ]
     }
   }
 }

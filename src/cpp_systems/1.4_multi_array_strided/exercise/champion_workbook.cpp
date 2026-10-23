@@ -68,10 +68,24 @@ int main() {
 
         auto start = chrono::high_resolution_clock::now();
 
-        // TODO: Compute Batched GEMV Y[b, m] = sum_k(W[m, k] * X[b, k]).
-        // --- YOUR CODE STARTS HERE ---
+        // Scope block isolating raw pointer arithmetic:
+        {
+            const float* __restrict__ pW = W.data();
+            const float* __restrict__ pX = X.data();
+            float* __restrict__ pY = Y.data();
 
-        // --- YOUR CODE ENDS HERE ---
+            struct DisallowDirectVectorSubscripting {} W, X, Y;
+            (void)W; (void)X; (void)Y;
+
+            // TODO: Compute Batched GEMV Y[b, m] = sum_k(W[m, k] * X[b, k]) using pointer arithmetic.
+            //       For each batch b:
+            //         For each row m:
+            //           Accumulate dot product across k=0..K-1 in a CPU register.
+            //           Store dot product to pY[b * M + m].
+            // --- YOUR CODE STARTS HERE ---
+
+            // --- YOUR CODE ENDS HERE ---
+        }
 
         auto end = chrono::high_resolution_clock::now();
         double elapsed_sec = chrono::duration<double>(end - start).count();
@@ -122,10 +136,22 @@ int main() {
 
         auto start = chrono::high_resolution_clock::now();
 
-        // TODO: Compute C[i, j] = A[i * DIM + j] + B[j * DIM + i].
-        // --- YOUR CODE STARTS HERE ---
+        // Scope block isolating raw pointer arithmetic:
+        {
+            const float* __restrict__ pA = A.data();
+            const float* __restrict__ pB = B.data();
+            float* __restrict__ pC = C.data();
 
-        // --- YOUR CODE ENDS HERE ---
+            struct DisallowDirectVectorSubscripting {} A, B, C;
+            (void)A; (void)B; (void)C;
+
+            // TODO: Compute C[i, j] = A[i * DIM + j] + B[j * DIM + i] using pA, pB, pC.
+            //       Notice: pA is traversed sequentially (*pA++), pB is strided by DIM (pB[j * DIM + i]),
+            //       and pC is written sequentially (*pC++).
+            // --- YOUR CODE STARTS HERE ---
+
+            // --- YOUR CODE ENDS HERE ---
+        }
 
         auto end = chrono::high_resolution_clock::now();
         double elapsed_sec = chrono::duration<double>(end - start).count();
@@ -171,12 +197,23 @@ int main() {
 
         vector<float> interleaved_img(total_elements, -1.0f);
 
-        // TODO: For each spatial pixel (h, w), pack R, G, B channels contiguously into interleaved_img.
-        // Interleaved offset for (h, w, c): (h * W + w) * 3 + c
-        // Planar offset for (c, h, w): c * (H * W) + h * W + w
-        // --- YOUR CODE STARTS HERE ---
+        // Scope block isolating raw pointer arithmetic:
+        {
+            const float* __restrict__ pPlanar = planar_img.data();
+            float* __restrict__ pInterleaved = interleaved_img.data();
 
-        // --- YOUR CODE ENDS HERE ---
+            struct DisallowDirectVectorSubscripting {} planar_img, interleaved_img;
+            (void)planar_img; (void)interleaved_img;
+
+            // TODO: For each spatial pixel (0..SPATIAL-1), pack R, G, B channels contiguously:
+            //       Plane R starts at: pPlanar
+            //       Plane G starts at: pPlanar + SPATIAL
+            //       Plane B starts at: pPlanar + 2 * SPATIAL
+            //       Write RGBRGB... sequentially into pInterleaved.
+            // --- YOUR CODE STARTS HERE ---
+
+            // --- YOUR CODE ENDS HERE ---
+        }
 
         bool p3_passed = true;
         for (int h = 0; h < H && p3_passed; ++h) {

@@ -66,10 +66,23 @@ int main() {
 
         auto start = chrono::high_resolution_clock::now();
 
-        // TODO: In-place SAXPY: Y[i] = alpha * X[i] + Y[i] using pointer arithmetic.
-        // --- YOUR CODE STARTS HERE ---
+        // Scope block isolating raw pointer arithmetic:
+        {
+            // Extract raw memory pointers with non-aliasing __restrict__ contract:
+            const float* __restrict__ pX = X.data();
+            float* __restrict__ pY = Y.data();
 
-        // --- YOUR CODE ENDS HERE ---
+            // Shadow high-level vector objects X and Y so naive vector indexing fails to compile:
+            struct DisallowDirectVectorSubscripting {} X, Y;
+            (void)X; (void)Y;
+
+            // TODO: In-place SAXPY using pointer arithmetic on pX and pY:
+            //       Update Y in-place: *pY = alpha * (*pX) + *pY; pX++; pY++;
+            //       (or via pointer offset: pY[i] = alpha * pX[i] + pY[i];)
+            // --- YOUR CODE STARTS HERE ---
+
+            // --- YOUR CODE ENDS HERE ---
+        }
 
         auto end = chrono::high_resolution_clock::now();
         double elapsed_sec = chrono::duration<double>(end - start).count();
@@ -111,10 +124,20 @@ int main() {
 
         vector<float> Z(OUT_N, 0.0f);
 
-        // TODO: Compute Z[i] = X[i * STRIDE_X] * Y[i * STRIDE_Y].
-        // --- YOUR CODE STARTS HERE ---
+        {
+            const float* __restrict__ pX = X.data();
+            const float* __restrict__ pY = Y.data();
+            float* __restrict__ pZ = Z.data();
 
-        // --- YOUR CODE ENDS HERE ---
+            struct DisallowDirectVectorSubscripting {} X, Y, Z;
+            (void)X; (void)Y; (void)Z;
+
+            // TODO: Compute Z[i] = X[i * STRIDE_X] * Y[i * STRIDE_Y] using strided pointer arithmetic:
+            //       Advance pX by STRIDE_X and pY by STRIDE_Y on each iteration.
+            // --- YOUR CODE STARTS HERE ---
+
+            // --- YOUR CODE ENDS HERE ---
+        }
 
         bool p2_passed = true;
         for (int i = 0; i < OUT_N; ++i) {
@@ -150,10 +173,20 @@ int main() {
 
         float cosine_sim = 0.0f;
 
-        // TODO: Compute dot product and L2 norms to find cosine_sim.
-        // --- YOUR CODE STARTS HERE ---
+        {
+            const float* __restrict__ pA = A.data();
+            const float* __restrict__ pB = B.data();
 
-        // --- YOUR CODE ENDS HERE ---
+            struct DisallowDirectVectorSubscripting {} A, B;
+            (void)A; (void)B;
+
+            // TODO: Single-pass dual-vector cosine similarity using pointers pA and pB:
+            //       Accumulate dot, norm_a, norm_b in local registers in one pass over memory,
+            //       then calculate cosine_sim = dot / (sqrt(norm_a) * sqrt(norm_b)).
+            // --- YOUR CODE STARTS HERE ---
+
+            // --- YOUR CODE ENDS HERE ---
+        }
 
         float dot = 0.0f, norm_a = 0.0f, norm_b = 0.0f;
         for (int i = 0; i < N; ++i) {
