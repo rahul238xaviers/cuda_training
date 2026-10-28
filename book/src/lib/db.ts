@@ -253,3 +253,18 @@ export function getCourseStats(): { totalTests: number; testsPassed: number; per
   const percent = totalTests > 0 ? Math.round((testsPassed / totalTests) * 100) : 0;
   return { totalTests, testsPassed, percent };
 }
+
+/**
+ * Resets user problem statuses for a specific chapter and tier back to pending.
+ */
+export function resetUserProblemStatuses(topicId: string, tier: string): void {
+  const db = getDatabase();
+  const stmt = db.prepare(`
+    DELETE FROM user_problem_status
+    WHERE problem_id IN (
+      SELECT problem_id FROM canonical_problems
+      WHERE topic_id = ? AND tier = ?
+    )
+  `);
+  stmt.run(topicId, tier);
+}

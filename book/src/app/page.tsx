@@ -456,7 +456,7 @@ export default function BookPlatform() {
     if (activeNode.type !== 'workbook' || !activeNode.chapterId || !activeNode.tier) return;
 
     const confirmed = window.confirm(
-      `Start over ${activeNode.chapterId} (${activeNode.tier})?\n\nThis will reset your local working file back to the clean exercise starter template.`
+      `Start over ${activeNode.chapterId} (${activeNode.tier})?\n\nThis will reset your local working file back to the clean exercise starter template and reset passed problem progress.`
     );
     if (!confirmed) return;
 
@@ -475,8 +475,30 @@ export default function BookPlatform() {
         setActiveCode(data.code || '');
         setSaveStatus('saved');
         setRunStatus('idle');
+        setDurationMs(undefined);
+        setExitCode(null);
         setTerminalOutput(`🔄 Workbook reset to fresh exercise template. Ready to begin!`);
-        loadTree();
+
+        // Immediately update local nodeData so problem status pills and counts reflect 0 passed
+        setNodeData((prev: any) => {
+          if (!prev) return prev;
+          const freshProblems = (data.problems || prev.problems || []).map((p: any) => ({
+            ...p,
+            status: 'pending',
+          }));
+          const totalCount = data.testsCount ?? prev.testsCount ?? freshProblems.length;
+          return {
+            ...prev,
+            problems: freshProblems,
+            testsPassed: 0,
+            status: 'pending',
+            newProblemsCount: totalCount,
+          };
+        });
+
+        // Sync fresh tree stats and reload full node content
+        await loadTree();
+        await fetchNodeContent(activeNode, target);
       } else {
         alert(`Failed to reset: ${data.error}`);
       }

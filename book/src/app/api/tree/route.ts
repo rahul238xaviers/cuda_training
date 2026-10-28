@@ -20,34 +20,43 @@ export async function GET() {
   let totalTestsAcrossCourse = 0;
   let totalPassedTests = 0;
 
-  // 1. C++ Stats
+  // 1. C++ Stats (Volume 1)
   let totalChapters = chapters.length;
   let completedCount = 0;
+  let vol1TotalTests = 0;
+  let vol1PassedTests = 0;
   for (const ch of chapters) {
-    totalTestsAcrossCourse += ch.totalTests;
-    totalPassedTests += ch.passedTests;
+    vol1TotalTests += ch.totalTests;
+    vol1PassedTests += ch.passedTests;
     if (ch.completed) completedCount++;
   }
 
-  // 2. CUDA Stats
+  // 2. CUDA Stats (Volume 2)
   let totalCudaTopics = 0;
   let completedCudaTopics = 0;
+  let vol2TotalTests = 0;
+  let vol2PassedTests = 0;
   for (const mod of cudaModules) {
     totalCudaTopics += mod.topics.length;
     completedCudaTopics += mod.topics.filter((t) => t.completed).length;
-    totalTestsAcrossCourse += mod.totalTests;
-    totalPassedTests += mod.passedTests;
+    vol2TotalTests += mod.totalTests;
+    vol2PassedTests += mod.passedTests;
   }
 
-  // 3. Kernel Stats
+  // 3. Kernel Stats (Volume 3)
   let totalKernelTopics = 0;
   let completedKernelTopics = 0;
+  let vol3TotalTests = 0;
+  let vol3PassedTests = 0;
   for (const mod of kernelModules) {
     totalKernelTopics += mod.topics.length;
     completedKernelTopics += mod.topics.filter((t) => t.completed).length;
-    totalTestsAcrossCourse += mod.totalTests;
-    totalPassedTests += mod.passedTests;
+    vol3TotalTests += mod.totalTests;
+    vol3PassedTests += mod.passedTests;
   }
+
+  totalTestsAcrossCourse = vol1TotalTests + vol2TotalTests + vol3TotalTests;
+  totalPassedTests = vol1PassedTests + vol2PassedTests + vol3PassedTests;
 
   // Find first uncompleted chapter for bookmark (prioritizing C++, then CUDA, then Kernels)
   const firstPendingCh = chapters.find((c) => !c.completed);
@@ -90,17 +99,55 @@ export async function GET() {
       percent,
       testsPassed: totalPassedTests,
       totalTests: totalTestsAcrossCourse,
+      vol1: {
+        id: 'vol1',
+        title: 'Volume 1: C++ Low-Level Systems Foundations',
+        shortTitle: 'C++ Systems',
+        chaptersDone: completedCount,
+        totalChapters,
+        testsPassed: vol1PassedTests,
+        totalTests: vol1TotalTests,
+        percent: vol1TotalTests > 0 ? Math.round((vol1PassedTests / vol1TotalTests) * 100) : 0,
+      },
+      vol2: {
+        id: 'vol2',
+        title: 'Volume 2: CUDA Architecture & LLM Execution Model',
+        shortTitle: 'CUDA Systems',
+        topicsDone: completedCudaTopics,
+        totalTopics: totalCudaTopics,
+        testsPassed: vol2PassedTests,
+        totalTests: vol2TotalTests,
+        percent: vol2TotalTests > 0 ? Math.round((vol2PassedTests / vol2TotalTests) * 100) : 0,
+      },
+      vol3: {
+        id: 'vol3',
+        title: 'Volume 3: Production GPU Kernels Curriculum',
+        shortTitle: 'GPU Kernels',
+        topicsDone: completedKernelTopics,
+        totalTopics: totalKernelTopics,
+        testsPassed: vol3PassedTests,
+        totalTests: vol3TotalTests,
+        percent: vol3TotalTests > 0 ? Math.round((vol3PassedTests / vol3TotalTests) * 100) : 0,
+      },
     },
-    volumes: manifest.volumes.map((v) => ({
-      id: v.id,
-      shortId: v.shortId,
-      title: v.title,
-      displayTitle: v.displayTitle,
-      tagline: v.tagline,
-      description: v.description,
-      modules: v.id === 'vol1' ? cppModules : v.id === 'vol2' ? cudaModules : kernelModules,
-      kernels: v.id === 'vol3' ? METAL_KERNELS : undefined,
-    })),
+    volumes: manifest.volumes.map((v) => {
+      const volStat = v.id === 'vol1'
+        ? { completedItems: completedCount, totalItems: totalChapters, testsPassed: vol1PassedTests, totalTests: vol1TotalTests, percent: vol1TotalTests > 0 ? Math.round((vol1PassedTests / vol1TotalTests) * 100) : 0 }
+        : v.id === 'vol2'
+        ? { completedItems: completedCudaTopics, totalItems: totalCudaTopics, testsPassed: vol2PassedTests, totalTests: vol2TotalTests, percent: vol2TotalTests > 0 ? Math.round((vol2PassedTests / vol2TotalTests) * 100) : 0 }
+        : { completedItems: completedKernelTopics, totalItems: totalKernelTopics, testsPassed: vol3PassedTests, totalTests: vol3TotalTests, percent: vol3TotalTests > 0 ? Math.round((vol3PassedTests / vol3TotalTests) * 100) : 0 };
+      return {
+        id: v.id,
+        shortId: v.shortId,
+        title: v.title,
+        displayTitle: v.displayTitle,
+        tagline: v.tagline,
+        description: v.description,
+        modules: v.id === 'vol1' ? cppModules : v.id === 'vol2' ? cudaModules : kernelModules,
+        kernels: v.id === 'vol3' ? METAL_KERNELS : undefined,
+        stats: volStat,
+      };
+    }),
     volume1: {
       id: 'vol1',
       title: vol1Meta?.title || 'Volume 1: C++ Low-Level Systems Foundations',

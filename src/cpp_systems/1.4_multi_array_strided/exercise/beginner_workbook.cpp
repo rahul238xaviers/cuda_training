@@ -1,11 +1,11 @@
-#include <iostream>
-#include <vector>
-#include <cmath>
-#include <iomanip>
-#include <chrono>
-#include <numeric>
-#include <cstring>
 #include <algorithm>
+#include <chrono>
+#include <cmath>
+#include <cstring>
+#include <iomanip>
+#include <iostream>
+#include <numeric>
+#include <vector>
 
 using namespace std;
 
@@ -47,12 +47,12 @@ int main() {
     // -------------------------------------------------------------------------
     // PROBLEM 1: High-Performance SAXPY (Single-Precision A * X Plus Y)
     //
-    // Context: BLAS-1 SAXPY (y = alpha * x + y) is the standard baseline benchmark
-    //          for GPU memory streaming bandwidth.
+    // Context: BLAS-1 SAXPY (y = alpha * x + y) is the foundational baseline benchmark
+    //          for GPU and CPU memory streaming throughput.
     //
-    // Task: Given vectors `X` and `Y` of size N=131,072 floats (512 KB each) and alpha=2.5f:
-    //       Update Y in-place: Y[i] = alpha * X[i] + Y[i].
-    //       Benchmark memory throughput in GB/s!
+    // Task: Given vectors `X` and `Y` of size N=131,072 floats and alpha=2.5f:
+    //       Stream through memory and update Y in-place: Y = alpha * X + Y.
+    //       Achieve optimal memory throughput by saturating memory bandwidth.
     // -------------------------------------------------------------------------
     {
         const int N = 131072;
@@ -66,23 +66,9 @@ int main() {
 
         auto start = chrono::high_resolution_clock::now();
 
-        // Scope block isolating raw pointer arithmetic:
-        {
-            // Extract raw memory pointers with non-aliasing __restrict__ contract:
-            const float* __restrict__ pX = X.data();
-            float* __restrict__ pY = Y.data();
+        // --- YOUR CODE STARTS HERE ---
 
-            // Shadow high-level vector objects X and Y so naive vector indexing fails to compile:
-            struct DisallowDirectVectorSubscripting {} X, Y;
-            (void)X; (void)Y;
-
-            // TODO: In-place SAXPY using pointer arithmetic on pX and pY:
-            //       Update Y in-place: *pY = alpha * (*pX) + *pY; pX++; pY++;
-            //       (or via pointer offset: pY[i] = alpha * pX[i] + pY[i];)
-            // --- YOUR CODE STARTS HERE ---
-
-            // --- YOUR CODE ENDS HERE ---
-        }
+        // --- YOUR CODE ENDS HERE ---
 
         auto end = chrono::high_resolution_clock::now();
         double elapsed_sec = chrono::duration<double>(end - start).count();
@@ -107,7 +93,8 @@ int main() {
     // PROBLEM 2: Strided Hadamard Product (Element-Wise Multiplication)
     //
     // Context: In gating mechanisms (e.g. GRU / LSTM gates), two activations are
-    //          multiplied elementwise with stride skips: Z[i] = X[i * stride_x] * Y[i * stride_y].
+    //          multiplied elementwise with non-unit strides:
+    //            Z[i] = X[i * stride_x] * Y[i * stride_y]
     //
     // Task: Given `X` of size 128 (stride_x = 2) and `Y` of size 192 (stride_y = 3):
     //       Compute 64 elementwise products into `Z` [64].
@@ -124,20 +111,13 @@ int main() {
 
         vector<float> Z(OUT_N, 0.0f);
 
-        {
-            const float* __restrict__ pX = X.data();
-            const float* __restrict__ pY = Y.data();
-            float* __restrict__ pZ = Z.data();
+        auto start = chrono::high_resolution_clock::now();
 
-            struct DisallowDirectVectorSubscripting {} X, Y, Z;
-            (void)X; (void)Y; (void)Z;
+        // --- YOUR CODE STARTS HERE ---
 
-            // TODO: Compute Z[i] = X[i * STRIDE_X] * Y[i * STRIDE_Y] using strided pointer arithmetic:
-            //       Advance pX by STRIDE_X and pY by STRIDE_Y on each iteration.
-            // --- YOUR CODE STARTS HERE ---
+        // --- YOUR CODE ENDS HERE ---
 
-            // --- YOUR CODE ENDS HERE ---
-        }
+        auto end = chrono::high_resolution_clock::now();
 
         bool p2_passed = true;
         for (int i = 0; i < OUT_N; ++i) {
@@ -173,20 +153,13 @@ int main() {
 
         float cosine_sim = 0.0f;
 
-        {
-            const float* __restrict__ pA = A.data();
-            const float* __restrict__ pB = B.data();
+        auto start = chrono::high_resolution_clock::now();
 
-            struct DisallowDirectVectorSubscripting {} A, B;
-            (void)A; (void)B;
+        // --- YOUR CODE STARTS HERE ---
 
-            // TODO: Single-pass dual-vector cosine similarity using pointers pA and pB:
-            //       Accumulate dot, norm_a, norm_b in local registers in one pass over memory,
-            //       then calculate cosine_sim = dot / (sqrt(norm_a) * sqrt(norm_b)).
-            // --- YOUR CODE STARTS HERE ---
+        // --- YOUR CODE ENDS HERE ---
 
-            // --- YOUR CODE ENDS HERE ---
-        }
+        auto end = chrono::high_resolution_clock::now();
 
         float dot = 0.0f, norm_a = 0.0f, norm_b = 0.0f;
         for (int i = 0; i < N; ++i) {
@@ -209,7 +182,8 @@ int main() {
     if (passed == total) {
         cout << "\033[1;32m  [STATUS] ALL " << total << " TESTS PASSED! \033[0m" << endl;
     } else {
-        cout << "\033[1;31m  [STATUS] INCOMPLETE (" << (total - passed) << " tests failed) \033[0m" << endl;
+        cout << "\033[1;31m  [STATUS] INCOMPLETE (" << (total - passed) << " tests failed) \033[0m"
+             << endl;
     }
     cout << "=================================================================" << endl;
 

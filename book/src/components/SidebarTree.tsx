@@ -746,24 +746,33 @@ export function SidebarTree({
         {/* ----------------- CURRICULUM MODE CONTROLS ----------------- */}
         {navMode === 'curriculum' && (
           <>
-            {/* Sleek Minimal Progress Tracker (Volume-Specific Chapters & Overall Tests) */}
+            {/* Sleek Minimal Progress Tracker (Volume-Specific Verified Tests & Chapters) */}
             {(() => {
-              const currentVolDone =
+              const currentVolStats =
                 activeVolume === 'vol1'
-                  ? treeData?.stats?.chaptersDone ?? 0
+                  ? treeData?.stats?.vol1
                   : activeVolume === 'vol2'
-                  ? treeData?.stats?.cudaTopicsDone ?? 0
-                  : treeData?.stats?.kernelTopicsDone ?? 0;
+                  ? treeData?.stats?.vol2
+                  : treeData?.stats?.vol3;
 
-              const currentVolTotal =
+              const volPassedTests = currentVolStats?.testsPassed ?? 0;
+              const volTotalTests = currentVolStats?.totalTests ?? (activeVolume === 'vol1' ? 187 : activeVolume === 'vol2' ? 290 : 75);
+              const volTestPercent =
+                volTotalTests > 0 ? Math.round((volPassedTests / volTotalTests) * 100) : 0;
+
+              const volCompletedItems =
                 activeVolume === 'vol1'
-                  ? treeData?.stats?.totalChapters ?? 20
+                  ? (currentVolStats?.chaptersDone ?? treeData?.stats?.chaptersDone ?? 0)
                   : activeVolume === 'vol2'
-                  ? treeData?.stats?.totalCudaTopics ?? 22
-                  : treeData?.stats?.totalKernelTopics ?? 25;
+                  ? (currentVolStats?.topicsDone ?? treeData?.stats?.cudaTopicsDone ?? 0)
+                  : (currentVolStats?.topicsDone ?? treeData?.stats?.kernelTopicsDone ?? 0);
 
-              const currentVolPercent =
-                currentVolTotal > 0 ? Math.round((currentVolDone / currentVolTotal) * 100) : 0;
+              const volTotalItems =
+                activeVolume === 'vol1'
+                  ? (currentVolStats?.totalChapters ?? treeData?.stats?.totalChapters ?? 20)
+                  : activeVolume === 'vol2'
+                  ? (currentVolStats?.totalTopics ?? treeData?.stats?.totalCudaTopics ?? 22)
+                  : (currentVolStats?.totalTopics ?? treeData?.stats?.totalKernelTopics ?? 25);
 
               return (
                 <div className="mt-2.5 px-0.5">
@@ -779,26 +788,27 @@ export function SidebarTree({
                       </span>
                     </span>
                     <span className="font-mono text-slate-200 font-semibold">
-                      {currentVolDone}/{currentVolTotal}{' '}
-                      <span className="text-slate-400 font-normal">({currentVolPercent}%)</span>
+                      {volPassedTests}/{volTotalTests} tests{' '}
+                      <span className="text-slate-400 font-normal">({volTestPercent}%)</span>
                     </span>
                   </div>
                   <div className="w-full h-1 bg-[#10141d] rounded-full overflow-hidden border border-[#21262d]">
                     <div
                       className="h-full bg-emerald-500 rounded-full transition-all duration-500"
-                      style={{ width: `${Math.max(1, currentVolPercent)}%` }}
+                      style={{ width: `${Math.max(1, volTestPercent)}%` }}
                     />
                   </div>
                   <div className="flex items-center justify-between mt-1 text-[9px] text-slate-500 font-mono">
                     <span>
+                      {volCompletedItems}/{volTotalItems}{' '}
                       {activeVolume === 'vol1'
-                        ? 'Chapters Mastered'
+                        ? 'chapters mastered'
                         : activeVolume === 'vol2'
-                        ? 'Topics Mastered'
-                        : 'Kernels Mastered'}
+                        ? 'topics mastered'
+                        : 'kernels mastered'}
                     </span>
-                    <span title="Total individual verified test cases passed across all workbooks">
-                      {treeData?.stats?.testsPassed ?? 0} tests passed total
+                    <span title="Total individual verified test cases passed course-wide">
+                      {treeData?.stats?.testsPassed ?? 0} total tests passed
                     </span>
                   </div>
                 </div>
@@ -824,9 +834,24 @@ export function SidebarTree({
             {/* Category Tabs — C++ Systems, CUDA, GPU Kernels */}
             {(() => {
               const volDefs = [
-                { id: 'vol1', label: 'C++ Systems', count: '20 Ch', accent: 'sky' },
-                { id: 'vol2', label: 'CUDA', count: '21 Ch', accent: 'indigo' },
-                { id: 'vol3', label: 'GPU Kernels', count: '28 Kernels', accent: 'amber' },
+                {
+                  id: 'vol1',
+                  label: 'C++ Systems',
+                  count: `${treeData?.stats?.vol1?.totalChapters ?? treeData?.stats?.totalChapters ?? 20} Ch`,
+                  accent: 'sky',
+                },
+                {
+                  id: 'vol2',
+                  label: 'CUDA',
+                  count: `${treeData?.stats?.vol2?.totalTopics ?? treeData?.stats?.totalCudaTopics ?? 22} Topics`,
+                  accent: 'indigo',
+                },
+                {
+                  id: 'vol3',
+                  label: 'GPU Kernels',
+                  count: `${treeData?.stats?.vol3?.totalTopics ?? treeData?.stats?.totalKernelTopics ?? 25} Kernels`,
+                  accent: 'amber',
+                },
               ];
 
               const accentStyles: Record<string, { active: string; dot: string; indicator: string }> = {

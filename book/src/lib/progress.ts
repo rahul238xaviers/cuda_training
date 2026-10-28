@@ -147,3 +147,21 @@ export function updateLastPosition(activeTopic?: string, activeVolume?: string, 
   if (activePlayground) data.activePlayground = activePlayground;
   saveUserProgress(data);
 }
+
+/**
+ * Resets tier progress for a topic back to pending / 0 tests passed.
+ */
+export function resetTierProgress(topicId: string, tier: 'beginner' | 'intermediate' | 'champion'): UserProgressData {
+  const data = loadUserProgress();
+  if (data.topics[topicId]?.tiers?.[tier]) {
+    const total = data.topics[topicId].tiers[tier].totalTests || 3;
+    data.topics[topicId].tiers[tier] = {
+      status: 'pending',
+      testsPassed: 0,
+      totalTests: total,
+    };
+    data.topics[topicId].completed = false;
+    saveUserProgress(data);
+  }
+  return data;
+}
