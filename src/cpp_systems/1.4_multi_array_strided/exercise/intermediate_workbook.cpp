@@ -64,25 +64,9 @@ int main() {
         for (int i = 0; i < M; ++i) y[i] = 1.0f;
         vector<float> original_y = y;
 
-        // Scope block isolating raw pointer arithmetic:
-        {
-            // Extract raw non-aliasing pointers:
-            const float* __restrict__ pA = A.data();
-            const float* __restrict__ px = x.data();
-            float* __restrict__ py = y.data();
+        // --- YOUR CODE STARTS HERE ---
 
-            // Shadow high-level vector objects to prevent naive vector subscripting:
-            struct DisallowDirectVectorSubscripting {} A, x, y;
-            (void)A; (void)x; (void)y;
-
-            // TODO: In-place GEMV update using row-pointer stepping:
-            //       For each row m in 0..M-1:
-            //         Walk through row m of pA and elements of px, accumulating dot product in a register.
-            //         Update py[m] = alpha * dot + beta * py[m].
-            // --- YOUR CODE STARTS HERE ---
-
-            // --- YOUR CODE ENDS HERE ---
-        }
+        // --- YOUR CODE ENDS HERE ---
 
         bool p1_passed = true;
         for (int m = 0; m < M && p1_passed; ++m) {
@@ -122,22 +106,9 @@ int main() {
 
         vector<float> Out(N, -1.0f);
 
-        // Scope block isolating raw pointer arithmetic:
-        {
-            const float* __restrict__ pX = X.data();
-            const float* __restrict__ pY = Y.data();
-            const float* __restrict__ pZ = Z.data();
-            float* __restrict__ pOut = Out.data();
+        // --- YOUR CODE STARTS HERE ---
 
-            struct DisallowDirectVectorSubscripting {} X, Y, Z, Out;
-            (void)X; (void)Y; (void)Z; (void)Out;
-
-            // TODO: Compute Out[i] in a single pass using pointers pX, pY, pZ, pOut.
-            //       Perform scale, subtract, add, and ReLU in CPU registers without temporary buffers!
-            // --- YOUR CODE STARTS HERE ---
-
-            // --- YOUR CODE ENDS HERE ---
-        }
+        // --- YOUR CODE ENDS HERE ---
 
         bool p2_passed = true;
         for (int i = 0; i < N; ++i) {
@@ -176,22 +147,9 @@ int main() {
 
         vector<float> R(N, 0.0f);
 
-        // Scope block isolating raw pointer arithmetic:
-        {
-            const float* __restrict__ pA = A.data();
-            const float* __restrict__ pB = B.data();
-            const float* __restrict__ pC = C.data();
-            const float* __restrict__ pD = D.data();
-            float* __restrict__ pR = R.data();
+        // --- YOUR CODE STARTS HERE ---
 
-            struct DisallowDirectVectorSubscripting {} A, B, C, D, R;
-            (void)A; (void)B; (void)C; (void)D; (void)R;
-
-            // TODO: Compute R[i] = A[i] * B[i] + C[i] * D[i] using pA, pB, pC, pD, pR pointers.
-            // --- YOUR CODE STARTS HERE ---
-
-            // --- YOUR CODE ENDS HERE ---
-        }
+        // --- YOUR CODE ENDS HERE ---
 
         bool p3_passed = true;
         for (int i = 0; i < N; ++i) {
