@@ -41,14 +41,27 @@ int main() {
     int total = 0;
 
     // -------------------------------------------------------------------------
-    // PROBLEM 1: BLAS Level-2 GEMV (y = alpha * A * x + beta * y)
+    // PROBLEM 1: BLAS Level-2 GEMV (Matrix-Vector Multiplication)
     //
-    // Context: Matrix-vector multiplication is the foundational operation in
-    //          recurrent networks (RNN/LSTM) and LLM autoregressive token generation.
+    // Context: In LLM token generation (e.g. LLaMA / GPT autoregressive decode),
+    //          each new token requires multiplying the model weight matrix by
+    //          the current token's activation vector:
+    //            y = alpha * (A * x) + beta * y
     //
-    // Task: Given matrix `A` [M=32, K=64], vector `x` [K=64], and vector `y` [M=32]:
-    //       Update y in-place with alpha=1.5f and beta=0.5f:
-    //         y[m] = alpha * sum_{k=0..K-1}(A[m, k] * x[k]) + beta * y[m]
+    // Physical Memory Layout:
+    //   - Matrix A [M=32 rows, K=64 columns] is stored flat in row-major order
+    //     (2048 floats total). The m-th row begins at offset: m * K.
+    //   - Vector x has K=64 elements (matching the number of columns in A).
+    //   - Vector y has M=32 elements (one output slot per row of A).
+    //
+    // Task:
+    //   1. For each row m (from 0 to M - 1):
+    //      - Compute the dot product between row m of Matrix A and Vector x:
+    //          row_dot = sum of (A[m * K + k] * x[k]) for k = 0 to K - 1
+    //      - Update y[m] in-place using scalars alpha=1.5f and beta=0.5f:
+    //          y[m] = alpha * row_dot + beta * y[m]
+    //   2. Extract raw pointers with const and __restrict__ to enforce
+    //      non-aliasing and enable register-level loop optimizations.
     // -------------------------------------------------------------------------
     {
         const int M = 32, K = 64;
